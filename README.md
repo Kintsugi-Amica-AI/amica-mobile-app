@@ -1,1 +1,0 @@
-# Amica Mobile App
