@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'core/constants/app_routes.dart';
 import 'core/constants/app_strings.dart';
 import 'core/theme/app_theme.dart';
+import 'core/widgets/loading_view.dart';
+import 'features/auth/services/auth_service.dart';
 import 'features/auth/screens/forgot_password_screen.dart';
 import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/signup_screen.dart';
@@ -22,12 +24,25 @@ import 'features/sos/screens/sos_active_screen.dart';
 class AmicaApp extends StatelessWidget {
   const AmicaApp({super.key});
 
+  static const AuthService _authService = AuthService();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: AppStrings.appName,
       theme: AppTheme.light,
-      initialRoute: AppRoutes.login,
+      home: StreamBuilder(
+        stream: _authService.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: LoadingView(message: 'Checking login status'),
+            );
+          }
+
+          return snapshot.data == null ? const LoginScreen() : const HomeScreen();
+        },
+      ),
       routes: {
         AppRoutes.login: (_) => const LoginScreen(),
         AppRoutes.signup: (_) => const SignupScreen(),
