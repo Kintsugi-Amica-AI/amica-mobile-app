@@ -1,12 +1,13 @@
-name: Flutter CI
+name: Flutter CI/CD
 
 on:
   push:
     branches: [dev, main]
   pull_request:
+    branches: [dev, main]
 
 jobs:
-  flutter:
+  build-debug-apk:
     runs-on: ubuntu-latest
 
     steps:
@@ -32,3 +33,10 @@ jobs:
 
       - name: Build debug APK
         run: flutter build apk --debug
+
+      - name: Upload debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: amica-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
