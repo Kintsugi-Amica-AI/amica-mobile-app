@@ -13,6 +13,10 @@ Flutter mobile application for Amica, a women's safety and security app.
 - Number plate OCR for Scan Before You Ride
 - Firebase backend integration
 
+## Contributing
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) for the Amica branch strategy, issue workflow, commit expectations, pull request process, and CI/CD guidance.
+
 ## Getting started
 
 ```bash
