@@ -17,6 +17,15 @@ Flutter mobile application for Amica, a women's safety and security app.
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) for the Amica branch strategy, issue workflow, commit expectations, pull request process, and CI/CD guidance.
 
+## Deployment Strategy
+
+- `dev` branch is used for development integration.
+- Backend `dev` branch deploys to Firebase development project only.
+- `main` branch is reserved for final demo/production-ready code.
+- Production deployment is not automatic yet.
+- Mobile app produces APK artifacts through GitHub Actions.
+- AI repo produces test/artifact outputs only.
+
 ## Getting started
 
 ```bash
