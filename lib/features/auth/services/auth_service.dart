@@ -118,6 +118,10 @@ class AuthService {
       await _auth.sendPasswordResetEmail(email: email.trim());
     } on FirebaseAuthException catch (error) {
       throw AuthServiceException(_authErrorMessage(error));
+    } on FirebaseException catch (error) {
+      throw AuthServiceException(
+        error.message ?? 'Firebase error while sending the reset email.',
+      );
     }
   }
 
@@ -176,6 +180,10 @@ class AuthService {
         return 'This email is already registered.';
       case 'invalid-email':
         return 'Enter a valid email address.';
+      case 'user-disabled':
+        return 'This account has been disabled.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please wait a moment and try again.';
       case 'user-not-found':
       case 'wrong-password':
       case 'invalid-credential':

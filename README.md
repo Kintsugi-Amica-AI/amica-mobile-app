@@ -19,6 +19,7 @@ The app includes basic screens for:
 
 - Login with email and password
 - Signup with name, email, phone, password, and secret phrase
+- Password reset email from the forgot password screen
 - Home dashboard with main Amica safety feature cards
 - Logout
 
@@ -57,6 +58,7 @@ The app currently calls `Firebase.initializeApp()` safely. If Firebase config is
 6. Confirm the user appears in Firebase Authentication.
 7. Confirm a matching document appears in Firestore `users`.
 8. Log out and log in again with the same account.
+9. Tap "Forgot password?", enter the test email, and confirm Firebase sends a reset email.
 
 Use demo-only data. Do not use real private phone numbers or personal safety phrases for testing.
 
