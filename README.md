@@ -47,6 +47,8 @@ ios/Runner/GoogleService-Info.plist
 
 Only commit Firebase configuration files if the team has agreed they are safe for the university demo. Never commit service account JSON files, private keys, API tokens, or `.env` files.
 
+GitHub Actions builds the debug APK without committing `android/app/google-services.json`. The Android Gradle setup applies the Google Services plugin only when that file exists, so CI can compile safely while local Firebase testing still uses your downloaded Firebase config.
+
 The app currently calls `Firebase.initializeApp()` safely. If Firebase config is missing, the app still opens, but login/signup will show a clear setup error.
 
 ## Auth Testing
