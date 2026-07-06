@@ -47,6 +47,8 @@ ios/Runner/GoogleService-Info.plist
 
 Only commit Firebase configuration files if the team has agreed they are safe for the university demo. Never commit service account JSON files, private keys, API tokens, or `.env` files.
 
+GitHub Actions builds the debug APK without committing `android/app/google-services.json`. The Android Gradle setup applies the Google Services plugin only when that file exists, so CI can compile safely while local Firebase testing still uses your downloaded Firebase config.
+
 The app currently calls `Firebase.initializeApp()` safely. If Firebase config is missing, the app still opens, but login/signup will show a clear setup error.
 
 ## Auth Testing
@@ -72,6 +74,30 @@ keytool -list -v -alias androiddebugkey -keystore "$env:USERPROFILE\.android\deb
 ```
 
 Use demo-only data. Do not use real private phone numbers or personal safety phrases for testing.
+
+## Emergency Contacts
+
+Emergency contacts are saved in the Firestore `emergency_contacts` collection and are owned by the signed-in user's Firebase Auth UID.
+
+To test:
+
+1. Log in or create a test account.
+2. Open the Home Dashboard.
+3. Tap "Emergency Contacts".
+4. Add a contact with name, phone, optional relationship, and priority.
+5. Confirm the contact appears in Firestore under `emergency_contacts`.
+6. Confirm the document has `userId` equal to the current user's UID.
+7. Edit the contact and confirm the UI and Firestore document update.
+8. Toggle the contact active/inactive.
+9. Delete the contact and confirm it is removed from Firestore.
+
+The app queries contacts with the current user's UID:
+
+```text
+emergency_contacts where userId == currentUser.uid
+```
+
+Do not commit real phone numbers, Firebase secrets, service account files, API keys, or `.env` files.
 
 ## Deployment Strategy
 
