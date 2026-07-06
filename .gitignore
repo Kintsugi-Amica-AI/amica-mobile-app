@@ -22,5 +22,6 @@ Thumbs.db
 *.keystore
 key.properties
 android/app/google-services.json
+android/google-services.json
 ios/Runner/GoogleService-Info.plist
 firebase_options.dart
