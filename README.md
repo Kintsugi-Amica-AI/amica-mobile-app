@@ -73,6 +73,30 @@ keytool -list -v -alias androiddebugkey -keystore "$env:USERPROFILE\.android\deb
 
 Use demo-only data. Do not use real private phone numbers or personal safety phrases for testing.
 
+## Emergency Contacts
+
+Emergency contacts are saved in the Firestore `emergency_contacts` collection and are owned by the signed-in user's Firebase Auth UID.
+
+To test:
+
+1. Log in or create a test account.
+2. Open the Home Dashboard.
+3. Tap "Emergency Contacts".
+4. Add a contact with name, phone, optional relationship, and priority.
+5. Confirm the contact appears in Firestore under `emergency_contacts`.
+6. Confirm the document has `userId` equal to the current user's UID.
+7. Edit the contact and confirm the UI and Firestore document update.
+8. Toggle the contact active/inactive.
+9. Delete the contact and confirm it is removed from Firestore.
+
+The app queries contacts with the current user's UID:
+
+```text
+emergency_contacts where userId == currentUser.uid
+```
+
+Do not commit real phone numbers, Firebase secrets, service account files, API keys, or `.env` files.
+
 ## Deployment Strategy
 
 - `dev` branch is used for development integration.
