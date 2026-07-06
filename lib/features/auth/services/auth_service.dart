@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../models/app_user.dart';
 
@@ -105,9 +106,53 @@ class AuthService {
     }
   }
 
+  Future<AppUser> signInWithGoogle() async {
+    _ensureFirebaseReady();
+
+    try {
+      final googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        throw const AuthServiceException('Google sign-in was cancelled.');
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await _auth.signInWithCredential(credential);
+      final firebaseUser = userCredential.user;
+      if (firebaseUser == null) {
+        throw const AuthServiceException(
+          'Google sign-in failed. Please try again.',
+        );
+      }
+
+      return _createOrUpdateGoogleUserProfile(firebaseUser);
+    } on AuthServiceException {
+      rethrow;
+    } on FirebaseAuthException catch (error) {
+      throw AuthServiceException(_authErrorMessage(error));
+    } on FirebaseException catch (error) {
+      throw AuthServiceException(
+        error.message ?? 'Firebase error while signing in with Google.',
+      );
+    } catch (_) {
+      throw const AuthServiceException(
+        'Google sign-in failed. Please try again.',
+      );
+    }
+  }
+
   Future<void> signOut() async {
     if (!_isFirebaseReady) {
       return;
+    }
+    try {
+      await GoogleSignIn().signOut();
+    } catch (_) {
+      // Firebase sign-out is the important part for app session state.
     }
     await _auth.signOut();
   }
@@ -118,6 +163,10 @@ class AuthService {
       await _auth.sendPasswordResetEmail(email: email.trim());
     } on FirebaseAuthException catch (error) {
       throw AuthServiceException(_authErrorMessage(error));
+    } on FirebaseException catch (error) {
+      throw AuthServiceException(
+        error.message ?? 'Firebase error while sending the reset email.',
+      );
     }
   }
 
@@ -162,6 +211,92 @@ class AuthService {
     }
   }
 
+  Future<AppUser> _createOrUpdateGoogleUserProfile(User firebaseUser) async {
+    final userRef = _firestore.collection('users').doc(firebaseUser.uid);
+    final snapshot = await userRef.get();
+    final email = firebaseUser.email?.trim() ?? '';
+    final name = _googleDisplayName(firebaseUser);
+    final metadata = _googleMetadata(firebaseUser);
+
+    if (!snapshot.exists || snapshot.data() == null) {
+      final now = DateTime.now();
+      final appUser = AppUser(
+        uid: firebaseUser.uid,
+        name: name,
+        email: email,
+        phone: '',
+        secretPhrase: '',
+        role: 'user',
+        status: 'active',
+        preferences: AppUser.defaultPreferences(),
+        safetySettings: AppUser.defaultSafetySettings(),
+        metadata: metadata,
+        schemaVersion: 1,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      await userRef.set(appUser.toCreateMap());
+      return appUser;
+    }
+
+    final data = snapshot.data()!;
+    final existingMetadata = _readMetadata(data['metadata']);
+    existingMetadata.addAll(metadata);
+
+    final updates = <String, dynamic>{
+      'uid': firebaseUser.uid,
+      'name': name,
+      'email': email,
+      'role': data['role'] ?? 'user',
+      'status': data['status'] ?? 'active',
+      'schemaVersion': data['schemaVersion'] ?? 1,
+      'preferences': data['preferences'] ?? AppUser.defaultPreferences(),
+      'safetySettings':
+          data['safetySettings'] ?? AppUser.defaultSafetySettings(),
+      'metadata': existingMetadata,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+
+    if (!data.containsKey('createdAt')) {
+      updates['createdAt'] = FieldValue.serverTimestamp();
+    }
+
+    await userRef.set(updates, SetOptions(merge: true));
+    return _loadUserProfile(firebaseUser);
+  }
+
+  String _googleDisplayName(User firebaseUser) {
+    final displayName = firebaseUser.displayName?.trim();
+    if (displayName != null && displayName.isNotEmpty) {
+      return displayName;
+    }
+
+    final email = firebaseUser.email?.trim() ?? '';
+    if (email.contains('@')) {
+      return email.split('@').first;
+    }
+
+    return 'Amica User';
+  }
+
+  Map<String, dynamic> _googleMetadata(User firebaseUser) {
+    return {
+      'authProvider': 'google',
+      if (firebaseUser.photoURL != null) 'photoUrl': firebaseUser.photoURL,
+    };
+  }
+
+  Map<String, dynamic> _readMetadata(dynamic value) {
+    if (value is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(value);
+    }
+    if (value is Map) {
+      return Map<String, dynamic>.from(value);
+    }
+    return <String, dynamic>{};
+  }
+
   void _ensureFirebaseReady() {
     if (!_isFirebaseReady) {
       throw const AuthServiceException(
@@ -176,6 +311,10 @@ class AuthService {
         return 'This email is already registered.';
       case 'invalid-email':
         return 'Enter a valid email address.';
+      case 'user-disabled':
+        return 'This account has been disabled.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please wait a moment and try again.';
       case 'user-not-found':
       case 'wrong-password':
       case 'invalid-credential':

@@ -23,7 +23,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
   String? _errorMessage;
+
+  bool get _isBusy => _isLoading || _isGoogleLoading;
 
   @override
   void dispose() {
@@ -59,6 +62,32 @@ class _LoginScreenState extends State<LoginScreen> {
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _continueWithGoogle() async {
+    setState(() {
+      _isGoogleLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await widget.authService.signInWithGoogle();
+
+      if (!mounted) {
+        return;
+      }
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
+    } on AuthServiceException catch (error) {
+      setState(() => _errorMessage = error.message);
+    } catch (_) {
+      setState(
+        () => _errorMessage = 'Google sign-in failed. Please try again.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isGoogleLoading = false);
       }
     }
   }
@@ -116,16 +145,24 @@ class _LoginScreenState extends State<LoginScreen> {
             PrimaryButton(
               label: _isLoading ? 'Logging in...' : 'Log in',
               icon: Icons.login,
-              onPressed: _isLoading ? null : _login,
+              onPressed: _isBusy ? null : _login,
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _isBusy ? null : _continueWithGoogle,
+              icon: const Icon(Icons.g_mobiledata),
+              label: Text(
+                _isGoogleLoading ? 'Connecting...' : 'Continue with Google',
+              ),
             ),
             TextButton(
-              onPressed: _isLoading
+              onPressed: _isBusy
                   ? null
                   : () => Navigator.pushNamed(context, AppRoutes.signup),
               child: const Text('Create account'),
             ),
             TextButton(
-              onPressed: _isLoading
+              onPressed: _isBusy
                   ? null
                   : () => Navigator.pushNamed(
                         context,

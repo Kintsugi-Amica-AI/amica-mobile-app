@@ -19,10 +19,12 @@ The app includes basic screens for:
 
 - Login with email and password
 - Signup with name, email, phone, password, and secret phrase
+- Google sign-in using Firebase Authentication
+- Password reset email from the forgot password screen
 - Home dashboard with main Amica safety feature cards
 - Logout
 
-Signup creates a Firebase Auth user and writes a matching profile document to the Firestore `users` collection.
+Signup and Google sign-in create a Firebase Auth user and write a matching profile document to the Firestore `users` collection.
 
 ## Firebase Setup
 
@@ -47,16 +49,27 @@ Only commit Firebase configuration files if the team has agreed they are safe fo
 
 The app currently calls `Firebase.initializeApp()` safely. If Firebase config is missing, the app still opens, but login/signup will show a clear setup error.
 
-## Login / Signup Testing
+## Auth Testing
 
 1. Configure Firebase dev project with FlutterFire CLI.
 2. Enable Email/Password sign-in in Firebase Authentication.
-3. Ensure Firestore rules allow the signed-in user to create their own `users/{uid}` document.
-4. Run the app.
-5. Create a test account from the signup screen.
-6. Confirm the user appears in Firebase Authentication.
-7. Confirm a matching document appears in Firestore `users`.
-8. Log out and log in again with the same account.
+3. Enable Google sign-in in Firebase Authentication.
+4. Add the Android debug SHA-1 and SHA-256 fingerprints to the Firebase Android app for package `com.kintsugi.amica`.
+5. Download the updated `google-services.json` and place it in `android/app/google-services.json`.
+6. Ensure Firestore rules allow the signed-in user to create their own `users/{uid}` document.
+7. Run the app.
+8. Create a test account from the signup screen.
+9. Confirm the user appears in Firebase Authentication.
+10. Confirm a matching document appears in Firestore `users`.
+11. Log out and log in again with the same account.
+12. Tap "Forgot password?", enter the test email, and confirm Firebase sends a reset email.
+13. Tap "Continue with Google", choose a Google account, and confirm the user/profile are created.
+
+To find the debug SHA fingerprints on Windows:
+
+```powershell
+keytool -list -v -alias androiddebugkey -keystore "$env:USERPROFILE\.android\debug.keystore" -storepass android -keypass android
+```
 
 Use demo-only data. Do not use real private phone numbers or personal safety phrases for testing.
 

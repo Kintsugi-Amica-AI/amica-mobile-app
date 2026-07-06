@@ -27,7 +27,10 @@ class _SignupScreenState extends State<SignupScreen> {
   final _confirmPasswordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
   String? _errorMessage;
+
+  bool get _isBusy => _isLoading || _isGoogleLoading;
 
   @override
   void dispose() {
@@ -70,6 +73,32 @@ class _SignupScreenState extends State<SignupScreen> {
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _continueWithGoogle() async {
+    setState(() {
+      _isGoogleLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await widget.authService.signInWithGoogle();
+
+      if (!mounted) {
+        return;
+      }
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
+    } on AuthServiceException catch (error) {
+      setState(() => _errorMessage = error.message);
+    } catch (_) {
+      setState(
+        () => _errorMessage = 'Google sign-in failed. Please try again.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isGoogleLoading = false);
       }
     }
   }
@@ -162,10 +191,18 @@ class _SignupScreenState extends State<SignupScreen> {
             PrimaryButton(
               label: _isLoading ? 'Creating account...' : 'Create account',
               icon: Icons.person_add,
-              onPressed: _isLoading ? null : _signup,
+              onPressed: _isBusy ? null : _signup,
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _isBusy ? null : _continueWithGoogle,
+              icon: const Icon(Icons.g_mobiledata),
+              label: Text(
+                _isGoogleLoading ? 'Connecting...' : 'Continue with Google',
+              ),
             ),
             TextButton(
-              onPressed: _isLoading
+              onPressed: _isBusy
                   ? null
                   : () => Navigator.pushReplacementNamed(
                         context,
