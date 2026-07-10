@@ -48,7 +48,9 @@ class LocationService {
   Future<Position> getCurrentPosition() async {
     await requestLocationPermission();
     return Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+      ),
     );
   }
 
