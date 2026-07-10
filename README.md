@@ -106,12 +106,14 @@ The MVP map/location foundation uses:
 - `geolocator` for location permission and current coordinates
 - `geocoding` for basic destination name/address lookup
 - `google_maps_flutter` for map display
+- `url_launcher` for emergency SMS and phone call intents
 - Firebase Auth and Firestore for saving `journeys` and `sos_alerts`
 
 Android permissions are configured in `android/app/src/main/AndroidManifest.xml`:
 
 - `ACCESS_FINE_LOCATION`
 - `ACCESS_COARSE_LOCATION`
+- `VIBRATE`
 
 Google Maps requires a local Android API key. Do not commit the real key. For local testing, add this to `android/gradle.properties`:
 
@@ -137,6 +139,13 @@ To test Start Journey:
 10. Start the journey and confirm a Firestore `journeys` document is created with destination latitude/longitude.
 11. Tap "I am safe" and confirm the journey status becomes `safe`.
 
+Journey timer safety behavior:
+
+- The countdown text updates without reloading the full timer page.
+- When the timer ends, the "Are you safe?" dialog appears and the phone vibrates twice.
+- If there is no response for 1 minute, Amica creates a timer SOS alert and opens the SMS app for the first active emergency contact.
+- If there is still no response after 3 minutes, Amica opens the phone dialer for that contact.
+
 To test manual SOS:
 
 1. Start a journey, then tap "Trigger test SOS", or tap the Home Dashboard SOS card.
@@ -148,8 +157,8 @@ MVP limits:
 - No route drawing yet.
 - No Google Directions API yet.
 - Destination time suggestions are simple MVP estimates, not live traffic estimates.
-- No background live tracking yet.
-- No real SMS/call/push notification to emergency contacts yet.
+- Background execution is MVP-level. The app uses absolute deadlines and catches up when resumed, but fully automatic background SMS/calls require native background service work.
+- SMS/call escalation opens the user's SMS and phone apps for safety and platform compatibility.
 
 ## Deployment Strategy
 
