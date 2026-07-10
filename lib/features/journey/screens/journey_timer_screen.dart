@@ -1,14 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_routes.dart';
 import '../../../core/utils/date_time_utils.dart';
 import '../../../core/widgets/amica_map_view.dart';
 import '../../../core/widgets/loading_view.dart';
 import '../../../core/widgets/primary_button.dart';
+import '../../../services/emergency_action_service.dart';
 import '../../../services/location_service.dart';
 import '../../emergency_contacts/models/emergency_contact.dart';
 import '../../emergency_contacts/services/emergency_contact_service.dart';
@@ -26,6 +25,7 @@ class JourneyTimerScreen extends StatefulWidget {
     this.locationService = const LocationService(),
     this.sosService = const SosService(),
     this.emergencyContactService = const EmergencyContactService(),
+    this.emergencyActionService = const EmergencyActionService(),
   });
 
   final String? journeyId;
@@ -33,6 +33,7 @@ class JourneyTimerScreen extends StatefulWidget {
   final LocationService locationService;
   final SosService sosService;
   final EmergencyContactService emergencyContactService;
+  final EmergencyActionService emergencyActionService;
 
   @override
   State<JourneyTimerScreen> createState() => _JourneyTimerScreenState();
@@ -54,6 +55,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
   bool _isLoadingJourney = true;
   bool _isSaving = false;
   bool _safetyDialogShown = false;
+  bool _emergencyPermissionsPrepared = false;
   bool _messageEscalationHandled = false;
   bool _callEscalationHandled = false;
 
@@ -97,6 +99,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
           _journeyError = null;
           _isLoadingJourney = false;
         });
+        _prepareEmergencyPermissionsForDebug(journey);
         _updateRemainingAndSafetyState();
       },
       onError: (Object error) {
@@ -271,9 +274,24 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
   }
 
   Future<void> _vibrateTwiceForSafetyCheck() async {
-    await HapticFeedback.vibrate();
-    await Future<void>.delayed(const Duration(milliseconds: 450));
-    await HapticFeedback.vibrate();
+    try {
+      await widget.emergencyActionService.vibrateTwice();
+    } catch (_) {
+      // Vibration support varies by emulator/device, so keep the safety flow moving.
+    }
+  }
+
+  void _prepareEmergencyPermissionsForDebug(Journey? journey) {
+    if (journey == null || _emergencyPermissionsPrepared) {
+      return;
+    }
+
+    _emergencyPermissionsPrepared = true;
+    unawaited(
+      widget.emergencyActionService
+          .prepareEmergencyPermissions()
+          .catchError((_) {}),
+    );
   }
 
   void _scheduleSafetyEscalations(Journey journey) {
@@ -335,7 +353,8 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
         return;
       }
 
-      await _openSms(contact, journey, location);
+      await _sendDirectSms(contact, journey, location);
+      _showEscalationSnack('Emergency SMS sent to ${contact.name}.');
     } catch (_) {
       _showEscalationSnack('Could not prepare emergency message.');
     }
@@ -355,38 +374,33 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
         return;
       }
 
-      await _openPhoneCall(contact);
+      await _startDirectPhoneCall(contact);
+      _showEscalationSnack('Calling ${contact.name}.');
     } catch (_) {
       _showEscalationSnack('Could not open emergency call.');
     }
   }
 
-  Future<void> _openSms(
+  Future<void> _sendDirectSms(
     EmergencyContact contact,
     Journey journey,
     LocationDataModel location,
   ) async {
-    final message = Uri.encodeComponent(
-      'Amica safety alert: I did not respond to my journey safety check. '
-      'Destination: ${journey.destinationName}. '
-      'Location: https://maps.google.com/?q=${location.latitude},${location.longitude}',
-    );
-    final uri = Uri.parse(
-      'sms:${_normalizedPhone(contact.phone)}?body=$message',
-    );
+    final message = 'Amica safety alert: I did not respond to my journey '
+        'safety check. Destination: ${journey.destinationName}. '
+        'Location: https://maps.google.com/?q=${location.latitude},'
+        '${location.longitude}';
 
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!launched) {
-      throw const FormatException('SMS app not available');
-    }
+    await widget.emergencyActionService.sendEmergencySms(
+      phone: _normalizedPhone(contact.phone),
+      message: message,
+    );
   }
 
-  Future<void> _openPhoneCall(EmergencyContact contact) async {
-    final uri = Uri(scheme: 'tel', path: _normalizedPhone(contact.phone));
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!launched) {
-      throw const FormatException('Phone app not available');
-    }
+  Future<void> _startDirectPhoneCall(EmergencyContact contact) async {
+    await widget.emergencyActionService.startEmergencyCall(
+      phone: _normalizedPhone(contact.phone),
+    );
   }
 
   String _normalizedPhone(String phone) {
