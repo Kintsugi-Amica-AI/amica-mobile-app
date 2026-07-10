@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart' as geocoding;
 
 import '../../../core/constants/app_routes.dart';
 import '../../../core/widgets/amica_map_view.dart';
@@ -27,19 +31,130 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
   final _destinationController = TextEditingController();
   final _durationController = TextEditingController(text: '20');
 
+  Timer? _destinationSearchDebounce;
   LocationDataModel? _currentLocation;
+  LocationDataModel? _destinationLocation;
   String _journeyType = 'walk';
+  int _suggestedDurationMinutes = 20;
   bool _isLoadingLocation = false;
+  bool _isResolvingDestination = false;
   bool _isStartingJourney = false;
+  bool _durationWasEdited = false;
+  bool _isUpdatingDurationText = false;
+  String? _destinationStatus;
   String? _errorMessage;
 
   bool get _isBusy => _isLoadingLocation || _isStartingJourney;
 
   @override
+  void initState() {
+    super.initState();
+    _destinationController.addListener(_onDestinationTextChanged);
+    _durationController.addListener(_onDurationTextChanged);
+  }
+
+  @override
   void dispose() {
-    _destinationController.dispose();
-    _durationController.dispose();
+    _destinationSearchDebounce?.cancel();
+    _destinationController
+      ..removeListener(_onDestinationTextChanged)
+      ..dispose();
+    _durationController
+      ..removeListener(_onDurationTextChanged)
+      ..dispose();
     super.dispose();
+  }
+
+  void _onDurationTextChanged() {
+    if (!_isUpdatingDurationText) {
+      _durationWasEdited = true;
+    }
+  }
+
+  void _onDestinationTextChanged() {
+    final destinationName = _destinationController.text.trim();
+
+    if (_destinationLocation != null) {
+      _destinationLocation = _destinationLocation!.copyWith(
+        address: destinationName,
+        updatedAt: DateTime.now(),
+      );
+    }
+
+    _scheduleDestinationLookup(destinationName);
+  }
+
+  void _scheduleDestinationLookup(String destinationName) {
+    _destinationSearchDebounce?.cancel();
+
+    if (destinationName.length < 3) {
+      if (mounted) {
+        setState(() {
+          _destinationStatus = null;
+          _isResolvingDestination = false;
+        });
+      }
+      return;
+    }
+
+    if (_currentLocation == null) {
+      if (mounted) {
+        setState(() {
+          _destinationStatus = 'Get current location before finding destination.';
+        });
+      }
+      return;
+    }
+
+    _destinationSearchDebounce = Timer(
+      const Duration(milliseconds: 700),
+      () => _findDestinationOnMap(destinationName),
+    );
+  }
+
+  Future<void> _findDestinationOnMap(String destinationName) async {
+    if (!mounted || destinationName != _destinationController.text.trim()) {
+      return;
+    }
+
+    setState(() {
+      _isResolvingDestination = true;
+      _destinationStatus = 'Finding destination on map...';
+      _errorMessage = null;
+    });
+
+    try {
+      final matches = await geocoding.locationFromAddress(destinationName);
+      if (matches.isEmpty) {
+        throw const FormatException('No destination found');
+      }
+
+      final match = matches.first;
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _destinationLocation = LocationDataModel(
+          latitude: match.latitude,
+          longitude: match.longitude,
+          address: destinationName,
+          updatedAt: DateTime.now(),
+        );
+        _destinationStatus = 'Destination found on map.';
+      });
+      _applySuggestedDuration();
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _destinationStatus = 'Destination not found. Pin it on the map.';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isResolvingDestination = false);
+      }
+    }
   }
 
   Future<void> _getCurrentLocation() async {
@@ -52,6 +167,8 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
       final location = await widget.locationService.getCurrentLocationData();
       if (mounted) {
         setState(() => _currentLocation = location);
+        _applySuggestedDuration();
+        _scheduleDestinationLookup(_destinationController.text.trim());
       }
     } on LocationServiceException catch (error) {
       if (mounted) {
@@ -73,9 +190,15 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
       return;
     }
 
-    final location = _currentLocation;
-    if (location == null) {
+    final startLocation = _currentLocation;
+    if (startLocation == null) {
       setState(() => _errorMessage = 'Get your current location first.');
+      return;
+    }
+
+    final destinationLocation = _destinationLocation;
+    if (destinationLocation == null) {
+      setState(() => _errorMessage = 'Choose the destination on the map.');
       return;
     }
 
@@ -86,8 +209,12 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
 
     try {
       final journeyId = await widget.journeyService.startJourney(
-        startLocation: location,
+        startLocation: startLocation,
         destinationName: _destinationController.text.trim(),
+        destinationLocation: destinationLocation.copyWith(
+          address: _destinationController.text.trim(),
+          updatedAt: DateTime.now(),
+        ),
         estimatedDurationMinutes: int.parse(_durationController.text.trim()),
         journeyType: _journeyType,
       );
@@ -115,6 +242,107 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
     }
   }
 
+  void _pinDestination(double latitude, double longitude) {
+    setState(() {
+      _destinationLocation = LocationDataModel(
+        latitude: latitude,
+        longitude: longitude,
+        address: _destinationController.text.trim(),
+        updatedAt: DateTime.now(),
+      );
+      _destinationStatus = 'Destination pin selected.';
+      _errorMessage = null;
+    });
+    _applySuggestedDuration();
+  }
+
+  void _onJourneyTypeChanged(String? value) {
+    setState(() => _journeyType = value ?? 'walk');
+    _applySuggestedDuration();
+  }
+
+  void _applySuggestedDuration({bool force = false}) {
+    final suggestedDuration = _estimateDurationMinutes();
+
+    if (mounted) {
+      setState(() => _suggestedDurationMinutes = suggestedDuration);
+    } else {
+      _suggestedDurationMinutes = suggestedDuration;
+    }
+
+    if (force || !_durationWasEdited) {
+      _isUpdatingDurationText = true;
+      _durationController.text = suggestedDuration.toString();
+      _durationController.selection = TextSelection.collapsed(
+        offset: _durationController.text.length,
+      );
+      _isUpdatingDurationText = false;
+    }
+  }
+
+  int _estimateDurationMinutes() {
+    final fallback = _fallbackDurationMinutes();
+    final start = _currentLocation;
+    final destination = _destinationLocation;
+    if (start == null || destination == null) {
+      return fallback;
+    }
+
+    final distanceKm = _distanceInKm(
+      start.latitude,
+      start.longitude,
+      destination.latitude,
+      destination.longitude,
+    );
+    if (distanceKm < 0.1) {
+      return 5;
+    }
+
+    final speedKmh = switch (_journeyType) {
+      'walk' => 5.0,
+      'taxi' => 30.0,
+      'bus' => 22.0,
+      'train' => 45.0,
+      _ => 20.0,
+    };
+    final buffer = _journeyType == 'walk' ? 1.15 : 1.35;
+    final minutes = (distanceKm / speedKmh * 60 * buffer).ceil();
+    return math.max(5, minutes);
+  }
+
+  int _fallbackDurationMinutes() {
+    return switch (_journeyType) {
+      'walk' => 20,
+      'taxi' => 15,
+      'bus' => 30,
+      'train' => 45,
+      _ => 25,
+    };
+  }
+
+  double _distanceInKm(
+    double startLatitude,
+    double startLongitude,
+    double endLatitude,
+    double endLongitude,
+  ) {
+    const earthRadiusKm = 6371.0;
+    final latDistance = _degreesToRadians(endLatitude - startLatitude);
+    final lonDistance = _degreesToRadians(endLongitude - startLongitude);
+    final startLat = _degreesToRadians(startLatitude);
+    final endLat = _degreesToRadians(endLatitude);
+
+    final a = math.sin(latDistance / 2) * math.sin(latDistance / 2) +
+        math.cos(startLat) *
+            math.cos(endLat) *
+            math.sin(lonDistance / 2) *
+            math.sin(lonDistance / 2);
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return earthRadiusKm * c;
+  }
+
+  double _degreesToRadians(double degrees) => degrees * math.pi / 180;
+
   String? _required(String? value, String fieldName) {
     if (value == null || value.trim().isEmpty) {
       return '$fieldName is required';
@@ -132,7 +360,11 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final location = _currentLocation;
+    final currentLocation = _currentLocation;
+    final destinationLocation = _destinationLocation;
+    final destinationTitle = _destinationController.text.trim().isEmpty
+        ? 'Destination'
+        : _destinationController.text.trim();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Start Journey')),
@@ -148,17 +380,11 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
               icon: Icons.my_location,
               onPressed: _isBusy ? null : _getCurrentLocation,
             ),
-            if (location != null) ...[
-              const SizedBox(height: 16),
-              AmicaMapView(
-                latitude: location.latitude,
-                longitude: location.longitude,
-                markerTitle: 'Journey start',
-              ),
+            if (currentLocation != null) ...[
               const SizedBox(height: 8),
               Text(
-                'Current location: ${location.latitude.toStringAsFixed(5)}, '
-                '${location.longitude.toStringAsFixed(5)}',
+                'Current location: ${currentLocation.latitude.toStringAsFixed(5)}, '
+                '${currentLocation.longitude.toStringAsFixed(5)}',
               ),
             ],
             const SizedBox(height: 24),
@@ -167,13 +393,33 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
               controller: _destinationController,
               validator: (value) => _required(value, 'Destination'),
             ),
-            const SizedBox(height: 16),
-            CustomTextField(
-              label: 'Estimated duration in minutes',
-              controller: _durationController,
-              keyboardType: TextInputType.number,
-              validator: _validateDuration,
-            ),
+            if (_isResolvingDestination || _destinationStatus != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                _isResolvingDestination
+                    ? 'Finding destination on map...'
+                    : _destinationStatus!,
+              ),
+            ],
+            if (currentLocation != null) ...[
+              const SizedBox(height: 16),
+              AmicaMapView(
+                latitude: currentLocation.latitude,
+                longitude: currentLocation.longitude,
+                markerTitle: 'Journey start',
+                destinationLatitude: destinationLocation?.latitude,
+                destinationLongitude: destinationLocation?.longitude,
+                destinationTitle: destinationTitle,
+                onTap: _isBusy ? null : _pinDestination,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                destinationLocation == null
+                    ? 'Tap map to pin destination.'
+                    : 'Destination pin: ${destinationLocation.latitude.toStringAsFixed(5)}, '
+                        '${destinationLocation.longitude.toStringAsFixed(5)}',
+              ),
+            ],
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               initialValue: _journeyType,
@@ -185,10 +431,17 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
                 DropdownMenuItem(value: 'train', child: Text('Train')),
                 DropdownMenuItem(value: 'other', child: Text('Other')),
               ],
-              onChanged: _isBusy
-                  ? null
-                  : (value) => setState(() => _journeyType = value ?? 'walk'),
+              onChanged: _isBusy ? null : _onJourneyTypeChanged,
             ),
+            const SizedBox(height: 16),
+            CustomTextField(
+              label: 'Estimated duration in minutes',
+              controller: _durationController,
+              keyboardType: TextInputType.number,
+              validator: _validateDuration,
+            ),
+            const SizedBox(height: 8),
+            Text('Suggested duration: $_suggestedDurationMinutes minutes'),
             if (_errorMessage != null) ...[
               const SizedBox(height: 16),
               Text(

@@ -26,6 +26,7 @@ class JourneyService {
     required LocationDataModel startLocation,
     required String destinationName,
     required int estimatedDurationMinutes,
+    LocationDataModel? destinationLocation,
     String journeyType = 'walk',
   }) async {
     final user = _currentUserOrThrow();
@@ -35,6 +36,15 @@ class JourneyService {
       Duration(minutes: estimatedDurationMinutes),
     );
 
+    final safeDestinationName = destinationName.trim();
+    final safeDestination = destinationLocation ??
+        LocationDataModel(
+          latitude: 0,
+          longitude: 0,
+          address: safeDestinationName,
+          updatedAt: now,
+        );
+
     await document.set({
       'id': document.id,
       'userId': user.uid,
@@ -43,10 +53,13 @@ class JourneyService {
       'startLocation': startLocation.toMap(),
       'currentLocation': startLocation.toMap(),
       'destination': {
-        'name': destinationName.trim(),
-        'address': destinationName.trim(),
-        'latitude': 0,
-        'longitude': 0,
+        'name': safeDestinationName,
+        'address': safeDestination.address.isEmpty
+            ? safeDestinationName
+            : safeDestination.address,
+        'latitude': safeDestination.latitude,
+        'longitude': safeDestination.longitude,
+        'updatedAt': Timestamp.fromDate(safeDestination.updatedAt),
       },
       'estimatedDurationMinutes': estimatedDurationMinutes,
       'estimatedEndTime': Timestamp.fromDate(estimatedEndTime),

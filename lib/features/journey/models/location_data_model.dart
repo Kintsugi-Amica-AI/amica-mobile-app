@@ -13,6 +13,20 @@ class LocationDataModel {
   final String address;
   final DateTime updatedAt;
 
+  LocationDataModel copyWith({
+    double? latitude,
+    double? longitude,
+    String? address,
+    DateTime? updatedAt,
+  }) {
+    return LocationDataModel(
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      address: address ?? this.address,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
   factory LocationDataModel.fromMap(Map<String, dynamic>? data) {
     final safeData = data ?? const <String, dynamic>{};
     return LocationDataModel(

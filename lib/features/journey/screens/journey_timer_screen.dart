@@ -215,6 +215,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen> {
           _maybeShowSafetyDialog(journey);
           final remaining = _remaining(journey);
           final mapLocation = journey.currentLocation ?? journey.startLocation;
+          final destinationLocation = journey.destinationLocation;
 
           return ListView(
             padding: const EdgeInsets.all(24),
@@ -239,6 +240,9 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen> {
                   latitude: mapLocation.latitude,
                   longitude: mapLocation.longitude,
                   markerTitle: 'Journey location',
+                  destinationLatitude: destinationLocation?.latitude,
+                  destinationLongitude: destinationLocation?.longitude,
+                  destinationTitle: journey.destinationName,
                 ),
               ],
               const SizedBox(height: 24),

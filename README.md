@@ -104,6 +104,7 @@ Do not commit real phone numbers, Firebase secrets, service account files, API k
 The MVP map/location foundation uses:
 
 - `geolocator` for location permission and current coordinates
+- `geocoding` for basic destination name/address lookup
 - `google_maps_flutter` for map display
 - Firebase Auth and Firestore for saving `journeys` and `sos_alerts`
 
@@ -130,9 +131,11 @@ To test Start Journey:
 4. Tap "Start Journey".
 5. Allow location permission.
 6. Confirm the current location appears on the map.
-7. Enter destination and duration.
-8. Start the journey and confirm a Firestore `journeys` document is created.
-9. Tap "I am safe" and confirm the journey status becomes `safe`.
+7. Enter a destination name or address.
+8. Confirm the destination appears on the map, then tap the map to refine the exact pin if needed.
+9. Confirm the suggested duration appears for the selected journey type.
+10. Start the journey and confirm a Firestore `journeys` document is created with destination latitude/longitude.
+11. Tap "I am safe" and confirm the journey status becomes `safe`.
 
 To test manual SOS:
 
@@ -144,6 +147,7 @@ MVP limits:
 
 - No route drawing yet.
 - No Google Directions API yet.
+- Destination time suggestions are simple MVP estimates, not live traffic estimates.
 - No background live tracking yet.
 - No real SMS/call/push notification to emergency contacts yet.
 
