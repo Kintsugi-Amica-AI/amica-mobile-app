@@ -34,6 +34,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
   Timer? _destinationSearchDebounce;
   LocationDataModel? _currentLocation;
   LocationDataModel? _destinationLocation;
+  int _destinationSearchToken = 0;
   String _journeyType = 'walk';
   int _suggestedDurationMinutes = 20;
   bool _isLoadingLocation = false;
@@ -88,6 +89,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
     _destinationSearchDebounce?.cancel();
 
     if (destinationName.length < 3) {
+      _destinationSearchToken++;
       if (mounted) {
         setState(() {
           _destinationStatus = null;
@@ -97,22 +99,17 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
       return;
     }
 
-    if (_currentLocation == null) {
-      if (mounted) {
-        setState(() {
-          _destinationStatus = 'Get current location before finding destination.';
-        });
-      }
-      return;
-    }
-
+    final searchToken = ++_destinationSearchToken;
     _destinationSearchDebounce = Timer(
       const Duration(milliseconds: 700),
-      () => _findDestinationOnMap(destinationName),
+      () => _findDestinationOnMap(destinationName, searchToken),
     );
   }
 
-  Future<void> _findDestinationOnMap(String destinationName) async {
+  Future<void> _findDestinationOnMap(
+    String destinationName,
+    int searchToken,
+  ) async {
     if (!mounted || destinationName != _destinationController.text.trim()) {
       return;
     }
@@ -124,13 +121,15 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
     });
 
     try {
-      final matches = await geocoding.locationFromAddress(destinationName);
+      final matches = await geocoding
+          .locationFromAddress(destinationName)
+          .timeout(const Duration(seconds: 6));
       if (matches.isEmpty) {
         throw const FormatException('No destination found');
       }
 
       final match = matches.first;
-      if (!mounted) {
+      if (!mounted || searchToken != _destinationSearchToken) {
         return;
       }
 
@@ -145,13 +144,13 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
       });
       _applySuggestedDuration();
     } catch (_) {
-      if (mounted) {
+      if (mounted && searchToken == _destinationSearchToken) {
         setState(() {
           _destinationStatus = 'Destination not found. Pin it on the map.';
         });
       }
     } finally {
-      if (mounted) {
+      if (mounted && searchToken == _destinationSearchToken) {
         setState(() => _isResolvingDestination = false);
       }
     }
@@ -243,6 +242,8 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
   }
 
   void _pinDestination(double latitude, double longitude) {
+    _destinationSearchDebounce?.cancel();
+    _destinationSearchToken++;
     setState(() {
       _destinationLocation = LocationDataModel(
         latitude: latitude,
@@ -362,6 +363,14 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
   Widget build(BuildContext context) {
     final currentLocation = _currentLocation;
     final destinationLocation = _destinationLocation;
+    final mapCenter = currentLocation ??
+        destinationLocation ??
+        LocationDataModel(
+          latitude: 6.9271,
+          longitude: 79.8612,
+          address: 'Colombo',
+          updatedAt: DateTime.now(),
+        );
     final destinationTitle = _destinationController.text.trim().isEmpty
         ? 'Destination'
         : _destinationController.text.trim();
@@ -380,13 +389,13 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
               icon: Icons.my_location,
               onPressed: _isBusy ? null : _getCurrentLocation,
             ),
-            if (currentLocation != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Current location: ${currentLocation.latitude.toStringAsFixed(5)}, '
-                '${currentLocation.longitude.toStringAsFixed(5)}',
-              ),
-            ],
+            const SizedBox(height: 8),
+            Text(
+              currentLocation == null
+                  ? 'Current location: not selected yet'
+                  : 'Current location: ${currentLocation.latitude.toStringAsFixed(5)}, '
+                      '${currentLocation.longitude.toStringAsFixed(5)}',
+            ),
             const SizedBox(height: 24),
             CustomTextField(
               label: 'Destination name or address',
@@ -401,25 +410,24 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
                     : _destinationStatus!,
               ),
             ],
-            if (currentLocation != null) ...[
-              const SizedBox(height: 16),
-              AmicaMapView(
-                latitude: currentLocation.latitude,
-                longitude: currentLocation.longitude,
-                markerTitle: 'Journey start',
-                destinationLatitude: destinationLocation?.latitude,
-                destinationLongitude: destinationLocation?.longitude,
-                destinationTitle: destinationTitle,
-                onTap: _isBusy ? null : _pinDestination,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                destinationLocation == null
-                    ? 'Tap map to pin destination.'
-                    : 'Destination pin: ${destinationLocation.latitude.toStringAsFixed(5)}, '
-                        '${destinationLocation.longitude.toStringAsFixed(5)}',
-              ),
-            ],
+            const SizedBox(height: 16),
+            AmicaMapView(
+              latitude: mapCenter.latitude,
+              longitude: mapCenter.longitude,
+              markerTitle: 'Journey start',
+              showStartMarker: currentLocation != null,
+              destinationLatitude: destinationLocation?.latitude,
+              destinationLongitude: destinationLocation?.longitude,
+              destinationTitle: destinationTitle,
+              onTap: _isStartingJourney ? null : _pinDestination,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              destinationLocation == null
+                  ? 'Tap map to pin destination.'
+                  : 'Destination pin: ${destinationLocation.latitude.toStringAsFixed(5)}, '
+                      '${destinationLocation.longitude.toStringAsFixed(5)}',
+            ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               initialValue: _journeyType,
@@ -453,7 +461,8 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
             PrimaryButton(
               label: _isStartingJourney ? 'Starting...' : 'Start Journey',
               icon: Icons.play_arrow,
-              onPressed: _isBusy ? null : _startJourney,
+              onPressed:
+                  (_isBusy || _isResolvingDestination) ? null : _startJourney,
             ),
           ],
         ),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -45,35 +47,49 @@ class JourneyService {
           updatedAt: now,
         );
 
-    await document.set({
-      'id': document.id,
-      'userId': user.uid,
-      'journeyType': journeyType,
-      'status': 'active',
-      'startLocation': startLocation.toMap(),
-      'currentLocation': startLocation.toMap(),
-      'destination': {
-        'name': safeDestinationName,
-        'address': safeDestination.address.isEmpty
-            ? safeDestinationName
-            : safeDestination.address,
-        'latitude': safeDestination.latitude,
-        'longitude': safeDestination.longitude,
-        'updatedAt': Timestamp.fromDate(safeDestination.updatedAt),
-      },
-      'estimatedDurationMinutes': estimatedDurationMinutes,
-      'estimatedEndTime': Timestamp.fromDate(estimatedEndTime),
-      'actualEndTime': null,
-      'safetyCheck': {
-        'required': true,
-        'responseDeadlineSeconds': 30,
-        'respondedAt': null,
-      },
-      'metadata': const <String, dynamic>{},
-      'schemaVersion': 1,
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    try {
+      await document.set({
+        'id': document.id,
+        'userId': user.uid,
+        'journeyType': journeyType,
+        'status': 'active',
+        'startLocation': startLocation.toMap(),
+        'currentLocation': startLocation.toMap(),
+        'destination': {
+          'name': safeDestinationName,
+          'address': safeDestination.address.isEmpty
+              ? safeDestinationName
+              : safeDestination.address,
+          'latitude': safeDestination.latitude,
+          'longitude': safeDestination.longitude,
+          'updatedAt': Timestamp.fromDate(safeDestination.updatedAt),
+        },
+        'estimatedDurationMinutes': estimatedDurationMinutes,
+        'estimatedEndTime': Timestamp.fromDate(estimatedEndTime),
+        'actualEndTime': null,
+        'safetyCheck': {
+          'required': true,
+          'responseDeadlineSeconds': 30,
+          'respondedAt': null,
+        },
+        'metadata': const <String, dynamic>{},
+        'schemaVersion': 1,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }).timeout(const Duration(seconds: 12));
+    } on TimeoutException {
+      // Firestore keeps the local write queued, so let the MVP flow continue.
+      return document.id;
+    } on FirebaseException catch (error) {
+      if (error.code == 'permission-denied') {
+        throw const JourneyServiceException(
+          'Firebase rules blocked this journey save. Check the deployed rules and login status.',
+        );
+      }
+      throw JourneyServiceException(
+        error.message ?? 'Could not save journey. Please try again.',
+      );
+    }
 
     return document.id;
   }
