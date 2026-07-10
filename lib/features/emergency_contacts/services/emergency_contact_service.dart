@@ -79,6 +79,30 @@ class EmergencyContactService {
     });
   }
 
+  Future<EmergencyContact?> getPrimaryActiveEmergencyContact() async {
+    final user = _currentUserOrThrow();
+
+    final snapshot = await _firestore
+        .collection(_collectionName)
+        .where('userId', isEqualTo: user.uid)
+        .get();
+
+    final contacts = snapshot.docs
+        .map((doc) => EmergencyContact.fromFirestore(doc))
+        .where((contact) => contact.isActive && contact.phone.trim().isNotEmpty)
+        .toList();
+
+    contacts.sort((a, b) {
+      final priorityCompare = a.priority.compareTo(b.priority);
+      if (priorityCompare != 0) {
+        return priorityCompare;
+      }
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
+
+    return contacts.isEmpty ? null : contacts.first;
+  }
+
   Future<void> updateEmergencyContact(EmergencyContact contact) async {
     final user = _currentUserOrThrow();
     if (contact.userId != user.uid) {
