@@ -51,9 +51,17 @@ class AmicaApp extends StatelessWidget {
         AppRoutes.emergencyContacts: (_) => const EmergencyContactsScreen(),
         AppRoutes.addEmergencyContact: (_) => const AddEmergencyContactScreen(),
         AppRoutes.startJourney: (_) => const StartJourneyScreen(),
-        AppRoutes.journeyTimer: (_) => const JourneyTimerScreen(),
+        AppRoutes.journeyTimer: (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          return JourneyTimerScreen(journeyId: args is String ? args : null);
+        },
         AppRoutes.safetyCheck: (_) => const SafetyCheckScreen(),
-        AppRoutes.sosActive: (_) => const SosActiveScreen(),
+        AppRoutes.sosActive: (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          return SosActiveScreen(
+            arguments: args is SosActiveArguments ? args : null,
+          );
+        },
         AppRoutes.fakeCall: (_) => const FakeCallScreen(),
         AppRoutes.plateScan: (_) => const PlateScanScreen(),
         AppRoutes.plateResult: (_) => const PlateResultScreen(),

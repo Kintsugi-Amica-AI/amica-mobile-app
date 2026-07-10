@@ -2,27 +2,60 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_routes.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../services/location_service.dart';
 import '../../auth/services/auth_service.dart';
+import '../../sos/screens/sos_active_screen.dart';
+import '../../sos/services/sos_service.dart';
 import '../widgets/safety_feature_card.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({
     super.key,
     this.authService = const AuthService(),
+    this.locationService = const LocationService(),
+    this.sosService = const SosService(),
   });
 
   final AuthService authService;
-
-  void _showTodo(BuildContext context, String featureName) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$featureName will be connected in the next MVP step.')),
-    );
-  }
+  final LocationService locationService;
+  final SosService sosService;
 
   Future<void> _logout(BuildContext context) async {
     await authService.signOut();
     if (context.mounted) {
       Navigator.pushReplacementNamed(context, AppRoutes.login);
+    }
+  }
+
+  Future<void> _triggerManualSos(BuildContext context) async {
+    try {
+      final location = await locationService.getCurrentLocationData();
+      final alertId = await sosService.createManualSosAlert(location: location);
+
+      if (!context.mounted) {
+        return;
+      }
+      Navigator.pushNamed(
+        context,
+        AppRoutes.sosActive,
+        arguments: SosActiveArguments(
+          alertId: alertId,
+          triggerType: 'manual',
+          location: location,
+        ),
+      );
+    } on LocationServiceException catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message)),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not create SOS alert')),
+        );
+      }
     }
   }
 
@@ -57,7 +90,7 @@ class HomeScreen extends StatelessWidget {
         title: 'SOS Alert',
         subtitle: 'Send a live safety alert.',
         icon: Icons.sos,
-        onTap: () => Navigator.pushNamed(context, AppRoutes.sosActive),
+        onTap: () => _triggerManualSos(context),
       ),
       SafetyFeatureCard(
         title: 'Profile / Settings',
@@ -98,12 +131,6 @@ class HomeScreen extends StatelessWidget {
             crossAxisSpacing: 12,
             childAspectRatio: 0.92,
             children: features,
-          ),
-          const SizedBox(height: 16),
-          OutlinedButton.icon(
-            onPressed: () => _showTodo(context, 'Live location sharing'),
-            icon: const Icon(Icons.location_on),
-            label: const Text('Test live location later'),
           ),
         ],
       ),
