@@ -114,6 +114,10 @@ Android permissions are configured in `android/app/src/main/AndroidManifest.xml`
 - `ACCESS_FINE_LOCATION`
 - `ACCESS_COARSE_LOCATION`
 - `VIBRATE`
+- `WAKE_LOCK`
+- `FOREGROUND_SERVICE`
+- `FOREGROUND_SERVICE_SPECIAL_USE`
+- `POST_NOTIFICATIONS`
 - `SEND_SMS`
 - `CALL_PHONE`
 
@@ -144,10 +148,13 @@ To test Start Journey:
 Journey timer safety behavior:
 
 - The countdown text updates without reloading the full timer page.
-- When the timer ends, the "Are you safe?" dialog appears and the phone vibrates twice.
-- If there is no response for 1 minute, Amica creates a timer SOS alert and sends a direct SMS to the first active emergency contact.
-- If there is still no response after 3 minutes, Amica starts a phone call to that contact.
-- Android will ask for SMS and Phone permissions on the timer screen during debug testing. Allow both permissions before the timer ends.
+- When the timer screen opens, Android starts a foreground journey safety service with a visible notification.
+- The native safety service keeps the timer running while the screen is off or locked.
+- When the timer ends, the phone vibrates twice from native Android code.
+- If there is no response for 1 minute, the native safety service sends a direct SMS to the first active emergency contact.
+- If there is still no response after 3 minutes, the native safety service starts a phone call to that contact.
+- Android will ask for Notification, SMS, and Phone permissions on the timer screen during debug testing. Allow them before the timer ends.
+- The foreground safety service stops when the user taps "I am safe" or manually sends SOS from the timer screen.
 
 To test manual SOS:
 
@@ -160,8 +167,9 @@ MVP limits:
 - No route drawing yet.
 - No Google Directions API yet.
 - Destination time suggestions are simple MVP estimates, not live traffic estimates.
-- Background execution is MVP-level. The app uses absolute deadlines and catches up when resumed, but fully reliable screen-off escalation requires native foreground/background service work.
+- Background execution uses a native Android foreground service plus a partial wake lock for MVP testing. Keep the Amica notification visible during an active journey.
 - Direct SMS and automatic call start are for debug APK testing. Publishing with these permissions requires careful Play Store policy review.
+- Some Android versions or manufacturer battery settings may still restrict automatic call launch from the lock screen. Disable battery optimization for Amica during testing if needed.
 - Playing a voice message into a cellular call and ending the call is not available to normal Android apps; use backend telephony such as Twilio for that behavior.
 
 ## Deployment Strategy

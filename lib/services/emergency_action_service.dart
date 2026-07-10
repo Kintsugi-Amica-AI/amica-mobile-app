@@ -48,6 +48,29 @@ class EmergencyActionService {
     await _invokeBooleanMethod('vibrateTwice');
   }
 
+  Future<void> startJourneySafetyMonitor({
+    required String journeyId,
+    required String destinationName,
+    required DateTime safetyCheckAt,
+    required String emergencyPhone,
+    required String emergencyMessage,
+  }) async {
+    await _invokeBooleanMethod(
+      'startJourneySafetyMonitor',
+      arguments: {
+        'journeyId': journeyId,
+        'destinationName': destinationName,
+        'safetyCheckAtMillis': safetyCheckAt.millisecondsSinceEpoch,
+        'emergencyPhone': emergencyPhone,
+        'emergencyMessage': emergencyMessage,
+      },
+    );
+  }
+
+  Future<void> stopJourneySafetyMonitor() async {
+    await _invokeBooleanMethod('stopJourneySafetyMonitor');
+  }
+
   Future<void> _invokeBooleanMethod(
     String method, {
     Map<String, Object?> arguments = const {},
