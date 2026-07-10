@@ -44,6 +44,24 @@ class Journey {
     return name is String && name.isNotEmpty ? name : 'Destination';
   }
 
+  LocationDataModel? get destinationLocation {
+    final latitude = destination['latitude'];
+    final longitude = destination['longitude'];
+    if (latitude is! num || longitude is! num) {
+      return null;
+    }
+    if (latitude == 0 && longitude == 0) {
+      return null;
+    }
+
+    return LocationDataModel(
+      latitude: latitude.toDouble(),
+      longitude: longitude.toDouble(),
+      address: _readString(destination['address'], destinationName),
+      updatedAt: _readDateTime(destination['updatedAt']),
+    );
+  }
+
   factory Journey.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> document,
   ) {
