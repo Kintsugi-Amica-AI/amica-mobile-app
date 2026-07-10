@@ -35,16 +35,23 @@ class MainActivity : FlutterActivity() {
                 "sendSms" -> handleSendSms(call, result)
                 "startCall" -> handleStartCall(call, result)
                 "vibrateTwice" -> handleVibrateTwice(result)
+                "startJourneySafetyMonitor" -> handleStartJourneySafetyMonitor(call, result)
+                "stopJourneySafetyMonitor" -> handleStopJourneySafetyMonitor(result)
                 else -> result.notImplemented()
             }
         }
     }
 
     private fun prepareEmergencyPermissions(result: MethodChannel.Result) {
-        val missingPermissions = listOf(
+        val requiredPermissions = mutableListOf(
             Manifest.permission.SEND_SMS,
             Manifest.permission.CALL_PHONE,
-        ).filter { !hasPermission(it) }
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requiredPermissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
+        val missingPermissions = requiredPermissions.filter { !hasPermission(it) }
 
         if (missingPermissions.isEmpty()) {
             result.success(true)
@@ -57,6 +64,55 @@ class MainActivity : FlutterActivity() {
             missingPermissions.toTypedArray(),
             preparePermissionsRequestCode,
         )
+    }
+
+    private fun handleStartJourneySafetyMonitor(
+        call: MethodCall,
+        result: MethodChannel.Result,
+    ) {
+        val journeyId = call.argument<String>("journeyId")?.trim().orEmpty()
+        val destinationName = call.argument<String>("destinationName")
+            ?.trim()
+            .orEmpty()
+        val safetyCheckAtMillis = call.argument<Number>("safetyCheckAtMillis")
+            ?.toLong()
+            ?: 0L
+        val emergencyPhone = call.argument<String>("emergencyPhone")
+            ?.trim()
+            .orEmpty()
+        val emergencyMessage = call.argument<String>("emergencyMessage")
+            ?.trim()
+            .orEmpty()
+
+        if (journeyId.isEmpty() || safetyCheckAtMillis <= 0L) {
+            result.error(
+                "INVALID_MONITOR_ARGUMENTS",
+                "Journey ID and safety check time are required.",
+                null,
+            )
+            return
+        }
+
+        val intent = EmergencySafetyMonitorService.startIntent(
+            context = this,
+            journeyId = journeyId,
+            destinationName = destinationName,
+            safetyCheckAtMillis = safetyCheckAtMillis,
+            emergencyPhone = emergencyPhone,
+            emergencyMessage = emergencyMessage,
+        )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+        result.success(true)
+    }
+
+    private fun handleStopJourneySafetyMonitor(result: MethodChannel.Result) {
+        startService(EmergencySafetyMonitorService.stopIntent(this))
+        result.success(true)
     }
 
     private fun handleSendSms(call: MethodCall, result: MethodChannel.Result) {
@@ -266,6 +322,7 @@ class MainActivity : FlutterActivity() {
     private fun startPhoneCall(phone: String) {
         val intent = Intent(Intent.ACTION_CALL).apply {
             data = Uri.fromParts("tel", phone, null)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         startActivity(intent)
     }

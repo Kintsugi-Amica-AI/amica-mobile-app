@@ -56,8 +56,11 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
   bool _isSaving = false;
   bool _safetyDialogShown = false;
   bool _emergencyPermissionsPrepared = false;
+  bool _nativeSafetyMonitorStarted = false;
+  bool _nativeSafetyMonitorStarting = false;
   bool _messageEscalationHandled = false;
   bool _callEscalationHandled = false;
+  String? _nativeSafetyMonitorJourneyId;
 
   @override
   void initState() {
@@ -100,6 +103,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
           _isLoadingJourney = false;
         });
         _prepareEmergencyPermissionsForDebug(journey);
+        unawaited(_startNativeSafetyMonitorIfNeeded(journey));
         _updateRemainingAndSafetyState();
       },
       onError: (Object error) {
@@ -161,6 +165,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     _cancelSafetyEscalations();
     setState(() => _isSaving = true);
     try {
+      await _stopNativeSafetyMonitor();
       await widget.journeyService.markJourneySafe(journey.id);
       if (!mounted) {
         return;
@@ -190,6 +195,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     _cancelSafetyEscalations();
     setState(() => _isSaving = true);
     try {
+      await _stopNativeSafetyMonitor();
       final location = await _currentOrFallbackLocation(journey);
       final alertId = timerTriggered
           ? await widget.sosService.createTimerSosAlert(
@@ -235,8 +241,11 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     _safetyDialogShown = true;
     _safetyCheckJourney = journey;
     _safetyCheckShownAt = DateTime.now();
-    _scheduleSafetyEscalations(journey);
-    unawaited(_vibrateTwiceForSafetyCheck());
+
+    if (!_nativeSafetyMonitorStarted) {
+      _scheduleSafetyEscalations(journey);
+      unawaited(_vibrateTwiceForSafetyCheck());
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
@@ -294,6 +303,53 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     );
   }
 
+  Future<void> _startNativeSafetyMonitorIfNeeded(Journey? journey) async {
+    if (journey == null || !journey.isActive) {
+      await _stopNativeSafetyMonitor();
+      return;
+    }
+
+    if (_nativeSafetyMonitorStarting ||
+        _nativeSafetyMonitorJourneyId == journey.id) {
+      return;
+    }
+
+    _nativeSafetyMonitorStarting = true;
+    try {
+      final contact = await widget.emergencyContactService
+          .getPrimaryActiveEmergencyContact();
+      final location = journey.currentLocation ?? journey.startLocation;
+
+      await widget.emergencyActionService.startJourneySafetyMonitor(
+        journeyId: journey.id,
+        destinationName: journey.destinationName,
+        safetyCheckAt: journey.estimatedEndTime,
+        emergencyPhone: contact == null ? '' : _normalizedPhone(contact.phone),
+        emergencyMessage: _buildEmergencyMessage(journey, location),
+      );
+
+      _nativeSafetyMonitorStarted = true;
+      _nativeSafetyMonitorJourneyId = journey.id;
+    } catch (_) {
+      _nativeSafetyMonitorStarted = false;
+      _nativeSafetyMonitorJourneyId = null;
+    } finally {
+      _nativeSafetyMonitorStarting = false;
+    }
+  }
+
+  Future<void> _stopNativeSafetyMonitor() async {
+    _nativeSafetyMonitorStarted = false;
+    _nativeSafetyMonitorStarting = false;
+    _nativeSafetyMonitorJourneyId = null;
+
+    try {
+      await widget.emergencyActionService.stopJourneySafetyMonitor();
+    } catch (_) {
+      // The foreground service is Android-only, so keep non-Android flows moving.
+    }
+  }
+
   void _scheduleSafetyEscalations(Journey journey) {
     _safetyMessageTimer?.cancel();
     _safetyCallTimer?.cancel();
@@ -309,6 +365,10 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
   }
 
   void _runMissedSafetyEscalations() {
+    if (_nativeSafetyMonitorStarted) {
+      return;
+    }
+
     final shownAt = _safetyCheckShownAt;
     final journey = _safetyCheckJourney;
     if (shownAt == null || journey == null) {
@@ -386,14 +446,9 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     Journey journey,
     LocationDataModel location,
   ) async {
-    final message = 'Amica safety alert: I did not respond to my journey '
-        'safety check. Destination: ${journey.destinationName}. '
-        'Location: https://maps.google.com/?q=${location.latitude},'
-        '${location.longitude}';
-
     await widget.emergencyActionService.sendEmergencySms(
       phone: _normalizedPhone(contact.phone),
-      message: message,
+      message: _buildEmergencyMessage(journey, location),
     );
   }
 
@@ -405,6 +460,19 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
 
   String _normalizedPhone(String phone) {
     return phone.replaceAll(RegExp(r'\s+'), '');
+  }
+
+  String _buildEmergencyMessage(
+    Journey journey,
+    LocationDataModel? location,
+  ) {
+    final locationText = location == null
+        ? 'Location not available.'
+        : 'Location: https://maps.google.com/?q=${location.latitude},'
+            '${location.longitude}';
+
+    return 'Amica safety alert: I did not respond to my journey safety check. '
+        'Destination: ${journey.destinationName}. $locationText';
   }
 
   void _showEscalationSnack(String message) {
