@@ -8,6 +8,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.media.AudioAttributes
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
@@ -79,6 +80,7 @@ class EmergencySafetyMonitorService : Service() {
 
         scheduleAt(safetyCheckAtMillis) {
             vibrateTwice()
+            showSafetyCheckAlertNotification()
             updateNotification(
                 title = "Safety check due",
                 text = "Amica is waiting for your safety response.",
@@ -171,7 +173,20 @@ class EmergencySafetyMonitorService : Service() {
             description = "Keeps the journey safety timer active."
         }
 
-        notificationManager().createNotificationChannel(channel)
+        val alertChannel = NotificationChannel(
+            ALERT_CHANNEL_ID,
+            "Amica safety alerts",
+            NotificationManager.IMPORTANCE_HIGH,
+        ).apply {
+            description = "Alerts when a journey safety check needs attention."
+            enableVibration(true)
+            vibrationPattern = TWO_PULSE_VIBRATION_PATTERN
+        }
+
+        notificationManager().apply {
+            createNotificationChannel(channel)
+            createNotificationChannel(alertChannel)
+        }
     }
 
     private fun startForegroundCompat(notification: Notification) {
@@ -194,6 +209,35 @@ class EmergencySafetyMonitorService : Service() {
     }
 
     private fun buildNotification(title: String, text: String): Notification {
+        return buildNotification(
+            channelId = CHANNEL_ID,
+            title = title,
+            text = text,
+            ongoing = true,
+            vibrate = false,
+        )
+    }
+
+    private fun showSafetyCheckAlertNotification() {
+        notificationManager().notify(
+            ALERT_NOTIFICATION_ID,
+            buildNotification(
+                channelId = ALERT_CHANNEL_ID,
+                title = "Are you safe?",
+                text = "Your journey timer ended. Open Amica to respond.",
+                ongoing = false,
+                vibrate = true,
+            ),
+        )
+    }
+
+    private fun buildNotification(
+        channelId: String,
+        title: String,
+        text: String,
+        ongoing: Boolean,
+        vibrate: Boolean,
+    ): Notification {
         val openIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
@@ -205,9 +249,13 @@ class EmergencySafetyMonitorService : Service() {
         )
 
         val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Notification.Builder(this, CHANNEL_ID)
+            Notification.Builder(this, channelId)
         } else {
             Notification.Builder(this)
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O && vibrate) {
+            builder.setVibrate(TWO_PULSE_VIBRATION_PATTERN)
         }
 
         return builder
@@ -215,7 +263,9 @@ class EmergencySafetyMonitorService : Service() {
             .setContentTitle(title)
             .setContentText(text)
             .setContentIntent(pendingIntent)
-            .setOngoing(true)
+            .setCategory(Notification.CATEGORY_ALARM)
+            .setPriority(Notification.PRIORITY_HIGH)
+            .setOngoing(ongoing)
             .build()
     }
 
@@ -237,9 +287,12 @@ class EmergencySafetyMonitorService : Service() {
             return
         }
 
-        val pattern = longArrayOf(0, 450, 250, 450)
+        val pattern = TWO_PULSE_VIBRATION_PATTERN
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
+            vibrator.vibrate(
+                VibrationEffect.createWaveform(pattern, -1),
+                alarmVibrationAttributes(),
+            )
         } else {
             @Suppress("DEPRECATION")
             vibrator.vibrate(pattern, -1)
@@ -276,11 +329,21 @@ class EmergencySafetyMonitorService : Service() {
         startActivity(intent)
     }
 
+    private fun alarmVibrationAttributes(): AudioAttributes {
+        return AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_ALARM)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+    }
+
     companion object {
         private const val CHANNEL_ID = "amica_journey_safety"
+        private const val ALERT_CHANNEL_ID = "amica_safety_alerts"
         private const val NOTIFICATION_ID = 901
+        private const val ALERT_NOTIFICATION_ID = 902
         private const val SMS_DELAY_MILLIS = 60_000L
         private const val CALL_DELAY_MILLIS = 180_000L
+        private val TWO_PULSE_VIBRATION_PATTERN = longArrayOf(0, 450, 250, 450)
         private const val ACTION_START = "com.kintsugi.amica.START_SAFETY_MONITOR"
         private const val ACTION_STOP = "com.kintsugi.amica.STOP_SAFETY_MONITOR"
         private const val EXTRA_JOURNEY_ID = "journeyId"
