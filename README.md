@@ -106,7 +106,7 @@ The MVP map/location foundation uses:
 - `geolocator` for location permission and current coordinates
 - `geocoding` for basic destination name/address lookup
 - `google_maps_flutter` for map display
-- `url_launcher` for emergency SMS and phone call intents
+- native Android emergency actions for debug SMS and phone call testing
 - Firebase Auth and Firestore for saving `journeys` and `sos_alerts`
 
 Android permissions are configured in `android/app/src/main/AndroidManifest.xml`:
@@ -114,6 +114,8 @@ Android permissions are configured in `android/app/src/main/AndroidManifest.xml`
 - `ACCESS_FINE_LOCATION`
 - `ACCESS_COARSE_LOCATION`
 - `VIBRATE`
+- `SEND_SMS`
+- `CALL_PHONE`
 
 Google Maps requires a local Android API key. Do not commit the real key. For local testing, add this to `android/gradle.properties`:
 
@@ -143,8 +145,9 @@ Journey timer safety behavior:
 
 - The countdown text updates without reloading the full timer page.
 - When the timer ends, the "Are you safe?" dialog appears and the phone vibrates twice.
-- If there is no response for 1 minute, Amica creates a timer SOS alert and opens the SMS app for the first active emergency contact.
-- If there is still no response after 3 minutes, Amica opens the phone dialer for that contact.
+- If there is no response for 1 minute, Amica creates a timer SOS alert and sends a direct SMS to the first active emergency contact.
+- If there is still no response after 3 minutes, Amica starts a phone call to that contact.
+- Android will ask for SMS and Phone permissions on the timer screen during debug testing. Allow both permissions before the timer ends.
 
 To test manual SOS:
 
@@ -157,8 +160,9 @@ MVP limits:
 - No route drawing yet.
 - No Google Directions API yet.
 - Destination time suggestions are simple MVP estimates, not live traffic estimates.
-- Background execution is MVP-level. The app uses absolute deadlines and catches up when resumed, but fully automatic background SMS/calls require native background service work.
-- SMS/call escalation opens the user's SMS and phone apps for safety and platform compatibility.
+- Background execution is MVP-level. The app uses absolute deadlines and catches up when resumed, but fully reliable screen-off escalation requires native foreground/background service work.
+- Direct SMS and automatic call start are for debug APK testing. Publishing with these permissions requires careful Play Store policy review.
+- Playing a voice message into a cellular call and ending the call is not available to normal Android apps; use backend telephony such as Twilio for that behavior.
 
 ## Deployment Strategy
 
