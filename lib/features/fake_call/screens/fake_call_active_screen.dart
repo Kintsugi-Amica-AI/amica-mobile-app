@@ -6,6 +6,7 @@ import '../../../core/constants/app_routes.dart';
 import '../../../services/emergency_action_service.dart';
 import '../../../services/location_service.dart';
 import '../../auth/services/user_profile_service.dart';
+import '../../emergency_contacts/services/emergency_contact_service.dart';
 import '../../sos/screens/sos_active_screen.dart';
 import '../../sos/services/sos_service.dart';
 import '../services/fake_call_service.dart';
@@ -30,6 +31,7 @@ class FakeCallActiveScreen extends StatefulWidget {
     this.sosService = const SosService(),
     this.fakeCallService = const FakeCallService(),
     this.emergencyActionService = const EmergencyActionService(),
+    this.emergencyContactService = const EmergencyContactService(),
     VoiceSosService? voiceSosService,
   }) : voiceSosService = voiceSosService ?? VoiceSosService();
 
@@ -39,6 +41,7 @@ class FakeCallActiveScreen extends StatefulWidget {
   final SosService sosService;
   final FakeCallService fakeCallService;
   final EmergencyActionService emergencyActionService;
+  final EmergencyContactService emergencyContactService;
   final VoiceSosService voiceSosService;
 
   @override
@@ -103,6 +106,13 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
       return;
     }
 
+    try {
+      await widget.emergencyActionService.prepareEmergencyPermissions();
+    } catch (_) {
+      // Voice SOS can still create a Firestore alert. Direct SMS will need
+      // Android SMS permission before it can be sent.
+    }
+
     await widget.voiceSosService.startListening(
       expectedPhrase: phrase,
       onTextDetected: (detectedText) {
@@ -141,6 +151,7 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
         confidenceScore: 0.85,
         emergencyMessage: _voiceSosEmergencyMessage,
       );
+      await _sendVoiceSosMessageToPrimaryContact();
 
       if (!mounted) {
         return;
@@ -159,9 +170,26 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
       _showError(error.message);
     } on SosServiceException catch (error) {
       _showError(error.message);
+    } on EmergencyContactServiceException catch (error) {
+      _showError(error.message);
+    } on EmergencyActionException catch (error) {
+      _showError(error.message);
     } catch (_) {
-      _showError('Could not create Voice SOS alert. Use manual SOS if needed.');
+      _showError('Could not complete Voice SOS. Use manual SOS if needed.');
     }
+  }
+
+  Future<void> _sendVoiceSosMessageToPrimaryContact() async {
+    final contact =
+        await widget.emergencyContactService.getPrimaryActiveEmergencyContact();
+    if (contact == null) {
+      return;
+    }
+
+    await widget.emergencyActionService.sendEmergencySms(
+      phone: contact.phone,
+      message: _voiceSosEmergencyMessage,
+    );
   }
 
   void _showError(String message) {

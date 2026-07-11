@@ -197,13 +197,13 @@ The settings page lets the user configure:
 
 - fake caller name
 - fake caller number
-- whether volume down pressed three times should open the call screen
+- whether volume up pressed three times should open the call screen
 - voice SOS enable/disable
 - secret phrase enable/disable
 - the exact secret phrase
-- the SOS message saved when the phrase is spoken during the fake call
+- the SOS message sent to the primary active emergency contact when the phrase is spoken during the fake call
 
-When the phrase is detected, the app creates a Firestore `sos_alerts` document with:
+When the phrase is detected, the app sends the configured SOS message by SMS to the first active emergency contact by priority and creates a Firestore `sos_alerts` document with:
 
 - `triggerType`: `voice`
 - current location
@@ -218,27 +218,28 @@ Manual test flow:
 2. Open the Home Dashboard.
 3. Tap "Fake Call".
 4. Accept the fake incoming call.
-5. Allow microphone permission if Android asks.
+5. Allow microphone and SMS permission if Android asks.
 6. Say "amica help me" while the call screen is active.
-7. Confirm the app creates a Firestore `sos_alerts` document with `triggerType` set to `voice`.
-8. Confirm the SOS Active screen opens and shows the location.
+7. Confirm the primary active emergency contact receives the configured SOS SMS.
+8. Confirm the app creates a Firestore `sos_alerts` document with `triggerType` set to `voice`.
+9. Confirm the SOS Active screen opens and shows the location.
 
 Volume shortcut test flow:
 
 1. Log in.
-2. Open Settings and enable "Volume-down shortcut".
+2. Open Settings and enable "Volume-up shortcut".
 3. Keep the "Safety shortcut armed" notification visible.
 4. You may now leave Amica or lock the phone.
-5. Press the Android volume down button three times within about 1.5 seconds.
+5. Press the Android volume up button three times within about 1.5 seconds.
 6. Confirm the incoming call screen opens. If Android blocks the automatic launch, tap the incoming-call notification.
 
 MVP notes:
 
 - No real phone call is made by Fake Call.
 - Voice SOS does not run in the background.
-- The volume-down shortcut uses an Android foreground service so it can work after the app UI is closed, as long as Android keeps the Amica shortcut notification running.
+- The volume-up shortcut uses an Android foreground service so it can work after the app UI is closed, as long as Android keeps the Amica shortcut notification running.
 - Android may block direct background activity launch on some versions or battery modes. The app posts a high-priority incoming-call notification as a fallback.
-- The shortcut watches volume changes, so it may not trigger if the relevant volume stream is already at the minimum level.
+- The shortcut watches volume changes. When the shortcut service starts, it may lower a maxed-out volume stream by one step so the next Volume Up press can be detected.
 - Proximity screen-off works only on real Android phones with a proximity sensor. Many emulators do not support it.
 - Voice recognition accuracy depends on the device and environment.
 - Some emulators do not support speech recognition well.

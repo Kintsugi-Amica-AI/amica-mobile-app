@@ -23,9 +23,9 @@ class FakeCallShortcutMonitorService : Service() {
     private var audioManager: AudioManager? = null
     private var volumeObserver: ContentObserver? = null
     private var previousVolumes = emptyMap<Int, Int>()
-    private var firstVolumeDownAtMillis = 0L
-    private var volumeDownPressCount = 0
-    private var lastVolumeDownEventAtMillis = 0L
+    private var firstVolumeUpAtMillis = 0L
+    private var volumeUpPressCount = 0
+    private var lastVolumeUpEventAtMillis = 0L
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -52,6 +52,7 @@ class FakeCallShortcutMonitorService : Service() {
         createNotificationChannel()
         startForegroundCompat(buildServiceNotification())
         audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+        primeVolumeStreamsForShortcut()
         previousVolumes = readCurrentVolumes()
         registerVolumeObserver()
     }
@@ -93,27 +94,45 @@ class FakeCallShortcutMonitorService : Service() {
 
     private fun handleVolumeSettingsChanged() {
         val currentVolumes = readCurrentVolumes()
-        val wentDown = monitoredStreams.any { stream ->
-            val previous = previousVolumes[stream] ?: return@any false
-            val current = currentVolumes[stream] ?: return@any false
-            current < previous
+        val priorVolumes = previousVolumes
+        val increasedStreams = monitoredStreams.filter { stream ->
+            val previous = priorVolumes[stream] ?: return@filter false
+            val current = currentVolumes[stream] ?: return@filter false
+            current > previous
         }
 
         previousVolumes = currentVolumes
 
-        if (!wentDown) {
+        if (increasedStreams.isEmpty()) {
             return
         }
+        restorePriorVolumes(increasedStreams, priorVolumes)
 
         val now = System.currentTimeMillis()
-        if (abs(now - lastVolumeDownEventAtMillis) < duplicateEventWindowMillis) {
+        if (abs(now - lastVolumeUpEventAtMillis) < duplicateEventWindowMillis) {
             return
         }
 
-        lastVolumeDownEventAtMillis = now
-        if (recordVolumeDownPress(now)) {
+        lastVolumeUpEventAtMillis = now
+        if (recordVolumeUpPress(now)) {
             openCallScreen()
         }
+    }
+
+    private fun restorePriorVolumes(
+        streams: List<Int>,
+        priorVolumes: Map<Int, Int>,
+    ) {
+        val manager = audioManager ?: return
+        streams.forEach { stream ->
+            val priorVolume = priorVolumes[stream] ?: return@forEach
+            try {
+                manager.setStreamVolume(stream, priorVolume, 0)
+            } catch (_: Exception) {
+                // Some device modes restrict changing ringer/system streams.
+            }
+        }
+        previousVolumes = readCurrentVolumes()
     }
 
     private fun readCurrentVolumes(): Map<Int, Int> {
@@ -127,23 +146,38 @@ class FakeCallShortcutMonitorService : Service() {
         }
     }
 
-    private fun recordVolumeDownPress(now: Long): Boolean {
+    private fun primeVolumeStreamsForShortcut() {
+        val manager = audioManager ?: return
+        monitoredStreams.forEach { stream ->
+            try {
+                val current = manager.getStreamVolume(stream)
+                val max = manager.getStreamMaxVolume(stream)
+                if (current >= max && current > 0) {
+                    manager.setStreamVolume(stream, current - 1, 0)
+                }
+            } catch (_: Exception) {
+                // Some device modes restrict changing ringer/system streams.
+            }
+        }
+    }
+
+    private fun recordVolumeUpPress(now: Long): Boolean {
         if (
-            firstVolumeDownAtMillis == 0L ||
-            now - firstVolumeDownAtMillis > volumeShortcutWindowMillis
+            firstVolumeUpAtMillis == 0L ||
+            now - firstVolumeUpAtMillis > volumeShortcutWindowMillis
         ) {
-            firstVolumeDownAtMillis = now
-            volumeDownPressCount = 1
+            firstVolumeUpAtMillis = now
+            volumeUpPressCount = 1
             return false
         }
 
-        volumeDownPressCount += 1
-        if (volumeDownPressCount < 3) {
+        volumeUpPressCount += 1
+        if (volumeUpPressCount < 3) {
             return false
         }
 
-        volumeDownPressCount = 0
-        firstVolumeDownAtMillis = 0L
+        volumeUpPressCount = 0
+        firstVolumeUpAtMillis = 0L
         return true
     }
 
@@ -228,7 +262,7 @@ class FakeCallShortcutMonitorService : Service() {
         return builder
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("Safety shortcut armed")
-            .setContentText("Press volume down three times to open the call screen.")
+            .setContentText("Press volume up three times to open the call screen.")
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .setPriority(Notification.PRIORITY_LOW)
