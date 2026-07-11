@@ -8,7 +8,7 @@ import '../../sos/screens/sos_active_screen.dart';
 import '../../sos/services/sos_service.dart';
 import '../widgets/safety_feature_card.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     this.authService = const AuthService(),
@@ -20,17 +20,35 @@ class HomeScreen extends StatelessWidget {
   final LocationService locationService;
   final SosService sosService;
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  bool _isSendingSos = false;
+
   Future<void> _logout(BuildContext context) async {
-    await authService.signOut();
+    await widget.authService.signOut();
     if (context.mounted) {
       Navigator.pushReplacementNamed(context, AppRoutes.login);
     }
   }
 
   Future<void> _triggerManualSos(BuildContext context) async {
+    if (_isSendingSos) {
+      return;
+    }
+
+    setState(() => _isSendingSos = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Sending SOS alert...')),
+    );
+
     try {
-      final location = await locationService.getCurrentLocationData();
-      final alertId = await sosService.createManualSosAlert(location: location);
+      final location = await widget.locationService.getCurrentLocationData();
+      final alertId = await widget.sosService.createManualSosAlert(
+        location: location,
+      );
 
       if (!context.mounted) {
         return;
@@ -50,11 +68,21 @@ class HomeScreen extends StatelessWidget {
           SnackBar(content: Text(error.message)),
         );
       }
+    } on SosServiceException catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message)),
+        );
+      }
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not create SOS alert')),
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSendingSos = false);
       }
     }
   }
@@ -87,8 +115,10 @@ class HomeScreen extends StatelessWidget {
         onTap: () => Navigator.pushNamed(context, AppRoutes.plateScan),
       ),
       SafetyFeatureCard(
-        title: 'SOS Alert',
-        subtitle: 'Send a live safety alert.',
+        title: _isSendingSos ? 'Sending SOS...' : 'SOS Alert',
+        subtitle: _isSendingSos
+            ? 'Creating your live alert.'
+            : 'Send a live safety alert.',
         icon: Icons.sos,
         onTap: () => _triggerManualSos(context),
       ),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -52,21 +54,35 @@ class SosService {
     final user = _currentUserOrThrow();
     final document = _firestore.collection(_collectionName).doc();
 
-    await document.set({
-      'id': document.id,
-      'userId': user.uid,
-      if (journeyId != null) 'journeyId': journeyId,
-      'triggerType': triggerType,
-      'status': 'active',
-      'location': location.toMap(),
-      'message': _defaultMessage,
-      'notifiedContacts': const <String>[],
-      'evidence': const <String, dynamic>{},
-      'metadata': const <String, dynamic>{},
-      'schemaVersion': 1,
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    try {
+      await document.set({
+        'id': document.id,
+        'userId': user.uid,
+        if (journeyId != null) 'journeyId': journeyId,
+        'triggerType': triggerType,
+        'status': 'active',
+        'location': location.toMap(),
+        'message': _defaultMessage,
+        'notifiedContacts': const <String>[],
+        'evidence': const <String, dynamic>{},
+        'metadata': const <String, dynamic>{},
+        'schemaVersion': 1,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }).timeout(const Duration(seconds: 12));
+    } on TimeoutException {
+      // Firestore keeps the local write queued, so keep the emergency flow moving.
+      return document.id;
+    } on FirebaseException catch (error) {
+      if (error.code == 'permission-denied') {
+        throw const SosServiceException(
+          'Firebase rules blocked this SOS alert. Check Firestore rules and login status.',
+        );
+      }
+      throw SosServiceException(
+        error.message ?? 'Could not create SOS alert. Please try again.',
+      );
+    }
 
     return document.id;
   }
