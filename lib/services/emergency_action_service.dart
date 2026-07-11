@@ -71,6 +71,34 @@ class EmergencyActionService {
     await _invokeBooleanMethod('stopJourneySafetyMonitor');
   }
 
+  Future<void> startFakeCallShortcutMonitor() async {
+    await _invokeBooleanMethod('startFakeCallShortcutMonitor');
+  }
+
+  Future<void> stopFakeCallShortcutMonitor() async {
+    await _invokeBooleanMethod('stopFakeCallShortcutMonitor');
+  }
+
+  Future<bool> consumePendingFakeCallShortcut() async {
+    try {
+      return await _channel.invokeMethod<bool>(
+            'consumePendingFakeCallShortcut',
+          ) ??
+          false;
+    } on PlatformException catch (error) {
+      throw EmergencyActionException(
+        error.message ?? 'Could not check the call shortcut.',
+      );
+    }
+  }
+
+  Future<void> setCallProximityEnabled({required bool enabled}) async {
+    await _invokeBooleanMethod(
+      'setCallProximityEnabled',
+      arguments: {'enabled': enabled},
+    );
+  }
+
   Future<void> _invokeBooleanMethod(
     String method, {
     Map<String, Object?> arguments = const {},

@@ -53,7 +53,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: LoadingView(message: 'Preparing fake call'),
+            body: LoadingView(message: 'Preparing call'),
           );
         }
 
@@ -72,7 +72,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
                 children: [
                   const SizedBox(height: 24),
                   const Text(
-                    'Fake Call',
+                    'Incoming call',
                     style: TextStyle(color: Colors.white70, fontSize: 16),
                   ),
                   const Spacer(),
@@ -104,10 +104,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
                     style: const TextStyle(color: Colors.white70, fontSize: 18),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Incoming call',
-                    style: TextStyle(color: Colors.white54),
-                  ),
+                  const Text('Mobile', style: TextStyle(color: Colors.white54)),
                   const Spacer(),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,

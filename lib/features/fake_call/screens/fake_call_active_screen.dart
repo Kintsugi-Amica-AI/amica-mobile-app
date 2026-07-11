@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_routes.dart';
-import '../../../core/widgets/primary_button.dart';
+import '../../../services/emergency_action_service.dart';
 import '../../../services/location_service.dart';
 import '../../auth/services/user_profile_service.dart';
 import '../../sos/screens/sos_active_screen.dart';
@@ -29,6 +29,7 @@ class FakeCallActiveScreen extends StatefulWidget {
     this.locationService = const LocationService(),
     this.sosService = const SosService(),
     this.fakeCallService = const FakeCallService(),
+    this.emergencyActionService = const EmergencyActionService(),
     VoiceSosService? voiceSosService,
   }) : voiceSosService = voiceSosService ?? VoiceSosService();
 
@@ -37,6 +38,7 @@ class FakeCallActiveScreen extends StatefulWidget {
   final LocationService locationService;
   final SosService sosService;
   final FakeCallService fakeCallService;
+  final EmergencyActionService emergencyActionService;
   final VoiceSosService voiceSosService;
 
   @override
@@ -47,14 +49,17 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
   Timer? _callTimer;
   Duration _callDuration = Duration.zero;
   String _expectedPhrase = UserProfileService.defaultSecretPhrase;
+  String _voiceSosEmergencyMessage =
+      UserProfileService.defaultVoiceSosEmergencyMessage;
   String _lastDetectedText = '';
-  String? _statusMessage;
-  bool _isListening = false;
   bool _isTriggeringSos = false;
 
   @override
   void initState() {
     super.initState();
+    unawaited(
+      widget.emergencyActionService.setCallProximityEnabled(enabled: true),
+    );
     _startCallTimer();
     _startVoiceSos();
   }
@@ -63,6 +68,9 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
   void dispose() {
     _callTimer?.cancel();
     widget.voiceSosService.stopListening();
+    unawaited(
+      widget.emergencyActionService.setCallProximityEnabled(enabled: false),
+    );
     super.dispose();
   }
 
@@ -76,30 +84,36 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
 
   Future<void> _startVoiceSos() async {
     final phrase = await widget.userProfileService.getSecretPhrase();
+    final settings = await widget.userProfileService.getSafetySettings();
     if (!mounted) {
       return;
     }
 
+    final voiceSosEnabled = settings['voiceSosEnabled'] == true;
+    final secretPhraseEnabled = settings['secretPhraseEnabled'] == true;
+    final message = settings['voiceSosEmergencyMessage'] as String? ??
+        UserProfileService.defaultVoiceSosEmergencyMessage;
+
     setState(() {
       _expectedPhrase = phrase;
-      _statusMessage = 'Voice SOS listening...';
-      _isListening = true;
+      _voiceSosEmergencyMessage = message;
     });
+
+    if (!voiceSosEnabled || !secretPhraseEnabled) {
+      return;
+    }
 
     await widget.voiceSosService.startListening(
       expectedPhrase: phrase,
       onTextDetected: (detectedText) {
-        if (mounted) {
-          setState(() => _lastDetectedText = detectedText);
-        }
+        _lastDetectedText = detectedText;
       },
       onSecretPhraseDetected: () => _triggerVoiceSos(_lastDetectedText),
       onError: (error) {
         if (mounted) {
-          setState(() {
-            _statusMessage = error;
-            _isListening = false;
-          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error)),
+          );
         }
       },
     );
@@ -112,7 +126,6 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
 
     setState(() {
       _isTriggeringSos = true;
-      _statusMessage = 'Creating silent Voice SOS alert...';
     });
 
     try {
@@ -126,6 +139,7 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
         detectedPhrase: phrase,
         expectedPhrase: _expectedPhrase,
         confidenceScore: 0.85,
+        emergencyMessage: _voiceSosEmergencyMessage,
       );
 
       if (!mounted) {
@@ -138,7 +152,7 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
           alertId: alertId,
           triggerType: 'voice',
           location: location,
-          message: 'Voice SOS triggered using secret phrase.',
+          message: _voiceSosEmergencyMessage,
         ),
       );
     } on LocationServiceException catch (error) {
@@ -156,7 +170,6 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
     }
     setState(() {
       _isTriggeringSos = false;
-      _statusMessage = message;
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
@@ -165,6 +178,7 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
 
   Future<void> _endCall() async {
     await widget.voiceSosService.stopListening();
+    await widget.emergencyActionService.setCallProximityEnabled(enabled: false);
     if (!mounted) {
       return;
     }
@@ -183,80 +197,113 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
         widget.fakeCallService.getDefaultCallerNumber();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Fake Call Active')),
-      body: ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          const SizedBox(height: 12),
-          const Icon(Icons.phone_in_talk, size: 72),
-          const SizedBox(height: 16),
-          Text(
-            callerName,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            callerNumber,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            widget.fakeCallService.formatCallDuration(_callDuration),
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.displaySmall,
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Call connected',
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(_isListening ? Icons.mic : Icons.mic_off),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(_statusMessage ?? 'Voice SOS listening...'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text('Secret phrase: "$_expectedPhrase"'),
-                  const SizedBox(height: 12),
-                  Text(
-                    _lastDetectedText.isEmpty
-                        ? 'Last detected speech: none yet'
-                        : 'Last detected speech: $_lastDetectedText',
-                  ),
-                ],
+      backgroundColor: const Color(0xFF202124),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(24),
+          children: [
+            const SizedBox(height: 8),
+            const Text(
+              'Mobile',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white70, fontSize: 16),
+            ),
+            const SizedBox(height: 48),
+            CircleAvatar(
+              radius: 48,
+              backgroundColor: const Color(0xFF5F6368),
+              child: Text(
+                callerName.isEmpty ? 'A' : callerName[0].toUpperCase(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 38,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 24),
-          PrimaryButton(
-            label:
-                _isTriggeringSos ? 'Creating SOS...' : 'Trigger Voice SOS Test',
-            icon: Icons.sos,
-            onPressed: _isTriggeringSos
-                ? null
-                : () => _triggerVoiceSos('amica help me'),
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: _endCall,
-            icon: const Icon(Icons.call_end),
-            label: const Text('End Call'),
-          ),
-        ],
+            const SizedBox(height: 20),
+            Text(
+              callerName,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 30,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              callerNumber,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white70, fontSize: 16),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              widget.fakeCallService.formatCallDuration(_callDuration),
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white, fontSize: 24),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Call connected',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white70),
+            ),
+            const SizedBox(height: 56),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _CallControlButton(icon: Icons.mic_off, label: 'Mute'),
+                _CallControlButton(icon: Icons.dialpad, label: 'Keypad'),
+                _CallControlButton(icon: Icons.volume_up, label: 'Speaker'),
+              ],
+            ),
+            const SizedBox(height: 28),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _CallControlButton(icon: Icons.add, label: 'Add call'),
+                _CallControlButton(icon: Icons.pause, label: 'Hold'),
+                _CallControlButton(icon: Icons.bluetooth, label: 'Bluetooth'),
+              ],
+            ),
+            const SizedBox(height: 32),
+            Center(
+              child: FloatingActionButton(
+                heroTag: 'endCall',
+                backgroundColor: Colors.red,
+                onPressed: _endCall,
+                child: const Icon(Icons.call_end, color: Colors.white),
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class _CallControlButton extends StatelessWidget {
+  const _CallControlButton({
+    required this.icon,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        CircleAvatar(
+          radius: 28,
+          backgroundColor: const Color(0xFF3C4043),
+          child: Icon(icon, color: Colors.white),
+        ),
+        const SizedBox(height: 8),
+        Text(label, style: const TextStyle(color: Colors.white70)),
+      ],
     );
   }
 }

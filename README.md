@@ -165,9 +165,11 @@ To test manual SOS:
 
 ## Fake Call and Voice SOS
 
-Fake Call is simulated inside the app. It does not make a real phone call. It shows a realistic incoming-call screen, then opens an active fake-call screen when the user accepts.
+Fake Call is simulated inside the app. It does not make a real phone call. The visible call screens avoid debug wording so the MVP looks like a normal incoming and active call screen.
 
 Voice SOS uses the `speech_to_text` package for MVP phrase detection. It listens only while the fake call active screen is open. It does not run in the background.
+
+During the active call screen, Android proximity mode is enabled. On phones with a proximity sensor, the screen should turn off when the phone is held close to the ear, similar to a normal call.
 
 Default values:
 
@@ -182,11 +184,30 @@ The app can also read these values from the Firestore `users` document:
 - `safetySettings.fakeCallPhoneNumber`
 - `safetySettings.voiceSosEnabled`
 - `safetySettings.secretPhraseEnabled`
+- `safetySettings.fakeCallVolumeShortcutEnabled`
+- `safetySettings.voiceSosEmergencyMessage`
+
+These can be edited in the app:
+
+```text
+Home Dashboard > Profile / Settings
+```
+
+The settings page lets the user configure:
+
+- fake caller name
+- fake caller number
+- whether volume down pressed three times should open the call screen
+- voice SOS enable/disable
+- secret phrase enable/disable
+- the exact secret phrase
+- the SOS message saved when the phrase is spoken during the fake call
 
 When the phrase is detected, the app creates a Firestore `sos_alerts` document with:
 
 - `triggerType`: `voice`
 - current location
+- custom SOS message from settings
 - `evidence.voicePhraseDetected`: `true`
 - detected phrase and expected phrase
 - `evidence.fakeCallActive`: `true`
@@ -198,14 +219,27 @@ Manual test flow:
 3. Tap "Fake Call".
 4. Accept the fake incoming call.
 5. Allow microphone permission if Android asks.
-6. Say "amica help me", or tap "Trigger Voice SOS Test" if speech recognition is not available.
+6. Say "amica help me" while the call screen is active.
 7. Confirm the app creates a Firestore `sos_alerts` document with `triggerType` set to `voice`.
 8. Confirm the SOS Active screen opens and shows the location.
+
+Volume shortcut test flow:
+
+1. Log in.
+2. Open Settings and enable "Volume-down shortcut".
+3. Keep the "Safety shortcut armed" notification visible.
+4. You may now leave Amica or lock the phone.
+5. Press the Android volume down button three times within about 1.5 seconds.
+6. Confirm the incoming call screen opens. If Android blocks the automatic launch, tap the incoming-call notification.
 
 MVP notes:
 
 - No real phone call is made by Fake Call.
 - Voice SOS does not run in the background.
+- The volume-down shortcut uses an Android foreground service so it can work after the app UI is closed, as long as Android keeps the Amica shortcut notification running.
+- Android may block direct background activity launch on some versions or battery modes. The app posts a high-priority incoming-call notification as a fallback.
+- The shortcut watches volume changes, so it may not trigger if the relevant volume stream is already at the minimum level.
+- Proximity screen-off works only on real Android phones with a proximity sensor. Many emulators do not support it.
 - Voice recognition accuracy depends on the device and environment.
 - Some emulators do not support speech recognition well.
 - Offline Vosk integration can be considered later.

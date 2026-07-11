@@ -12,6 +12,7 @@ import 'features/emergency_contacts/screens/add_emergency_contact_screen.dart';
 import 'features/emergency_contacts/screens/emergency_contacts_screen.dart';
 import 'features/fake_call/screens/fake_call_active_screen.dart';
 import 'features/fake_call/screens/fake_call_screen.dart';
+import 'features/fake_call/services/fake_call_shortcut_service.dart';
 import 'features/home/screens/home_screen.dart';
 import 'features/journey/screens/journey_timer_screen.dart';
 import 'features/journey/screens/safety_check_screen.dart';
@@ -22,14 +23,30 @@ import 'features/profile/screens/profile_screen.dart';
 import 'features/profile/screens/settings_screen.dart';
 import 'features/sos/screens/sos_active_screen.dart';
 
-class AmicaApp extends StatelessWidget {
+class AmicaApp extends StatefulWidget {
   const AmicaApp({super.key});
 
+  @override
+  State<AmicaApp> createState() => _AmicaAppState();
+}
+
+class _AmicaAppState extends State<AmicaApp> {
   static const AuthService _authService = AuthService();
+  static final GlobalKey<NavigatorState> _navigatorKey =
+      GlobalKey<NavigatorState>();
+  final FakeCallShortcutService _fakeCallShortcutService =
+      FakeCallShortcutService();
+
+  @override
+  void initState() {
+    super.initState();
+    _fakeCallShortcutService.configure(navigatorKey: _navigatorKey);
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: _navigatorKey,
       title: AppStrings.appName,
       theme: AppTheme.light,
       home: StreamBuilder(
@@ -75,7 +92,7 @@ class AmicaApp extends StatelessWidget {
         AppRoutes.plateScan: (_) => const PlateScanScreen(),
         AppRoutes.plateResult: (_) => const PlateResultScreen(),
         AppRoutes.profile: (_) => const ProfileScreen(),
-        AppRoutes.settings: (_) => const SettingsScreen(),
+        AppRoutes.settings: (_) => SettingsScreen(),
       },
     );
   }
