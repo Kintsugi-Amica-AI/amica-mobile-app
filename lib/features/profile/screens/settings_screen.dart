@@ -167,9 +167,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onChanged: (value) {
                 setState(() => _fakeCallVolumeShortcutEnabled = value);
               },
-              title: const Text('Volume-down shortcut'),
+              title: const Text('Volume-up shortcut'),
               subtitle: const Text(
-                'When enabled, Amica keeps a safety shortcut notification running. Press volume down three times to open the call screen.',
+                'When enabled, Amica keeps a safety shortcut notification running. Press volume up three times to open the call screen.',
               ),
             ),
             const SizedBox(height: 8),

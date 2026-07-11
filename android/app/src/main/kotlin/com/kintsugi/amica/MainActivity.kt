@@ -27,8 +27,8 @@ class MainActivity : FlutterActivity() {
     private var emergencyChannel: MethodChannel? = null
     private var pendingResult: MethodChannel.Result? = null
     private var pendingAction: PendingAction? = null
-    private var volumeDownPressCount = 0
-    private var firstVolumeDownAtMillis = 0L
+    private var volumeShortcutPressCount = 0
+    private var firstVolumeShortcutAtMillis = 0L
     private var pendingCallShortcut = false
     private var proximityWakeLock: PowerManager.WakeLock? = null
 
@@ -70,11 +70,12 @@ class MainActivity : FlutterActivity() {
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (
-            event.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN &&
+            (event.keyCode == KeyEvent.KEYCODE_VOLUME_UP ||
+                event.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) &&
             event.action == KeyEvent.ACTION_DOWN &&
             event.repeatCount == 0
         ) {
-            if (recordVolumeDownPress()) {
+            if (recordVolumeShortcutPress()) {
                 emergencyChannel?.invokeMethod("onVolumeDownTriplePress", null)
                 return true
             }
@@ -82,20 +83,20 @@ class MainActivity : FlutterActivity() {
         return super.dispatchKeyEvent(event)
     }
 
-    private fun recordVolumeDownPress(): Boolean {
+    private fun recordVolumeShortcutPress(): Boolean {
         val now = System.currentTimeMillis()
-        if (firstVolumeDownAtMillis == 0L ||
-            now - firstVolumeDownAtMillis > volumeShortcutWindowMillis
+        if (firstVolumeShortcutAtMillis == 0L ||
+            now - firstVolumeShortcutAtMillis > volumeShortcutWindowMillis
         ) {
-            firstVolumeDownAtMillis = now
-            volumeDownPressCount = 1
+            firstVolumeShortcutAtMillis = now
+            volumeShortcutPressCount = 1
             return false
         }
 
-        volumeDownPressCount += 1
-        if (volumeDownPressCount >= 3) {
-            volumeDownPressCount = 0
-            firstVolumeDownAtMillis = 0L
+        volumeShortcutPressCount += 1
+        if (volumeShortcutPressCount >= 3) {
+            volumeShortcutPressCount = 0
+            firstVolumeShortcutAtMillis = 0L
             return true
         }
         return false
