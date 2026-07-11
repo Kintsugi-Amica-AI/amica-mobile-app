@@ -19,6 +19,7 @@ Thumbs.db
 # Local environment and secrets
 .env
 .env.*
+android/local.properties
 *.jks
 *.keystore
 key.properties

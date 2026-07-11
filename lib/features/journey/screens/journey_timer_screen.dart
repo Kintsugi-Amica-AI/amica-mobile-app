@@ -159,6 +159,28 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     }
   }
 
+  LocationDataModel? _cachedJourneyLocation(Journey journey) {
+    return journey.currentLocation ?? journey.startLocation;
+  }
+
+  Future<LocationDataModel> _sosLocation(Journey journey) async {
+    final cachedLocation = _cachedJourneyLocation(journey);
+    if (cachedLocation != null) {
+      unawaited(
+        widget.locationService
+            .getCurrentLocationData()
+            .then(
+              (location) =>
+                  widget.journeyService.updateCurrentLocation(journey.id, location),
+            )
+            .catchError((_) {}),
+      );
+      return cachedLocation;
+    }
+
+    return _currentOrFallbackLocation(journey);
+  }
+
   Future<void> _markSafe(Journey journey) async {
     _cancelSafetyEscalations();
     setState(() => _isSaving = true);
@@ -192,9 +214,10 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
   Future<void> _sendSos(Journey journey, {bool timerTriggered = false}) async {
     _cancelSafetyEscalations();
     setState(() => _isSaving = true);
+    _showEscalationSnack('Sending SOS alert...');
     try {
       await _stopNativeSafetyMonitor();
-      final location = await _currentOrFallbackLocation(journey);
+      final location = await _sosLocation(journey);
       final alertId = timerTriggered
           ? await widget.sosService.createTimerSosAlert(
               location: location,
@@ -204,7 +227,9 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
               location: location,
               journeyId: journey.id,
             );
-      await widget.journeyService.markJourneySos(journey.id);
+      unawaited(
+        widget.journeyService.markJourneySos(journey.id).catchError((_) {}),
+      );
 
       if (!mounted) {
         return;
@@ -218,6 +243,18 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
           location: location,
         ),
       );
+    } on SosServiceException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message)),
+        );
+      }
+    } on LocationServiceException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message)),
+        );
+      }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -386,12 +423,14 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     _messageEscalationHandled = true;
 
     try {
-      final location = await _currentOrFallbackLocation(journey);
+      final location = await _sosLocation(journey);
       await widget.sosService.createTimerSosAlert(
         location: location,
         journeyId: journey.id,
       );
-      await widget.journeyService.markJourneySos(journey.id);
+      unawaited(
+        widget.journeyService.markJourneySos(journey.id).catchError((_) {}),
+      );
 
       final contact = await widget.emergencyContactService
           .getPrimaryActiveEmergencyContact();
