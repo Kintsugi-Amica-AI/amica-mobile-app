@@ -127,7 +127,7 @@ Google Maps requires a local Android API key. Do not commit the real key. For lo
 GOOGLE_MAPS_API_KEY=your_local_google_maps_api_key
 ```
 
-The manifest reads that value through a Gradle placeholder. CI can still compile without a key, but maps will not fully render on an emulator/device until the key is configured.
+The Gradle build also accepts `googleMapsApiKey` in `android/gradle.properties`, `android/local.properties`, user-level `.gradle/gradle.properties`, or an environment variable. CI can still compile without a key, but maps will not fully render on an emulator/device until the key is configured and the Google Maps SDK for Android is enabled for that key.
 
 iOS is not configured yet. If an iOS folder is added later, add `NSLocationWhenInUseUsageDescription` to `ios/Runner/Info.plist`.
 

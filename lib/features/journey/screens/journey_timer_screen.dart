@@ -55,7 +55,6 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
   bool _isLoadingJourney = true;
   bool _isSaving = false;
   bool _safetyDialogShown = false;
-  bool _emergencyPermissionsPrepared = false;
   bool _nativeSafetyMonitorStarted = false;
   bool _nativeSafetyMonitorStarting = false;
   bool _messageEscalationHandled = false;
@@ -102,7 +101,6 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
           _journeyError = null;
           _isLoadingJourney = false;
         });
-        _prepareEmergencyPermissionsForDebug(journey);
         unawaited(_startNativeSafetyMonitorIfNeeded(journey));
         _updateRemainingAndSafetyState();
       },
@@ -290,19 +288,6 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     }
   }
 
-  void _prepareEmergencyPermissionsForDebug(Journey? journey) {
-    if (journey == null || _emergencyPermissionsPrepared) {
-      return;
-    }
-
-    _emergencyPermissionsPrepared = true;
-    unawaited(
-      widget.emergencyActionService
-          .prepareEmergencyPermissions()
-          .catchError((_) {}),
-    );
-  }
-
   Future<void> _startNativeSafetyMonitorIfNeeded(Journey? journey) async {
     if (journey == null || !journey.isActive) {
       await _stopNativeSafetyMonitor();
@@ -316,6 +301,8 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
 
     _nativeSafetyMonitorStarting = true;
     try {
+      await widget.emergencyActionService.prepareEmergencyPermissions();
+
       final contact = await widget.emergencyContactService
           .getPrimaryActiveEmergencyContact();
       final location = journey.currentLocation ?? journey.startLocation;
