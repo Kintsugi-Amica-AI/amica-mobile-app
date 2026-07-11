@@ -12,6 +12,7 @@ class AppRoutes {
   static const String safetyCheck = '/journey/safety-check';
   static const String sosActive = '/sos/active';
   static const String fakeCall = '/fake-call';
+  static const String fakeCallActive = '/fake-call/active';
   static const String plateScan = '/plate-scan';
   static const String plateResult = '/plate-scan/result';
   static const String profile = '/profile';

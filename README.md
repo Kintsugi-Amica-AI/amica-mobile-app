@@ -120,8 +120,9 @@ Android permissions are configured in `android/app/src/main/AndroidManifest.xml`
 - `POST_NOTIFICATIONS`
 - `SEND_SMS`
 - `CALL_PHONE`
+- `RECORD_AUDIO`
 
-Google Maps requires a local Android API key. Do not commit the real key. For local testing, add this to `android/gradle.properties`:
+Google Maps requires a local Android API key. Do not commit the real key. For local testing, add this to `android/local.properties`:
 
 ```properties
 GOOGLE_MAPS_API_KEY=your_local_google_maps_api_key
@@ -129,7 +130,7 @@ GOOGLE_MAPS_API_KEY=your_local_google_maps_api_key
 
 The Gradle build also accepts `googleMapsApiKey` in `android/gradle.properties`, `android/local.properties`, user-level `.gradle/gradle.properties`, or an environment variable. CI can still compile without a key, but maps will not fully render on an emulator/device until the key is configured and the Google Maps SDK for Android is enabled for that key.
 
-iOS is not configured yet. If an iOS folder is added later, add `NSLocationWhenInUseUsageDescription` to `ios/Runner/Info.plist`.
+iOS is not configured yet. If an iOS folder is added later, add `NSLocationWhenInUseUsageDescription`, `NSMicrophoneUsageDescription`, and `NSSpeechRecognitionUsageDescription` to `ios/Runner/Info.plist`.
 
 To test Start Journey:
 
@@ -161,6 +162,54 @@ To test manual SOS:
 1. Start a journey, then tap "Trigger test SOS", or tap the Home Dashboard SOS card.
 2. Confirm a Firestore `sos_alerts` document is created with a `location` map.
 3. Confirm the SOS Active screen shows the location on a map.
+
+## Fake Call and Voice SOS
+
+Fake Call is simulated inside the app. It does not make a real phone call. It shows a realistic incoming-call screen, then opens an active fake-call screen when the user accepts.
+
+Voice SOS uses the `speech_to_text` package for MVP phrase detection. It listens only while the fake call active screen is open. It does not run in the background.
+
+Default values:
+
+- Secret phrase: `amica help me`
+- Fake caller name: `Amica Friend`
+- Fake caller number: `+94 700 000 000`
+
+The app can also read these values from the Firestore `users` document:
+
+- `secretPhrase`
+- `safetySettings.fakeCallContactName`
+- `safetySettings.fakeCallPhoneNumber`
+- `safetySettings.voiceSosEnabled`
+- `safetySettings.secretPhraseEnabled`
+
+When the phrase is detected, the app creates a Firestore `sos_alerts` document with:
+
+- `triggerType`: `voice`
+- current location
+- `evidence.voicePhraseDetected`: `true`
+- detected phrase and expected phrase
+- `evidence.fakeCallActive`: `true`
+
+Manual test flow:
+
+1. Log in.
+2. Open the Home Dashboard.
+3. Tap "Fake Call".
+4. Accept the fake incoming call.
+5. Allow microphone permission if Android asks.
+6. Say "amica help me", or tap "Trigger Voice SOS Test" if speech recognition is not available.
+7. Confirm the app creates a Firestore `sos_alerts` document with `triggerType` set to `voice`.
+8. Confirm the SOS Active screen opens and shows the location.
+
+MVP notes:
+
+- No real phone call is made by Fake Call.
+- Voice SOS does not run in the background.
+- Voice recognition accuracy depends on the device and environment.
+- Some emulators do not support speech recognition well.
+- Offline Vosk integration can be considered later.
+- No secrets or API keys should be committed.
 
 MVP limits:
 

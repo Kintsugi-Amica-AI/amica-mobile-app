@@ -11,11 +11,15 @@ class SosActiveArguments {
     required this.alertId,
     required this.triggerType,
     required this.location,
+    this.message,
+    this.status = 'active',
   });
 
   final String alertId;
   final String triggerType;
   final LocationDataModel location;
+  final String? message;
+  final String status;
 }
 
 class SosActiveScreen extends StatelessWidget {
@@ -37,14 +41,19 @@ class SosActiveScreen extends StatelessWidget {
         children: [
           const Icon(Icons.sos, color: AppColors.alert, size: 72),
           const SizedBox(height: 16),
-          const Text(
-            'Your SOS alert is active.',
+          Text(
+            args?.triggerType == 'voice'
+                ? 'Voice SOS triggered using secret phrase.'
+                : 'Your SOS alert is active.',
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           Text('Alert ID: ${args?.alertId ?? 'Not available'}'),
           Text('Trigger type: ${args?.triggerType ?? 'manual'}'),
-          const Text('Status: active'),
+          Text('Status: ${args?.status ?? 'active'}'),
+          Text(
+            'Message: ${args?.message ?? 'I need help. This is my live location.'}',
+          ),
           if (args?.location != null) ...[
             const SizedBox(height: 20),
             AmicaMapView(

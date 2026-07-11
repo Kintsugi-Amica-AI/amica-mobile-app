@@ -18,7 +18,8 @@ class SosService {
   const SosService();
 
   static const String _collectionName = 'sos_alerts';
-  static const String _defaultMessage = 'I need help. This is my live location.';
+  static const String _defaultMessage =
+      'I need help. This is my live location.';
 
   FirebaseAuth get _auth => FirebaseAuth.instance;
 
@@ -46,10 +47,32 @@ class SosService {
     );
   }
 
+  Future<String> createVoiceSosAlert({
+    required LocationDataModel location,
+    required String detectedPhrase,
+    required String expectedPhrase,
+    double? confidenceScore,
+    String? journeyId,
+  }) {
+    return _createSosAlert(
+      triggerType: 'voice',
+      location: location,
+      journeyId: journeyId,
+      evidence: {
+        'voicePhraseDetected': true,
+        'detectedPhrase': detectedPhrase,
+        'expectedPhrase': expectedPhrase,
+        'voiceConfidenceScore': confidenceScore ?? 0,
+        'fakeCallActive': true,
+      },
+    );
+  }
+
   Future<String> _createSosAlert({
     required String triggerType,
     required LocationDataModel location,
     String? journeyId,
+    Map<String, dynamic> evidence = const <String, dynamic>{},
   }) async {
     final user = _currentUserOrThrow();
     final document = _firestore.collection(_collectionName).doc();
@@ -64,7 +87,7 @@ class SosService {
         'location': location.toMap(),
         'message': _defaultMessage,
         'notifiedContacts': const <String>[],
-        'evidence': const <String, dynamic>{},
+        'evidence': evidence,
         'metadata': const <String, dynamic>{},
         'schemaVersion': 1,
         'createdAt': FieldValue.serverTimestamp(),

@@ -10,6 +10,7 @@ import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/signup_screen.dart';
 import 'features/emergency_contacts/screens/add_emergency_contact_screen.dart';
 import 'features/emergency_contacts/screens/emergency_contacts_screen.dart';
+import 'features/fake_call/screens/fake_call_active_screen.dart';
 import 'features/fake_call/screens/fake_call_screen.dart';
 import 'features/home/screens/home_screen.dart';
 import 'features/journey/screens/journey_timer_screen.dart';
@@ -40,7 +41,9 @@ class AmicaApp extends StatelessWidget {
             );
           }
 
-          return snapshot.data == null ? const LoginScreen() : const HomeScreen();
+          return snapshot.data == null
+              ? const LoginScreen()
+              : const HomeScreen();
         },
       ),
       routes: {
@@ -63,6 +66,12 @@ class AmicaApp extends StatelessWidget {
           );
         },
         AppRoutes.fakeCall: (_) => const FakeCallScreen(),
+        AppRoutes.fakeCallActive: (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          return FakeCallActiveScreen(
+            arguments: args is FakeCallActiveArguments ? args : null,
+          );
+        },
         AppRoutes.plateScan: (_) => const PlateScanScreen(),
         AppRoutes.plateResult: (_) => const PlateResultScreen(),
         AppRoutes.profile: (_) => const ProfileScreen(),

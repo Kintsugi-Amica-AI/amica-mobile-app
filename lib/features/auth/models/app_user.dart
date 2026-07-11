@@ -38,7 +38,8 @@ class AppUser {
   factory AppUser.fromMap(Map<String, dynamic> data, String uidFallback) {
     return AppUser(
       uid: _readString(data['uid'], uidFallback),
-      name: _readString(data['name'], _readString(data['displayName'], 'Amica User')),
+      name: _readString(
+          data['name'], _readString(data['displayName'], 'Amica User')),
       email: _readString(data['email']),
       phone: _readString(data['phone'], _readString(data['phoneNumber'])),
       secretPhrase: _readString(data['secretPhrase']).isEmpty
@@ -105,9 +106,12 @@ class AppUser {
 
   static Map<String, dynamic> defaultSafetySettings() {
     return {
-      'defaultEmergencyMessage': 'I need help. Please check my location.',
-      'autoSosDelaySeconds': 60,
-      'fakeCallContactName': 'Amica Safety',
+      'defaultEmergencyMessage': 'I need help. This is my live location.',
+      'autoSosDelaySeconds': 30,
+      'fakeCallContactName': 'Amica Friend',
+      'fakeCallPhoneNumber': '+94 700 000 000',
+      'voiceSosEnabled': true,
+      'secretPhraseEnabled': true,
     };
   }
 
