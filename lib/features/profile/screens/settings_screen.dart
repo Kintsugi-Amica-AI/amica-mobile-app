@@ -3,14 +3,18 @@ import 'package:flutter/material.dart';
 import '../../../core/widgets/loading_view.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../auth/services/user_profile_service.dart';
+import '../../fake_call/services/fake_call_shortcut_service.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({
+  SettingsScreen({
     super.key,
     this.userProfileService = const UserProfileService(),
-  });
+    FakeCallShortcutService? fakeCallShortcutService,
+  }) : fakeCallShortcutService =
+            fakeCallShortcutService ?? FakeCallShortcutService();
 
   final UserProfileService userProfileService;
+  final FakeCallShortcutService fakeCallShortcutService;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -102,6 +106,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         secretPhraseEnabled: _secretPhraseEnabled,
         fakeCallVolumeShortcutEnabled: _fakeCallVolumeShortcutEnabled,
       );
+      await widget.fakeCallShortcutService.syncShortcutMonitor();
 
       if (!mounted) {
         return;
@@ -164,7 +169,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
               title: const Text('Volume-down shortcut'),
               subtitle: const Text(
-                'Press volume down three times while Amica is open to show Fake Call.',
+                'When enabled, Amica keeps a safety shortcut notification running. Press volume down three times to open the call screen.',
               ),
             ),
             const SizedBox(height: 8),

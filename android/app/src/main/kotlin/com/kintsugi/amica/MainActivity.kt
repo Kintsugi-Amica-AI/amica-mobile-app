@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -21,12 +22,15 @@ class MainActivity : FlutterActivity() {
     private val startCallRequestCode = 4102
     private val preparePermissionsRequestCode = 4103
     private val volumeShortcutWindowMillis = 1500L
+    private val openCallShortcutExtra = "openCallShortcut"
 
     private var emergencyChannel: MethodChannel? = null
     private var pendingResult: MethodChannel.Result? = null
     private var pendingAction: PendingAction? = null
     private var volumeDownPressCount = 0
     private var firstVolumeDownAtMillis = 0L
+    private var pendingCallShortcut = false
+    private var proximityWakeLock: PowerManager.WakeLock? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -43,9 +47,25 @@ class MainActivity : FlutterActivity() {
                 "vibrateTwice" -> handleVibrateTwice(result)
                 "startJourneySafetyMonitor" -> handleStartJourneySafetyMonitor(call, result)
                 "stopJourneySafetyMonitor" -> handleStopJourneySafetyMonitor(result)
+                "startFakeCallShortcutMonitor" -> handleStartFakeCallShortcutMonitor(result)
+                "stopFakeCallShortcutMonitor" -> handleStopFakeCallShortcutMonitor(result)
+                "consumePendingFakeCallShortcut" -> consumePendingCallShortcut(result)
+                "setCallProximityEnabled" -> handleSetCallProximityEnabled(call, result)
                 else -> result.notImplemented()
             }
         }
+        handleCallShortcutIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleCallShortcutIntent(intent)
+    }
+
+    override fun onDestroy() {
+        releaseCallProximityWakeLock()
+        super.onDestroy()
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
@@ -154,6 +174,37 @@ class MainActivity : FlutterActivity() {
         result.success(true)
     }
 
+    private fun handleStartFakeCallShortcutMonitor(result: MethodChannel.Result) {
+        val intent = FakeCallShortcutMonitorService.startIntent(this)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+        result.success(true)
+    }
+
+    private fun handleStopFakeCallShortcutMonitor(result: MethodChannel.Result) {
+        startService(FakeCallShortcutMonitorService.stopIntent(this))
+        result.success(true)
+    }
+
+    private fun consumePendingCallShortcut(result: MethodChannel.Result) {
+        val wasPending = pendingCallShortcut
+        pendingCallShortcut = false
+        result.success(wasPending)
+    }
+
+    private fun handleCallShortcutIntent(intent: Intent?) {
+        if (intent?.getBooleanExtra(openCallShortcutExtra, false) != true) {
+            return
+        }
+
+        pendingCallShortcut = true
+        intent.removeExtra(openCallShortcutExtra)
+        emergencyChannel?.invokeMethod("onVolumeDownTriplePress", null)
+    }
+
     private fun handleSendSms(call: MethodCall, result: MethodChannel.Result) {
         val phone = call.argument<String>("phone")?.trim().orEmpty()
         val message = call.argument<String>("message")?.trim().orEmpty()
@@ -238,6 +289,27 @@ class MainActivity : FlutterActivity() {
             result.error(
                 "VIBRATION_FAILED",
                 error.localizedMessage ?: "Could not vibrate device.",
+                null,
+            )
+        }
+    }
+
+    private fun handleSetCallProximityEnabled(
+        call: MethodCall,
+        result: MethodChannel.Result,
+    ) {
+        val enabled = call.argument<Boolean>("enabled") == true
+        try {
+            if (enabled) {
+                acquireCallProximityWakeLock()
+            } else {
+                releaseCallProximityWakeLock()
+            }
+            result.success(true)
+        } catch (error: Exception) {
+            result.error(
+                "PROXIMITY_WAKE_LOCK_FAILED",
+                error.localizedMessage ?: "Could not update call proximity mode.",
                 null,
             )
         }
@@ -378,6 +450,39 @@ class MainActivity : FlutterActivity() {
             @Suppress("DEPRECATION")
             getSystemService(VIBRATOR_SERVICE) as? Vibrator
         }
+    }
+
+    private fun acquireCallProximityWakeLock() {
+        if (proximityWakeLock?.isHeld == true) {
+            return
+        }
+
+        val powerManager = getSystemService(POWER_SERVICE) as PowerManager
+        if (
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP &&
+            !powerManager.isWakeLockLevelSupported(
+                PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK,
+            )
+        ) {
+            return
+        }
+
+        proximityWakeLock = powerManager.newWakeLock(
+            PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK,
+            "Amica::CallProximity",
+        ).apply {
+            setReferenceCounted(false)
+            acquire()
+        }
+    }
+
+    private fun releaseCallProximityWakeLock() {
+        proximityWakeLock?.let {
+            if (it.isHeld) {
+                it.release()
+            }
+        }
+        proximityWakeLock = null
     }
 
     private fun clearPendingAction() {

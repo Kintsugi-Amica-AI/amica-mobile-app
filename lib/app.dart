@@ -92,7 +92,7 @@ class _AmicaAppState extends State<AmicaApp> {
         AppRoutes.plateScan: (_) => const PlateScanScreen(),
         AppRoutes.plateResult: (_) => const PlateResultScreen(),
         AppRoutes.profile: (_) => const ProfileScreen(),
-        AppRoutes.settings: (_) => const SettingsScreen(),
+        AppRoutes.settings: (_) => SettingsScreen(),
       },
     );
   }
