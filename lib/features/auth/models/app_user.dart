@@ -112,6 +112,8 @@ class AppUser {
       'fakeCallPhoneNumber': '+94 700 000 000',
       'voiceSosEnabled': true,
       'secretPhraseEnabled': true,
+      'fakeCallVolumeShortcutEnabled': true,
+      'voiceSosEmergencyMessage': 'I need help. This is my live location.',
     };
   }
 

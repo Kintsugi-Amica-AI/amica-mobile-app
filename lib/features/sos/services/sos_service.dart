@@ -53,11 +53,13 @@ class SosService {
     required String expectedPhrase,
     double? confidenceScore,
     String? journeyId,
+    String? emergencyMessage,
   }) {
     return _createSosAlert(
       triggerType: 'voice',
       location: location,
       journeyId: journeyId,
+      message: emergencyMessage,
       evidence: {
         'voicePhraseDetected': true,
         'detectedPhrase': detectedPhrase,
@@ -72,6 +74,7 @@ class SosService {
     required String triggerType,
     required LocationDataModel location,
     String? journeyId,
+    String? message,
     Map<String, dynamic> evidence = const <String, dynamic>{},
   }) async {
     final user = _currentUserOrThrow();
@@ -85,7 +88,9 @@ class SosService {
         'triggerType': triggerType,
         'status': 'active',
         'location': location.toMap(),
-        'message': _defaultMessage,
+        'message': message?.trim().isNotEmpty == true
+            ? message!.trim()
+            : _defaultMessage,
         'notifiedContacts': const <String>[],
         'evidence': evidence,
         'metadata': const <String, dynamic>{},

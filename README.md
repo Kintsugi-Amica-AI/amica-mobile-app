@@ -182,11 +182,30 @@ The app can also read these values from the Firestore `users` document:
 - `safetySettings.fakeCallPhoneNumber`
 - `safetySettings.voiceSosEnabled`
 - `safetySettings.secretPhraseEnabled`
+- `safetySettings.fakeCallVolumeShortcutEnabled`
+- `safetySettings.voiceSosEmergencyMessage`
+
+These can be edited in the app:
+
+```text
+Home Dashboard > Profile / Settings
+```
+
+The settings page lets the user configure:
+
+- fake caller name
+- fake caller number
+- whether volume down pressed three times should open Fake Call
+- voice SOS enable/disable
+- secret phrase enable/disable
+- the exact secret phrase
+- the SOS message saved when the phrase is spoken during the fake call
 
 When the phrase is detected, the app creates a Firestore `sos_alerts` document with:
 
 - `triggerType`: `voice`
 - current location
+- custom SOS message from settings
 - `evidence.voicePhraseDetected`: `true`
 - detected phrase and expected phrase
 - `evidence.fakeCallActive`: `true`
@@ -202,10 +221,19 @@ Manual test flow:
 7. Confirm the app creates a Firestore `sos_alerts` document with `triggerType` set to `voice`.
 8. Confirm the SOS Active screen opens and shows the location.
 
+Volume shortcut test flow:
+
+1. Log in.
+2. Open Settings and enable "Volume-down shortcut".
+3. Return to the app.
+4. Press the Android volume down button three times within about 1.5 seconds.
+5. Confirm the Fake Call incoming screen opens.
+
 MVP notes:
 
 - No real phone call is made by Fake Call.
 - Voice SOS does not run in the background.
+- The volume-down shortcut works while Amica is open/in the foreground for MVP testing.
 - Voice recognition accuracy depends on the device and environment.
 - Some emulators do not support speech recognition well.
 - Offline Vosk integration can be considered later.

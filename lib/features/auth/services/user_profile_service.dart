@@ -7,6 +7,8 @@ class UserProfileService {
   static const String defaultSecretPhrase = 'amica help me';
   static const String defaultFakeCallContactName = 'Amica Friend';
   static const String defaultFakeCallPhoneNumber = '+94 700 000 000';
+  static const String defaultVoiceSosEmergencyMessage =
+      'I need help. This is my live location.';
 
   FirebaseAuth get _auth => FirebaseAuth.instance;
 
@@ -25,7 +27,7 @@ class UserProfileService {
     return {
       'defaultEmergencyMessage': _readString(
         safetySettings['defaultEmergencyMessage'],
-        'I need help. This is my live location.',
+        defaultVoiceSosEmergencyMessage,
       ),
       'autoSosDelaySeconds': _readInt(
         safetySettings['autoSosDelaySeconds'],
@@ -44,7 +46,58 @@ class UserProfileService {
         safetySettings['secretPhraseEnabled'],
         true,
       ),
+      'fakeCallVolumeShortcutEnabled': _readBool(
+        safetySettings['fakeCallVolumeShortcutEnabled'],
+        true,
+      ),
+      'voiceSosEmergencyMessage': _readString(
+        safetySettings['voiceSosEmergencyMessage'],
+        _readString(
+          safetySettings['defaultEmergencyMessage'],
+          defaultVoiceSosEmergencyMessage,
+        ),
+      ),
     };
+  }
+
+  Future<void> saveFakeCallVoiceSettings({
+    required String secretPhrase,
+    required String fakeCallContactName,
+    required String fakeCallPhoneNumber,
+    required String voiceSosEmergencyMessage,
+    required bool voiceSosEnabled,
+    required bool secretPhraseEnabled,
+    required bool fakeCallVolumeShortcutEnabled,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw const UserProfileException('Please log in before saving settings.');
+    }
+
+    final normalizedPhrase = secretPhrase.trim().isEmpty
+        ? defaultSecretPhrase
+        : secretPhrase.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+    final message = voiceSosEmergencyMessage.trim().isEmpty
+        ? defaultVoiceSosEmergencyMessage
+        : voiceSosEmergencyMessage.trim();
+
+    await _firestore.collection('users').doc(user.uid).set({
+      'secretPhrase': normalizedPhrase,
+      'safetySettings': {
+        'defaultEmergencyMessage': message,
+        'fakeCallContactName': fakeCallContactName.trim().isEmpty
+            ? defaultFakeCallContactName
+            : fakeCallContactName.trim(),
+        'fakeCallPhoneNumber': fakeCallPhoneNumber.trim().isEmpty
+            ? defaultFakeCallPhoneNumber
+            : fakeCallPhoneNumber.trim(),
+        'voiceSosEnabled': voiceSosEnabled,
+        'secretPhraseEnabled': secretPhraseEnabled,
+        'fakeCallVolumeShortcutEnabled': fakeCallVolumeShortcutEnabled,
+        'voiceSosEmergencyMessage': message,
+      },
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
   }
 
   Future<Map<String, dynamic>> _getCurrentUserData() async {
@@ -82,4 +135,13 @@ class UserProfileService {
     }
     return <String, dynamic>{};
   }
+}
+
+class UserProfileException implements Exception {
+  const UserProfileException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
 }

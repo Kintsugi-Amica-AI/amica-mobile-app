@@ -126,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: 'Profile / Settings',
         subtitle: 'Update safety preferences.',
         icon: Icons.person,
-        onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
+        onTap: () => Navigator.pushNamed(context, AppRoutes.settings),
       ),
     ];
 

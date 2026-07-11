@@ -9,6 +9,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.telephony.SmsManager
+import android.view.KeyEvent
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
@@ -19,17 +20,22 @@ class MainActivity : FlutterActivity() {
     private val sendSmsRequestCode = 4101
     private val startCallRequestCode = 4102
     private val preparePermissionsRequestCode = 4103
+    private val volumeShortcutWindowMillis = 1500L
 
+    private var emergencyChannel: MethodChannel? = null
     private var pendingResult: MethodChannel.Result? = null
     private var pendingAction: PendingAction? = null
+    private var volumeDownPressCount = 0
+    private var firstVolumeDownAtMillis = 0L
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        MethodChannel(
+        emergencyChannel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             emergencyChannelName,
-        ).setMethodCallHandler { call, result ->
+        )
+        emergencyChannel?.setMethodCallHandler { call, result ->
             when (call.method) {
                 "prepareEmergencyPermissions" -> prepareEmergencyPermissions(result)
                 "sendSms" -> handleSendSms(call, result)
@@ -40,6 +46,39 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (
+            event.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN &&
+            event.action == KeyEvent.ACTION_DOWN &&
+            event.repeatCount == 0
+        ) {
+            if (recordVolumeDownPress()) {
+                emergencyChannel?.invokeMethod("onVolumeDownTriplePress", null)
+                return true
+            }
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
+    private fun recordVolumeDownPress(): Boolean {
+        val now = System.currentTimeMillis()
+        if (firstVolumeDownAtMillis == 0L ||
+            now - firstVolumeDownAtMillis > volumeShortcutWindowMillis
+        ) {
+            firstVolumeDownAtMillis = now
+            volumeDownPressCount = 1
+            return false
+        }
+
+        volumeDownPressCount += 1
+        if (volumeDownPressCount >= 3) {
+            volumeDownPressCount = 0
+            firstVolumeDownAtMillis = 0L
+            return true
+        }
+        return false
     }
 
     private fun prepareEmergencyPermissions(result: MethodChannel.Result) {
