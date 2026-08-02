@@ -121,6 +121,7 @@ Android permissions are configured in `android/app/src/main/AndroidManifest.xml`
 - `SEND_SMS`
 - `CALL_PHONE`
 - `RECORD_AUDIO`
+- `CAMERA`
 
 Google Maps requires a local Android API key. Do not commit the real key. For local testing, add this to `android/local.properties`:
 
@@ -256,6 +257,29 @@ MVP limits:
 - Some Android versions or manufacturer battery settings may still restrict automatic call launch from the lock screen. Disable battery optimization for Amica during testing if needed.
 - If lock-screen vibration is not felt, check Android Settings > Apps > Amica > Notifications and make sure the "Amica safety alerts" channel can vibrate. Also make sure the phone is not in a mode that blocks alarm/notification vibration.
 - Playing a voice message into a cellular call and ending the call is not available to normal Android apps; use backend telephony such as Twilio for that behavior.
+
+## Scan Before You Ride
+
+Scan Before You Ride uses on-device OCR, matching the `amica-ai-core` plate OCR prototype's normalization rules (uppercase, alphanumeric only) so the mobile app and the AI module agree on the same plate format.
+
+- `google_mlkit_text_recognition` reads the plate text from a captured or gallery photo, fully on-device (no image is uploaded).
+- The recognized text is cleaned with the same rule as `plate_text_cleaner.py`: strip everything except letters and digits, then uppercase.
+- The cleaned plate is looked up in the shared Firestore `vehicles` collection by `normalizedPlateNumber`, matching `amica-cloud-backend`'s schema.
+- The result screen shows Safe, Reported, or Unknown with the report count, risk level, and notes from the matched record.
+
+To test:
+
+1. Configure Firebase dev backend and `android/app/google-services.json`.
+2. Seed the `vehicles` collection with `amica-cloud-backend/seed-data/vehicles.json` (or add your own test documents).
+3. Log in, open the Home Dashboard, and tap "Scan Vehicle".
+4. Take a photo of a plate (or a printed test plate such as `WP CA 9876` for a Reported result, or `WP CA 1234` for a Safe result).
+5. Confirm the result screen shows the matching status, report count, and risk level.
+6. Try an unrecognized plate and confirm the app shows Unknown instead of failing.
+
+MVP notes:
+
+- OCR runs fully offline/on-device; only the cleaned plate text (not the photo) is sent to Firestore.
+- Recognition accuracy depends on photo lighting, angle, and plate condition.
 
 ## Deployment Strategy
 

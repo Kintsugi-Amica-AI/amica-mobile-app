@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_routes.dart';
+import '../../../core/widgets/amica_background.dart';
+import '../../../core/widgets/amica_logo.dart';
 import '../../../core/widgets/custom_text_field.dart';
+import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../services/auth_service.dart';
 
@@ -95,82 +98,107 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Amica')),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            const SizedBox(height: 24),
-            Text(
-              'Welcome back',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Sign in to manage journeys, trusted contacts, and safety alerts.',
-            ),
-            const SizedBox(height: 32),
-            CustomTextField(
-              label: 'Email',
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              validator: (value) {
-                if (value == null || !value.contains('@')) {
-                  return 'Enter a valid email';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            CustomTextField(
-              label: 'Password',
-              controller: _passwordController,
-              obscureText: true,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Password is required';
-                }
-                return null;
-              },
-            ),
-            if (_errorMessage != null) ...[
-              const SizedBox(height: 16),
-              Text(
-                _errorMessage!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ],
-            const SizedBox(height: 24),
-            PrimaryButton(
-              label: _isLoading ? 'Logging in...' : 'Log in',
-              icon: Icons.login,
-              onPressed: _isBusy ? null : _login,
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: _isBusy ? null : _continueWithGoogle,
-              icon: const Icon(Icons.g_mobiledata),
-              label: Text(
-                _isGoogleLoading ? 'Connecting...' : 'Continue with Google',
-              ),
-            ),
-            TextButton(
-              onPressed: _isBusy
-                  ? null
-                  : () => Navigator.pushNamed(context, AppRoutes.signup),
-              child: const Text('Create account'),
-            ),
-            TextButton(
-              onPressed: _isBusy
-                  ? null
-                  : () => Navigator.pushNamed(
-                        context,
-                        AppRoutes.forgotPassword,
+      backgroundColor: Colors.transparent,
+      body: AmicaBackground(
+        child: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+              children: [
+                const AmicaLogo(),
+                const SizedBox(height: 32),
+                GlassCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Welcome back',
+                        style: Theme.of(context).textTheme.headlineSmall,
                       ),
-              child: const Text('Forgot password?'),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Sign in to manage journeys, trusted contacts, and safety alerts.',
+                      ),
+                      const SizedBox(height: 28),
+                      CustomTextField(
+                        label: 'Email',
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        prefixIcon: Icons.alternate_email_rounded,
+                        validator: (value) {
+                          if (value == null || !value.contains('@')) {
+                            return 'Enter a valid email';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        label: 'Password',
+                        controller: _passwordController,
+                        obscureText: true,
+                        prefixIcon: Icons.lock_outline_rounded,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Password is required';
+                          }
+                          return null;
+                        },
+                      ),
+                      if (_errorMessage != null) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          _errorMessage!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 24),
+                      PrimaryButton(
+                        label: _isLoading ? 'Logging in...' : 'Log in',
+                        icon: Icons.login_rounded,
+                        onPressed: _isBusy ? null : _login,
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: _isBusy ? null : _continueWithGoogle,
+                        icon: const Icon(Icons.g_mobiledata_rounded),
+                        label: Text(
+                          _isGoogleLoading
+                              ? 'Connecting...'
+                              : 'Continue with Google',
+                        ),
+                      ),
+                      Center(
+                        child: TextButton(
+                          onPressed: _isBusy
+                              ? null
+                              : () => Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.signup,
+                                  ),
+                          child: const Text('Create account'),
+                        ),
+                      ),
+                      Center(
+                        child: TextButton(
+                          onPressed: _isBusy
+                              ? null
+                              : () => Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.forgotPassword,
+                                  ),
+                          child: const Text('Forgot password?'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

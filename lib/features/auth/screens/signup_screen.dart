@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_routes.dart';
+import '../../../core/widgets/amica_background.dart';
 import '../../../core/widgets/custom_text_field.dart';
+import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../services/auth_service.dart';
 
@@ -113,104 +115,130 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Create account')),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            Text(
-              'Join Amica',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 8),
-            const Text('Create your profile for safety alerts and trusted contacts.'),
-            const SizedBox(height: 24),
-            CustomTextField(
-              label: 'Name',
-              controller: _nameController,
-              validator: (value) => _required(value, 'Name'),
-            ),
-            const SizedBox(height: 16),
-            CustomTextField(
-              label: 'Email',
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              validator: (value) {
-                if (value == null || !value.contains('@')) {
-                  return 'Enter a valid email';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            CustomTextField(
-              label: 'Phone',
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              validator: (value) => _required(value, 'Phone'),
-            ),
-            const SizedBox(height: 16),
-            CustomTextField(
-              label: 'Secret phrase',
-              controller: _secretPhraseController,
-              validator: (value) => _required(value, 'Secret phrase'),
-            ),
-            const SizedBox(height: 16),
-            CustomTextField(
-              label: 'Password',
-              controller: _passwordController,
-              obscureText: true,
-              validator: (value) {
-                if (value == null || value.length < 6) {
-                  return 'Password must be at least 6 characters';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            CustomTextField(
-              label: 'Confirm password',
-              controller: _confirmPasswordController,
-              obscureText: true,
-              validator: (value) {
-                if (value != _passwordController.text) {
-                  return 'Passwords do not match';
-                }
-                return null;
-              },
-            ),
-            if (_errorMessage != null) ...[
-              const SizedBox(height: 16),
-              Text(
-                _errorMessage!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ],
-            const SizedBox(height: 24),
-            PrimaryButton(
-              label: _isLoading ? 'Creating account...' : 'Create account',
-              icon: Icons.person_add,
-              onPressed: _isBusy ? null : _signup,
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: _isBusy ? null : _continueWithGoogle,
-              icon: const Icon(Icons.g_mobiledata),
-              label: Text(
-                _isGoogleLoading ? 'Connecting...' : 'Continue with Google',
-              ),
-            ),
-            TextButton(
-              onPressed: _isBusy
-                  ? null
-                  : () => Navigator.pushReplacementNamed(
-                        context,
-                        AppRoutes.login,
+      extendBodyBehindAppBar: true,
+      body: AmicaBackground(
+        child: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              children: [
+                Text(
+                  'Join Amica',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Create your profile for safety alerts and trusted contacts.',
+                ),
+                const SizedBox(height: 20),
+                GlassCard(
+                  child: Column(
+                    children: [
+                      CustomTextField(
+                        label: 'Name',
+                        controller: _nameController,
+                        prefixIcon: Icons.person_outline_rounded,
+                        validator: (value) => _required(value, 'Name'),
                       ),
-              child: const Text('Already have an account? Log in'),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        label: 'Email',
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        prefixIcon: Icons.alternate_email_rounded,
+                        validator: (value) {
+                          if (value == null || !value.contains('@')) {
+                            return 'Enter a valid email';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        label: 'Phone',
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        prefixIcon: Icons.call_outlined,
+                        validator: (value) => _required(value, 'Phone'),
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        label: 'Secret phrase',
+                        controller: _secretPhraseController,
+                        prefixIcon: Icons.record_voice_over_outlined,
+                        helperText: 'Say this during a fake call to trigger stealth SOS.',
+                        validator: (value) => _required(value, 'Secret phrase'),
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        label: 'Password',
+                        controller: _passwordController,
+                        obscureText: true,
+                        prefixIcon: Icons.lock_outline_rounded,
+                        validator: (value) {
+                          if (value == null || value.length < 6) {
+                            return 'Password must be at least 6 characters';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        label: 'Confirm password',
+                        controller: _confirmPasswordController,
+                        obscureText: true,
+                        prefixIcon: Icons.lock_reset_rounded,
+                        validator: (value) {
+                          if (value != _passwordController.text) {
+                            return 'Passwords do not match';
+                          }
+                          return null;
+                        },
+                      ),
+                      if (_errorMessage != null) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          _errorMessage!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 24),
+                      PrimaryButton(
+                        label:
+                            _isLoading ? 'Creating account...' : 'Create account',
+                        icon: Icons.person_add_alt_1_rounded,
+                        onPressed: _isBusy ? null : _signup,
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: _isBusy ? null : _continueWithGoogle,
+                        icon: const Icon(Icons.g_mobiledata_rounded),
+                        label: Text(
+                          _isGoogleLoading
+                              ? 'Connecting...'
+                              : 'Continue with Google',
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _isBusy
+                            ? null
+                            : () => Navigator.pushReplacementNamed(
+                                  context,
+                                  AppRoutes.login,
+                                ),
+                        child: const Text('Already have an account? Log in'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

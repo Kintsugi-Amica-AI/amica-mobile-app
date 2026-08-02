@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/widgets/amica_background.dart';
 import '../../../core/widgets/custom_text_field.dart';
+import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../models/emergency_contact.dart';
 import '../services/emergency_contact_service.dart';
@@ -119,56 +121,76 @@ class _AddEmergencyContactScreenState extends State<AddEmergencyContactScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(_isEditing ? 'Edit contact' : 'Add contact'),
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            CustomTextField(
-              label: 'Name',
-              controller: _nameController,
-              validator: (value) => _required(value, 'Name'),
+      extendBodyBehindAppBar: true,
+      body: AmicaBackground(
+        child: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+              children: [
+                GlassCard(
+                  child: Column(
+                    children: [
+                      CustomTextField(
+                        label: 'Name',
+                        controller: _nameController,
+                        prefixIcon: Icons.person_outline_rounded,
+                        validator: (value) => _required(value, 'Name'),
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        label: 'Phone number',
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        prefixIcon: Icons.call_outlined,
+                        validator: (value) => _required(value, 'Phone number'),
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        label: 'Relationship',
+                        controller: _relationshipController,
+                        prefixIcon: Icons.diversity_1_outlined,
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        label: 'Priority',
+                        controller: _priorityController,
+                        keyboardType: TextInputType.number,
+                        prefixIcon: Icons.flag_outlined,
+                        helperText: 'Lower numbers are contacted first.',
+                        validator: _validatePriority,
+                      ),
+                      if (_errorMessage != null) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          _errorMessage!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 24),
+                      PrimaryButton(
+                        label: _isSaving ? 'Saving...' : 'Save Contact',
+                        icon: Icons.save_outlined,
+                        onPressed: _isSaving ? null : _saveContact,
+                      ),
+                      TextButton(
+                        onPressed:
+                            _isSaving ? null : () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            CustomTextField(
-              label: 'Phone number',
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              validator: (value) => _required(value, 'Phone number'),
-            ),
-            const SizedBox(height: 16),
-            CustomTextField(
-              label: 'Relationship',
-              controller: _relationshipController,
-            ),
-            const SizedBox(height: 16),
-            CustomTextField(
-              label: 'Priority',
-              controller: _priorityController,
-              keyboardType: TextInputType.number,
-              validator: _validatePriority,
-            ),
-            if (_errorMessage != null) ...[
-              const SizedBox(height: 16),
-              Text(
-                _errorMessage!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ],
-            const SizedBox(height: 24),
-            PrimaryButton(
-              label: _isSaving ? 'Saving...' : 'Save Contact',
-              icon: Icons.save,
-              onPressed: _isSaving ? null : _saveContact,
-            ),
-            TextButton(
-              onPressed: _isSaving ? null : () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-          ],
+          ),
         ),
       ),
     );

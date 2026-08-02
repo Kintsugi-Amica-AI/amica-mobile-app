@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../core/utils/date_time_utils.dart';
+import '../../../core/widgets/amica_background.dart';
 import '../../../core/widgets/amica_map_view.dart';
+import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/loading_view.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../services/emergency_action_service.dart';
@@ -515,8 +518,10 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     final journey = _journey;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Journey Timer')),
-      body: _buildBody(context, journey),
+      extendBodyBehindAppBar: true,
+      body: AmicaBackground(child: SafeArea(child: _buildBody(context, journey))),
     );
   }
 
@@ -536,28 +541,74 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
 
     final mapLocation = journey.currentLocation ?? journey.startLocation;
     final destinationLocation = journey.destinationLocation;
+    final statusColor = switch (journey.status) {
+      'sos' => AppColors.alert,
+      'safe' => AppColors.success,
+      _ => AppColors.secondary,
+    };
 
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       children: [
-        Text(
-          journey.destinationName,
-          style: Theme.of(context).textTheme.headlineSmall,
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                journey.destinationName,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: statusColor.withValues(alpha: 0.5)),
+              ),
+              child: Text(
+                journey.status.toUpperCase(),
+                style: TextStyle(
+                  color: statusColor,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  letterSpacing: 0.6,
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
-        Text('Status: ${journey.status}'),
+        const SizedBox(height: 4),
         Text('Estimated duration: ${journey.estimatedDurationMinutes} minutes'),
-        const SizedBox(height: 16),
-        const Text('Time remaining'),
-        const SizedBox(height: 8),
-        ValueListenableBuilder<Duration>(
-          valueListenable: _remainingNotifier,
-          builder: (context, remaining, _) {
-            return Text(
-              DateTimeUtils.formatDuration(remaining),
-              style: Theme.of(context).textTheme.displaySmall,
-            );
-          },
+        const SizedBox(height: 20),
+        GlassCard(
+          child: Column(
+            children: [
+              Text(
+                'TIME REMAINING',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      letterSpacing: 1.4,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              ValueListenableBuilder<Duration>(
+                valueListenable: _remainingNotifier,
+                builder: (context, remaining, _) {
+                  return ShaderMask(
+                    shaderCallback: (bounds) =>
+                        AppColors.primaryButtonGradient.createShader(bounds),
+                    child: Text(
+                      DateTimeUtils.formatDuration(remaining),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 44,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
         if (mapLocation != null) ...[
           const SizedBox(height: 20),
@@ -573,13 +624,13 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
         const SizedBox(height: 24),
         PrimaryButton(
           label: _isSaving ? 'Saving...' : 'I am safe',
-          icon: Icons.check_circle,
+          icon: Icons.check_circle_rounded,
           onPressed: _isSaving ? null : () => _markSafe(journey),
         ),
         const SizedBox(height: 12),
         OutlinedButton.icon(
           onPressed: _isSaving ? null : () => _sendSos(journey),
-          icon: const Icon(Icons.sos),
+          icon: const Icon(Icons.sos_rounded),
           label: const Text('Trigger test SOS'),
         ),
       ],

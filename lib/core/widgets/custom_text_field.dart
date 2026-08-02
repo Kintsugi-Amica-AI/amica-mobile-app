@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../constants/app_colors.dart';
+
 class CustomTextField extends StatelessWidget {
   const CustomTextField({
     required this.label,
@@ -8,6 +10,10 @@ class CustomTextField extends StatelessWidget {
     this.keyboardType,
     this.obscureText = false,
     this.validator,
+    this.prefixIcon,
+    this.minLines,
+    this.maxLines = 1,
+    this.helperText,
   });
 
   final String label;
@@ -15,6 +21,10 @@ class CustomTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final bool obscureText;
   final String? Function(String?)? validator;
+  final IconData? prefixIcon;
+  final int? minLines;
+  final int maxLines;
+  final String? helperText;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +33,17 @@ class CustomTextField extends StatelessWidget {
       keyboardType: keyboardType,
       obscureText: obscureText,
       validator: validator,
-      decoration: InputDecoration(labelText: label),
+      minLines: minLines,
+      maxLines: obscureText ? 1 : maxLines,
+      style: const TextStyle(color: AppColors.textPrimary),
+      cursorColor: AppColors.secondary,
+      decoration: InputDecoration(
+        labelText: label,
+        helperText: helperText,
+        prefixIcon: prefixIcon == null
+            ? null
+            : Icon(prefixIcon, color: AppColors.textSecondary, size: 20),
+      ),
     );
   }
 }

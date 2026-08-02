@@ -128,29 +128,33 @@ class _AmicaMapViewState extends State<AmicaMapView> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: widget.height,
-      width: double.infinity,
-      child: GoogleMap(
-        initialCameraPosition: CameraPosition(
-          target: _destinationPosition ?? _centerPosition,
-          zoom: 15,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: SizedBox(
+        height: widget.height,
+        width: double.infinity,
+        child: GoogleMap(
+          initialCameraPosition: CameraPosition(
+            target: _destinationPosition ?? _centerPosition,
+            zoom: 15,
+          ),
+          style: _nightMapStyle,
+          markers: _markers(),
+          onMapCreated: (controller) {
+            _controller = controller;
+            _moveCameraToMarkers();
+          },
+          onTap: widget.onTap == null
+              ? null
+              : (position) => widget.onTap!(
+                    position.latitude,
+                    position.longitude,
+                  ),
+          myLocationButtonEnabled: false,
+          myLocationEnabled: false,
+          zoomControlsEnabled: true,
+          mapToolbarEnabled: false,
         ),
-        markers: _markers(),
-        onMapCreated: (controller) {
-          _controller = controller;
-          _moveCameraToMarkers();
-        },
-        onTap: widget.onTap == null
-            ? null
-            : (position) => widget.onTap!(
-                  position.latitude,
-                  position.longitude,
-                ),
-        myLocationButtonEnabled: false,
-        myLocationEnabled: false,
-        zoomControlsEnabled: true,
-        mapToolbarEnabled: false,
       ),
     );
   }
@@ -168,3 +172,24 @@ class _AmicaMapViewState extends State<AmicaMapView> {
     return first > second ? first : second;
   }
 }
+
+/// A violet-tinted night map style so the map blends into Amica's
+/// futuristic dark theme instead of showing the default light basemap.
+const String _nightMapStyle = '''
+[
+  {"elementType": "geometry", "stylers": [{"color": "#170b2e"}]},
+  {"elementType": "labels.text.stroke", "stylers": [{"color": "#170b2e"}]},
+  {"elementType": "labels.text.fill", "stylers": [{"color": "#7b7299"}]},
+  {"featureType": "administrative", "elementType": "geometry", "stylers": [{"color": "#3d2c66"}]},
+  {"featureType": "poi", "elementType": "labels.text.fill", "stylers": [{"color": "#8f86ad"}]},
+  {"featureType": "poi.park", "elementType": "geometry", "stylers": [{"color": "#1c2b28"}]},
+  {"featureType": "road", "elementType": "geometry", "stylers": [{"color": "#241640"}]},
+  {"featureType": "road", "elementType": "geometry.stroke", "stylers": [{"color": "#1b1030"}]},
+  {"featureType": "road", "elementType": "labels.text.fill", "stylers": [{"color": "#b2a8d6"}]},
+  {"featureType": "road.highway", "elementType": "geometry", "stylers": [{"color": "#2c1f52"}]},
+  {"featureType": "road.highway", "elementType": "geometry.stroke", "stylers": [{"color": "#22d3ee"}, {"weight": 0.2}]},
+  {"featureType": "transit", "elementType": "geometry", "stylers": [{"color": "#241640"}]},
+  {"featureType": "water", "elementType": "geometry", "stylers": [{"color": "#0a0417"}]},
+  {"featureType": "water", "elementType": "labels.text.fill", "stylers": [{"color": "#5b21b6"}]}
+]
+''';

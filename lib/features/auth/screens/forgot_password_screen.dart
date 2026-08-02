@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
+import '../../../core/widgets/amica_background.dart';
 import '../../../core/widgets/custom_text_field.dart';
+import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../services/auth_service.dart';
 
@@ -68,57 +71,76 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Reset password')),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            Text(
-              'Forgot your password?',
-              style: Theme.of(context).textTheme.headlineSmall,
+      extendBodyBehindAppBar: true,
+      body: AmicaBackground(
+        child: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              children: [
+                const Icon(Icons.lock_reset_rounded,
+                    color: AppColors.secondary, size: 48),
+                const SizedBox(height: 16),
+                Text(
+                  'Forgot your password?',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Enter your account email and Amica will send a password reset link.',
+                ),
+                const SizedBox(height: 24),
+                GlassCard(
+                  child: Column(
+                    children: [
+                      CustomTextField(
+                        label: 'Email',
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        prefixIcon: Icons.alternate_email_rounded,
+                        validator: (value) {
+                          if (value == null || !value.trim().contains('@')) {
+                            return 'Enter a valid email address';
+                          }
+                          return null;
+                        },
+                      ),
+                      if (_errorMessage != null) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          _errorMessage!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ],
+                      if (_successMessage != null) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          _successMessage!,
+                          style: const TextStyle(color: AppColors.success),
+                        ),
+                      ],
+                      const SizedBox(height: 24),
+                      PrimaryButton(
+                        label: _isLoading ? 'Sending...' : 'Send reset link',
+                        icon: Icons.mail_outline_rounded,
+                        onPressed: _isLoading ? null : _sendResetLink,
+                      ),
+                      TextButton(
+                        onPressed:
+                            _isLoading ? null : () => Navigator.pop(context),
+                        child: const Text('Back to login'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Enter your account email and Amica will send a password reset link.',
-            ),
-            const SizedBox(height: 24),
-            CustomTextField(
-              label: 'Email',
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              validator: (value) {
-                if (value == null || !value.trim().contains('@')) {
-                  return 'Enter a valid email address';
-                }
-                return null;
-              },
-            ),
-            if (_errorMessage != null) ...[
-              const SizedBox(height: 16),
-              Text(
-                _errorMessage!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ],
-            if (_successMessage != null) ...[
-              const SizedBox(height: 16),
-              Text(
-                _successMessage!,
-                style: TextStyle(color: Theme.of(context).colorScheme.primary),
-              ),
-            ],
-            const SizedBox(height: 24),
-            PrimaryButton(
-              label: _isLoading ? 'Sending...' : 'Send reset link',
-              icon: Icons.mail,
-              onPressed: _isLoading ? null : _sendResetLink,
-            ),
-            TextButton(
-              onPressed: _isLoading ? null : () => Navigator.pop(context),
-              child: const Text('Back to login'),
-            ),
-          ],
+          ),
         ),
       ),
     );

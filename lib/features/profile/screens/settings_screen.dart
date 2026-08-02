@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
+import '../../../core/widgets/amica_background.dart';
+import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/loading_view.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../auth/services/user_profile_service.dart';
@@ -139,133 +142,170 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        body: LoadingView(message: 'Loading settings'),
+        backgroundColor: Colors.transparent,
+        body: AmicaBackground(
+          child: SafeArea(
+            child: LoadingView(message: 'Loading settings'),
+          ),
+        ),
       );
     }
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Settings')),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            if (_errorMessage != null) ...[
-              Text(
-                _errorMessage!,
-                style: const TextStyle(color: Colors.red),
-              ),
-              const SizedBox(height: 12),
-            ],
-            Text(
-              'Fake Call',
-              style: Theme.of(context).textTheme.titleLarge,
+      extendBodyBehindAppBar: true,
+      body: AmicaBackground(
+        child: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              children: [
+                if (_errorMessage != null) ...[
+                  Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: AppColors.alert),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                Row(
+                  children: [
+                    const Icon(Icons.phone_in_talk_outlined,
+                        color: AppColors.warning, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Fake Call',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                GlassCard(
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        value: _fakeCallVolumeShortcutEnabled,
+                        onChanged: (value) {
+                          setState(
+                              () => _fakeCallVolumeShortcutEnabled = value);
+                        },
+                        title: const Text('Volume-up shortcut'),
+                        subtitle: const Text(
+                          'When enabled, Amica keeps a safety shortcut notification running. Press volume up three times to open the call screen.',
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _callerNameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Fake caller name',
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Enter a caller name.';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _callerNumberController,
+                        keyboardType: TextInputType.phone,
+                        decoration: const InputDecoration(
+                          labelText: 'Fake caller number',
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Enter a caller number.';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    const Icon(Icons.record_voice_over_outlined,
+                        color: AppColors.secondary, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Stealth Voice SOS',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                GlassCard(
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        value: _voiceSosEnabled,
+                        onChanged: (value) {
+                          setState(() => _voiceSosEnabled = value);
+                        },
+                        title: const Text('Enable voice SOS'),
+                        subtitle: const Text(
+                          'Listen for the secret phrase during an active fake call.',
+                        ),
+                      ),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        value: _secretPhraseEnabled,
+                        onChanged: (value) {
+                          setState(() => _secretPhraseEnabled = value);
+                        },
+                        title: const Text('Enable secret phrase'),
+                        subtitle: const Text(
+                            'Use the phrase below to trigger Voice SOS.'),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _secretPhraseController,
+                        decoration: const InputDecoration(
+                          labelText: 'Secret phrase',
+                          helperText: 'Example: amica help me',
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Enter a secret phrase.';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _voiceSosMessageController,
+                        minLines: 3,
+                        maxLines: 5,
+                        decoration: const InputDecoration(
+                          labelText: 'SOS message for emergency contact',
+                          helperText:
+                              'Saved with the Voice SOS alert when the phrase is spoken.',
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Enter the message to send.';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                PrimaryButton(
+                  label: _isSaving ? 'Saving...' : 'Save Settings',
+                  icon: Icons.save_outlined,
+                  onPressed: _isSaving ? null : _saveSettings,
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            SwitchListTile(
-              value: _fakeCallVolumeShortcutEnabled,
-              onChanged: (value) {
-                setState(() => _fakeCallVolumeShortcutEnabled = value);
-              },
-              title: const Text('Volume-up shortcut'),
-              subtitle: const Text(
-                'When enabled, Amica keeps a safety shortcut notification running. Press volume up three times to open the call screen.',
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _callerNameController,
-              decoration: const InputDecoration(
-                labelText: 'Fake caller name',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Enter a caller name.';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _callerNumberController,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: 'Fake caller number',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Enter a caller number.';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Stealth Voice SOS',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            SwitchListTile(
-              value: _voiceSosEnabled,
-              onChanged: (value) {
-                setState(() => _voiceSosEnabled = value);
-              },
-              title: const Text('Enable voice SOS'),
-              subtitle: const Text(
-                'Listen for the secret phrase during an active fake call.',
-              ),
-            ),
-            SwitchListTile(
-              value: _secretPhraseEnabled,
-              onChanged: (value) {
-                setState(() => _secretPhraseEnabled = value);
-              },
-              title: const Text('Enable secret phrase'),
-              subtitle:
-                  const Text('Use the phrase below to trigger Voice SOS.'),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _secretPhraseController,
-              decoration: const InputDecoration(
-                labelText: 'Secret phrase',
-                helperText: 'Example: amica help me',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Enter a secret phrase.';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _voiceSosMessageController,
-              minLines: 3,
-              maxLines: 5,
-              decoration: const InputDecoration(
-                labelText: 'SOS message for emergency contact',
-                helperText:
-                    'Saved with the Voice SOS alert when the phrase is spoken.',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Enter the message to send.';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 24),
-            PrimaryButton(
-              label: _isSaving ? 'Saving...' : 'Save Settings',
-              icon: Icons.save,
-              onPressed: _isSaving ? null : _saveSettings,
-            ),
-          ],
+          ),
         ),
       ),
     );

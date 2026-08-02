@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart' as geocoding;
 
 import '../../../core/constants/app_routes.dart';
+import '../../../core/widgets/amica_background.dart';
 import '../../../core/widgets/amica_map_view.dart';
 import '../../../core/widgets/custom_text_field.dart';
+import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../services/location_service.dart';
 import '../models/location_data_model.dart';
@@ -376,95 +378,117 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
         : _destinationController.text.trim();
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Start Journey')),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            PrimaryButton(
-              label: _isLoadingLocation
-                  ? 'Getting location...'
-                  : 'Get current location',
-              icon: Icons.my_location,
-              onPressed: _isBusy ? null : _getCurrentLocation,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              currentLocation == null
-                  ? 'Current location: not selected yet'
-                  : 'Current location: ${currentLocation.latitude.toStringAsFixed(5)}, '
-                      '${currentLocation.longitude.toStringAsFixed(5)}',
-            ),
-            const SizedBox(height: 24),
-            CustomTextField(
-              label: 'Destination name or address',
-              controller: _destinationController,
-              validator: (value) => _required(value, 'Destination'),
-            ),
-            if (_isResolvingDestination || _destinationStatus != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                _isResolvingDestination
-                    ? 'Finding destination on map...'
-                    : _destinationStatus!,
-              ),
-            ],
-            const SizedBox(height: 16),
-            AmicaMapView(
-              latitude: mapCenter.latitude,
-              longitude: mapCenter.longitude,
-              markerTitle: 'Journey start',
-              showStartMarker: currentLocation != null,
-              destinationLatitude: destinationLocation?.latitude,
-              destinationLongitude: destinationLocation?.longitude,
-              destinationTitle: destinationTitle,
-              onTap: _isStartingJourney ? null : _pinDestination,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              destinationLocation == null
-                  ? 'Tap map to pin destination.'
-                  : 'Destination pin: ${destinationLocation.latitude.toStringAsFixed(5)}, '
-                      '${destinationLocation.longitude.toStringAsFixed(5)}',
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              initialValue: _journeyType,
-              decoration: const InputDecoration(labelText: 'Journey type'),
-              items: const [
-                DropdownMenuItem(value: 'walk', child: Text('Walk')),
-                DropdownMenuItem(value: 'taxi', child: Text('Taxi')),
-                DropdownMenuItem(value: 'bus', child: Text('Bus')),
-                DropdownMenuItem(value: 'train', child: Text('Train')),
-                DropdownMenuItem(value: 'other', child: Text('Other')),
+      extendBodyBehindAppBar: true,
+      body: AmicaBackground(
+        child: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+              children: [
+                GlassCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      PrimaryButton(
+                        label: _isLoadingLocation
+                            ? 'Getting location...'
+                            : 'Get current location',
+                        icon: Icons.my_location_rounded,
+                        onPressed: _isBusy ? null : _getCurrentLocation,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        currentLocation == null
+                            ? 'Current location: not selected yet'
+                            : 'Current location: ${currentLocation.latitude.toStringAsFixed(5)}, '
+                                '${currentLocation.longitude.toStringAsFixed(5)}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                CustomTextField(
+                  label: 'Destination name or address',
+                  controller: _destinationController,
+                  prefixIcon: Icons.place_outlined,
+                  validator: (value) => _required(value, 'Destination'),
+                ),
+                if (_isResolvingDestination || _destinationStatus != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    _isResolvingDestination
+                        ? 'Finding destination on map...'
+                        : _destinationStatus!,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+                const SizedBox(height: 16),
+                AmicaMapView(
+                  latitude: mapCenter.latitude,
+                  longitude: mapCenter.longitude,
+                  markerTitle: 'Journey start',
+                  showStartMarker: currentLocation != null,
+                  destinationLatitude: destinationLocation?.latitude,
+                  destinationLongitude: destinationLocation?.longitude,
+                  destinationTitle: destinationTitle,
+                  onTap: _isStartingJourney ? null : _pinDestination,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  destinationLocation == null
+                      ? 'Tap map to pin destination.'
+                      : 'Destination pin: ${destinationLocation.latitude.toStringAsFixed(5)}, '
+                          '${destinationLocation.longitude.toStringAsFixed(5)}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  initialValue: _journeyType,
+                  decoration: const InputDecoration(labelText: 'Journey type'),
+                  items: const [
+                    DropdownMenuItem(value: 'walk', child: Text('Walk')),
+                    DropdownMenuItem(value: 'taxi', child: Text('Taxi')),
+                    DropdownMenuItem(value: 'bus', child: Text('Bus')),
+                    DropdownMenuItem(value: 'train', child: Text('Train')),
+                    DropdownMenuItem(value: 'other', child: Text('Other')),
+                  ],
+                  onChanged: _isBusy ? null : _onJourneyTypeChanged,
+                ),
+                const SizedBox(height: 16),
+                CustomTextField(
+                  label: 'Estimated duration in minutes',
+                  controller: _durationController,
+                  keyboardType: TextInputType.number,
+                  prefixIcon: Icons.hourglass_bottom_rounded,
+                  validator: _validateDuration,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Suggested duration: $_suggestedDurationMinutes minutes',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    _errorMessage!,
+                    style: TextStyle(color: Theme.of(context).colorScheme.error),
+                  ),
+                ],
+                const SizedBox(height: 24),
+                PrimaryButton(
+                  label: _isStartingJourney ? 'Starting...' : 'Start Journey',
+                  icon: Icons.play_arrow_rounded,
+                  onPressed: (_isBusy || _isResolvingDestination)
+                      ? null
+                      : _startJourney,
+                ),
               ],
-              onChanged: _isBusy ? null : _onJourneyTypeChanged,
             ),
-            const SizedBox(height: 16),
-            CustomTextField(
-              label: 'Estimated duration in minutes',
-              controller: _durationController,
-              keyboardType: TextInputType.number,
-              validator: _validateDuration,
-            ),
-            const SizedBox(height: 8),
-            Text('Suggested duration: $_suggestedDurationMinutes minutes'),
-            if (_errorMessage != null) ...[
-              const SizedBox(height: 16),
-              Text(
-                _errorMessage!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ],
-            const SizedBox(height: 24),
-            PrimaryButton(
-              label: _isStartingJourney ? 'Starting...' : 'Start Journey',
-              icon: Icons.play_arrow,
-              onPressed:
-                  (_isBusy || _isResolvingDestination) ? null : _startJourney,
-            ),
-          ],
+          ),
         ),
       ),
     );

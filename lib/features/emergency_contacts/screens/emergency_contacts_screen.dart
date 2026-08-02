@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
+import '../../../core/widgets/amica_background.dart';
+import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/loading_view.dart';
 import '../models/emergency_contact.dart';
 import '../services/emergency_contact_service.dart';
@@ -101,61 +104,81 @@ class EmergencyContactsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Emergency Contacts')),
-      body: StreamBuilder<List<EmergencyContact>>(
-        stream: service.watchEmergencyContacts(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const LoadingView(message: 'Loading emergency contacts');
-          }
+      extendBodyBehindAppBar: true,
+      body: AmicaBackground(
+        child: SafeArea(
+          child: StreamBuilder<List<EmergencyContact>>(
+            stream: service.watchEmergencyContacts(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const LoadingView(message: 'Loading emergency contacts');
+              }
 
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  'Could not load emergency contacts.\n${snapshot.error}',
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            );
-          }
+              if (snapshot.hasError) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      'Could not load emergency contacts.\n${snapshot.error}',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              }
 
-          final contacts = snapshot.data ?? const <EmergencyContact>[];
-          if (contacts.isEmpty) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'No emergency contacts yet.\nAdd someone you trust before testing SOS alerts.',
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            );
-          }
+              final contacts = snapshot.data ?? const <EmergencyContact>[];
+              if (contacts.isEmpty) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: GlassCard(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.contacts_outlined,
+                            color: AppColors.textSecondary,
+                            size: 40,
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            'No emergency contacts yet.\nAdd someone you trust before testing SOS alerts.',
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: contacts.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final contact = contacts[index];
-              return _EmergencyContactCard(
-                contact: contact,
-                onEdit: () => _openEditScreen(context, contact),
-                onDelete: () => _confirmDelete(context, contact),
-                onActiveChanged: (value) => _toggleActive(
-                  context,
-                  contact,
-                  value,
-                ),
+              return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+                itemCount: contacts.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final contact = contacts[index];
+                  return _EmergencyContactCard(
+                    contact: contact,
+                    onEdit: () => _openEditScreen(context, contact),
+                    onDelete: () => _confirmDelete(context, contact),
+                    onActiveChanged: (value) => _toggleActive(
+                      context,
+                      contact,
+                      value,
+                    ),
+                  );
+                },
               );
             },
-          );
-        },
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         tooltip: 'Add contact',
+        backgroundColor: AppColors.primary,
         onPressed: () => Navigator.pushNamed(
           context,
           AppRoutes.addEmergencyContact,
@@ -184,62 +207,92 @@ class _EmergencyContactCard extends StatelessWidget {
     final relationshipText = contact.relationship.isEmpty
         ? 'Relationship not set'
         : contact.relationship;
+    final initial = contact.name.isEmpty ? '?' : contact.name[0].toUpperCase();
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        contact.name,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(contact.phone),
-                      const SizedBox(height: 4),
-                      Text(relationshipText),
-                    ],
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: AppColors.primaryButtonGradient,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  initial,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
                   ),
                 ),
-                Chip(
-                  label: Text(contact.isActive ? 'Active' : 'Inactive'),
-                  visualDensity: VisualDensity.compact,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      contact.name,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(contact.phone,
+                        style: Theme.of(context).textTheme.bodyMedium),
+                    const SizedBox(height: 4),
+                    Text(relationshipText,
+                        style: Theme.of(context).textTheme.bodySmall),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text('Priority ${contact.priority}'),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Text('Use for SOS'),
-                const Spacer(),
-                Switch(
-                  value: contact.isActive,
-                  onChanged: onActiveChanged,
+              ),
+              Chip(
+                label: Text(contact.isActive ? 'Active' : 'Inactive'),
+                visualDensity: VisualDensity.compact,
+                backgroundColor: (contact.isActive
+                        ? AppColors.success
+                        : AppColors.textMuted)
+                    .withValues(alpha: 0.16),
+                labelStyle: TextStyle(
+                  color: contact.isActive
+                      ? AppColors.success
+                      : AppColors.textMuted,
                 ),
-                IconButton(
-                  tooltip: 'Edit',
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.edit),
-                ),
-                IconButton(
-                  tooltip: 'Delete',
-                  onPressed: onDelete,
-                  icon: const Icon(Icons.delete),
-                ),
-              ],
-            ),
-          ],
-        ),
+                side: BorderSide.none,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text('Priority ${contact.priority}',
+              style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Text('Use for SOS'),
+              const Spacer(),
+              Switch(
+                value: contact.isActive,
+                onChanged: onActiveChanged,
+              ),
+              IconButton(
+                tooltip: 'Edit',
+                onPressed: onEdit,
+                icon: const Icon(Icons.edit_outlined),
+              ),
+              IconButton(
+                tooltip: 'Delete',
+                onPressed: onDelete,
+                icon: const Icon(Icons.delete_outline_rounded,
+                    color: AppColors.alert),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

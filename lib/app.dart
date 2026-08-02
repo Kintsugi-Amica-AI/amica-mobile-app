@@ -48,7 +48,9 @@ class _AmicaAppState extends State<AmicaApp> {
     return MaterialApp(
       navigatorKey: _navigatorKey,
       title: AppStrings.appName,
-      theme: AppTheme.light,
+      theme: AppTheme.dark,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.dark,
       home: StreamBuilder(
         stream: _authService.authStateChanges(),
         builder: (context, snapshot) {
@@ -89,7 +91,7 @@ class _AmicaAppState extends State<AmicaApp> {
             arguments: args is FakeCallActiveArguments ? args : null,
           );
         },
-        AppRoutes.plateScan: (_) => const PlateScanScreen(),
+        AppRoutes.plateScan: (_) => PlateScanScreen(),
         AppRoutes.plateResult: (_) => const PlateResultScreen(),
         AppRoutes.profile: (_) => const ProfileScreen(),
         AppRoutes.settings: (_) => SettingsScreen(),

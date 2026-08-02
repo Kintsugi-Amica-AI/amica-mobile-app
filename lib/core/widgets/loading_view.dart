@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../constants/app_colors.dart';
+
 class LoadingView extends StatelessWidget {
   const LoadingView({super.key, this.message = 'Loading'});
 
@@ -11,9 +13,34 @@ class LoadingView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const CircularProgressIndicator(),
-          const SizedBox(height: 16),
-          Text(message),
+          Container(
+            width: 64,
+            height: 64,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: AppColors.primaryButtonGradient,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.4),
+                  blurRadius: 24,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: const CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 3,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            message,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              letterSpacing: 0.4,
+            ),
+          ),
         ],
       ),
     );

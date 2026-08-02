@@ -177,6 +177,17 @@ class AuthService {
     return signInWithEmailAndPassword(email: email, password: password);
   }
 
+  Future<AppUser?> currentUserProfile() async {
+    if (!_isFirebaseReady) {
+      return null;
+    }
+    final user = _auth.currentUser;
+    if (user == null) {
+      return null;
+    }
+    return _loadUserProfile(user);
+  }
+
   Future<AppUser> signUp({
     required String email,
     required String password,
