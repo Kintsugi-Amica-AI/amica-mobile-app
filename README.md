@@ -7,6 +7,7 @@ Flutter mobile application for Amica, a women's safety and security app.
 - User authentication
 - Emergency contacts
 - Smart Journey Timer
+- Bus Stop Alert with a distance alarm before your drop-off
 - Live location SOS alert
 - Fake Call deterrent
 - Stealth Voice SOS with secret phrase detection
@@ -153,6 +154,8 @@ Journey timer safety behavior:
 - When the timer screen opens, Android starts a foreground journey safety service with a visible notification.
 - The native safety service keeps the timer running while the screen is off or locked.
 - When the timer ends, the phone vibrates twice from native Android alarm-style vibration code and also posts a high-priority safety alert notification with the same vibration pattern.
+- The timer then opens the full-screen Safety Check, which shows a live countdown to the automatic emergency-contact alert and offers "I am safe" or "Send SOS now". It cannot be dismissed with the back button, so an accidental swipe is never read as a safety confirmation.
+- The Safety Check screen only reports the user's answer. The journey timer screen stays the single place that updates the Firestore `journeys` document, stops the native safety service, and creates the `sos_alerts` document, so both answers behave the same whether the check was answered immediately or after an escalation already fired.
 - If there is no response for 1 minute, the native safety service sends a direct SMS to the first active emergency contact.
 - If there is still no response after 3 minutes, the native safety service starts a phone call to that contact.
 - Android will ask for Notification, SMS, and Phone permissions on the timer screen during debug testing. Allow them before the timer ends.
@@ -164,9 +167,58 @@ To test manual SOS:
 2. Confirm a Firestore `sos_alerts` document is created with a `location` map.
 3. Confirm the SOS Active screen shows the location on a map.
 
+## Bus Stop Alert
+
+Smart Stop Alert warns a rider before their bus reaches the stop they are getting off at, so they can rest on a long or unfamiliar route without missing it.
+
+The rider opens "Bus Stop Alert" from the Home Dashboard, names the stop (geocoded to the map) or taps the map to pin it, picks how far out to be warned, and starts the ride. Amica then tracks the distance and sounds an alarm on arrival inside that radius.
+
+- The default alert distance is **2 km**. 1 km, 3 km, and 5 km are also offered, because a fixed 2 km fires immediately on a short city hop and lands too late on a long intercity run.
+- If the chosen stop is already inside the alert radius when the ride is about to start, the setup screen says so and asks for a shorter distance instead of arming an alarm that would sound straight away.
+- The alarm sounds **once per ride**, so a bus weaving in and out of the radius or a jittery GPS fix does not set it off repeatedly.
+- Tracking runs in a native Android foreground service with a partial wake lock, so the alarm still sounds with Amica closed and the screen off — which is the whole point, since the phone will be in a pocket.
+- The alarm uses an alarm-usage notification channel (alarm sound plus a long vibration pattern) rather than a notification chime, so it can wake someone who dozed off.
+- The tracking notification shows the live remaining distance and has a "Stop" action.
+
+A stop alert ride is stored in the shared Firestore `journeys` collection as `journeyType: 'bus'` with a `stopAlert` map, matching the backend schema's note that "Smart Stop Alert can use `destination` and `journeyType`". Its safety countdown is switched off (`safetyCheck.required: false`): the rider is asking to be told when the bus nears their stop, not to be asked whether they arrived by a deadline they cannot predict. The Journey Timer and the Bus Stop Alert filter each other out when reading active journeys.
+
+Android permissions used:
+
+- `ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION` for the distance tracking
+- `FOREGROUND_SERVICE_LOCATION` for the location-typed foreground service on Android 14+
+- `POST_NOTIFICATIONS` for the alarm
+
+`ACCESS_BACKGROUND_LOCATION` is deliberately **not** requested. A location-typed foreground service started while the app is in the foreground — which it always is, since the rider starts the ride from the app — may keep receiving location in the background without it.
+
+To test:
+
+1. Configure Firebase dev backend and a local Google Maps API key.
+2. Log in, open the Home Dashboard, and tap "Bus Stop Alert".
+3. Allow location permission when asked.
+4. Type a stop a good distance away (for example "Malabe" while in Colombo Fort), or tap the map to pin it.
+5. Confirm the card shows the current distance to that stop.
+6. Pick an alert distance and confirm the warning appears if you choose one larger than the current distance.
+7. Start the ride and confirm a Firestore `journeys` document is created with `journeyType` `bus` and a `stopAlert` map.
+8. Confirm the tracking notification appears with the live remaining distance.
+9. Lock the phone and travel toward the stop (or use the emulator's extended controls to set a location inside the radius).
+10. Confirm the alarm sounds and vibrates, and that the notification reads "Your stop is coming up".
+11. Re-open Amica and confirm the screen shows the approaching-stop state rather than alarming a second time.
+12. Tap "I am getting off here" and confirm the journey status becomes `safe` and the notification clears.
+
+MVP notes:
+
+- Distance is straight-line (great-circle), not road distance, so a route that loops away from the stop warns slightly late relative to road travel. Road distance needs the Directions API, which is out of scope for the MVP.
+- Accuracy depends on the GPS fix. Inside a tunnel or a dense built-up area the distance may lag until the next good fix.
+- Manufacturer battery settings can still stop a foreground service. Disable battery optimization for Amica when testing a long ride.
+- Emulators without Google Play services may not deliver location updates to the native service.
+
 ## Fake Call and Voice SOS
 
 Fake Call is simulated inside the app. It does not make a real phone call. The visible call screens avoid debug wording so the MVP looks like a normal incoming and active call screen.
+
+Opening Fake Call from the Home Dashboard shows the arming screen, where the call can be scheduled for 15s, 30s, 1, 2, or 5 minutes ahead, or rung immediately. A scheduled call is held by a native Android foreground service with a partial wake lock, so it still rings after Amica is closed or the phone is locked — which is the point of arming one before getting into a vehicle. The countdown appears in the notification shade with a Cancel action, and the arming screen restores the remaining time if it is reopened.
+
+The volume-up shortcut and a schedule that comes due both open the incoming call screen directly. A scheduled call deliberately ignores the "Volume-up shortcut" setting, since the user armed that specific call.
 
 Voice SOS uses the `speech_to_text` package for MVP phrase detection. It listens only while the fake call active screen is open. It does not run in the background.
 
@@ -225,6 +277,17 @@ Manual test flow:
 8. Confirm the app creates a Firestore `sos_alerts` document with `triggerType` set to `voice`.
 9. Confirm the SOS Active screen opens and shows the location.
 
+Scheduled call test flow:
+
+1. Log in.
+2. Open the Home Dashboard and tap "Fake Call".
+3. Choose a delay and tap "Schedule in ...".
+4. Allow the notification permission if Android asks.
+5. Confirm the "Call scheduled" notification appears with a live countdown.
+6. Leave Amica or lock the phone.
+7. Confirm the incoming call screen opens when the countdown ends. If Android blocks the automatic launch, tap the incoming-call notification.
+8. Repeat, and confirm "Cancel scheduled call" (in the app or from the notification action) stops the pending call.
+
 Volume shortcut test flow:
 
 1. Log in.
@@ -237,6 +300,7 @@ Volume shortcut test flow:
 MVP notes:
 
 - No real phone call is made by Fake Call.
+- A scheduled call survives the app being closed, but Android may still stop the foreground service under aggressive manufacturer battery settings. Disable battery optimization for Amica during testing if a schedule does not fire.
 - Voice SOS does not run in the background.
 - The volume-up shortcut uses an Android foreground service so it can work after the app UI is closed, as long as Android keeps the Amica shortcut notification running.
 - Android may block direct background activity launch on some versions or battery modes. The app posts a high-priority incoming-call notification as a fallback.

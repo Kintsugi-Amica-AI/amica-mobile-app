@@ -114,7 +114,7 @@ class FakeCallShortcutService {
       return false;
     }
 
-    final navigator = _navigatorKey?.currentState;
+    final navigator = await _awaitNavigator();
     if (navigator == null) {
       return false;
     }
@@ -129,5 +129,22 @@ class FakeCallShortcutService {
       _isNavigating = false;
     });
     return true;
+  }
+
+  /// Waits for the navigator to exist before pushing the call screen.
+  ///
+  /// [configure] runs from `initState`, so on a cold start triggered by a
+  /// scheduled-call or shortcut notification there is no navigator yet. The
+  /// pending flag has already been consumed by then, so giving up
+  /// immediately would silently drop the call the user armed.
+  Future<NavigatorState?> _awaitNavigator() async {
+    for (var attempt = 0; attempt < 20; attempt++) {
+      final navigator = _navigatorKey?.currentState;
+      if (navigator != null) {
+        return navigator;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+    return _navigatorKey?.currentState;
   }
 }

@@ -108,6 +108,13 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: () => Navigator.pushNamed(context, AppRoutes.startJourney),
       ),
       SafetyFeatureCard(
+        title: AppStrings.stopAlert,
+        subtitle: 'Alarm before your bus stop.',
+        icon: Icons.directions_bus_filled_outlined,
+        iconColor: AppColors.secondary,
+        onTap: () => Navigator.pushNamed(context, AppRoutes.stopAlert),
+      ),
+      SafetyFeatureCard(
         title: AppStrings.emergencyContacts,
         subtitle: 'Manage trusted contacts.',
         icon: Icons.contacts_outlined,
@@ -116,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       SafetyFeatureCard(
         title: AppStrings.fakeCall,
-        subtitle: 'Trigger a deterrent call.',
+        subtitle: 'Ring now or schedule one.',
         icon: Icons.phone_in_talk_outlined,
         iconColor: AppColors.warning,
         onTap: () => Navigator.pushNamed(context, AppRoutes.fakeCall),

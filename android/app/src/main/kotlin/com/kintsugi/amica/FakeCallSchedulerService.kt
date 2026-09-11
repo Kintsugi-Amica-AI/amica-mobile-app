@@ -40,14 +40,26 @@ class FakeCallSchedulerService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         return when (intent?.action) {
             ACTION_START -> {
-                startScheduling(intent)
+                startScheduling(
+                    triggerAtMillis = intent.getLongExtra(
+                        EXTRA_TRIGGER_AT_MILLIS,
+                        0L,
+                    ),
+                    callerName = intent.getStringExtra(EXTRA_CALLER_NAME),
+                )
                 START_STICKY
             }
             ACTION_STOP -> {
                 cancelScheduling()
                 START_NOT_STICKY
             }
-            else -> START_NOT_STICKY
+            // Android restarted the sticky service with no intent. Re-arm from
+            // the persisted trigger so a pending call is never silently lost
+            // while the app still shows a countdown for it.
+            else -> {
+                restoreScheduling()
+                START_STICKY
+            }
         }
     }
 
@@ -57,22 +69,23 @@ class FakeCallSchedulerService : Service() {
         super.onDestroy()
     }
 
-    private fun startScheduling(intent: Intent) {
+    private fun startScheduling(triggerAtMillis: Long, callerName: String?) {
         cancelScheduledCall()
 
-        val triggerAtMillis = intent.getLongExtra(EXTRA_TRIGGER_AT_MILLIS, 0L)
-        callerName = intent.getStringExtra(EXTRA_CALLER_NAME)
-            ?.takeIf { it.isNotBlank() }
+        this.callerName = callerName?.takeIf { it.isNotBlank() }
             ?: DEFAULT_CALLER_NAME
+
+        // Go foreground before any early return: Android kills the process if
+        // startForegroundService() is not followed by startForeground().
+        createNotificationChannels()
+        startForegroundCompat(buildSchedulingNotification(triggerAtMillis))
 
         if (triggerAtMillis <= System.currentTimeMillis()) {
             cancelScheduling()
             return
         }
 
-        saveScheduledTrigger(this, triggerAtMillis)
-        createNotificationChannels()
-        startForegroundCompat(buildSchedulingNotification(triggerAtMillis))
+        saveScheduledTrigger(this, triggerAtMillis, this.callerName)
         acquireWakeLockUntil(triggerAtMillis)
 
         val runnable = Runnable {
@@ -84,6 +97,21 @@ class FakeCallSchedulerService : Service() {
         handler.postDelayed(
             runnable,
             max(0L, triggerAtMillis - System.currentTimeMillis()),
+        )
+    }
+
+    private fun restoreScheduling() {
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val triggerAtMillis = prefs.getLong(PREF_TRIGGER_AT_MILLIS, 0L)
+
+        if (triggerAtMillis <= System.currentTimeMillis()) {
+            cancelScheduling()
+            return
+        }
+
+        startScheduling(
+            triggerAtMillis = triggerAtMillis,
+            callerName = prefs.getString(PREF_CALLER_NAME, null),
         )
     }
 
@@ -302,6 +330,7 @@ class FakeCallSchedulerService : Service() {
         private const val DEFAULT_CALLER_NAME = "Amica Friend"
         private const val PREFS_NAME = "amica_fake_call_scheduler"
         private const val PREF_TRIGGER_AT_MILLIS = "triggerAtMillis"
+        private const val PREF_CALLER_NAME = "callerName"
 
         fun startIntent(
             context: Context,
@@ -337,10 +366,15 @@ class FakeCallSchedulerService : Service() {
             return max(0L, triggerAtMillis - System.currentTimeMillis())
         }
 
-        private fun saveScheduledTrigger(context: Context, triggerAtMillis: Long) {
+        private fun saveScheduledTrigger(
+            context: Context,
+            triggerAtMillis: Long,
+            callerName: String,
+        ) {
             context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                 .edit()
                 .putLong(PREF_TRIGGER_AT_MILLIS, triggerAtMillis)
+                .putString(PREF_CALLER_NAME, callerName)
                 .apply()
         }
 
@@ -348,6 +382,7 @@ class FakeCallSchedulerService : Service() {
             context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                 .edit()
                 .remove(PREF_TRIGGER_AT_MILLIS)
+                .remove(PREF_CALLER_NAME)
                 .apply()
         }
     }

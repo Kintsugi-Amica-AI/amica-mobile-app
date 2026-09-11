@@ -16,12 +16,17 @@ class PlateScanException implements Exception {
 }
 
 class PlateScanService {
-  PlateScanService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+  const PlateScanService({FirebaseFirestore? firestore})
+      : _injectedFirestore = firestore;
 
   static const String _collectionName = 'vehicles';
 
-  final FirebaseFirestore _firestore;
+  final FirebaseFirestore? _injectedFirestore;
+
+  /// Resolved lazily, matching the other Amica services, so the plate text
+  /// normalization rules can be unit tested without a Firebase app.
+  FirebaseFirestore get _firestore =>
+      _injectedFirestore ?? FirebaseFirestore.instance;
 
   /// Normalizes raw OCR text into an uppercase alphanumeric plate string.
   ///

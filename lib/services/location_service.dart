@@ -54,6 +54,20 @@ class LocationService {
     );
   }
 
+  /// Live position updates for a screen that tracks movement, such as the bus
+  /// stop alert.
+  ///
+  /// [distanceFilterMeters] keeps the stream quiet while the rider is stopped
+  /// in traffic instead of emitting every GPS jitter.
+  Stream<Position> watchPosition({int distanceFilterMeters = 25}) {
+    return Geolocator.getPositionStream(
+      locationSettings: LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: distanceFilterMeters,
+      ),
+    );
+  }
+
   Future<LocationDataModel> getCurrentLocationData() async {
     final position = await getCurrentPosition();
     return LocationDataModel(

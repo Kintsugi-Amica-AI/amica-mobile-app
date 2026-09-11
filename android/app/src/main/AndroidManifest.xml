@@ -4,6 +4,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -72,6 +73,14 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="volume_shortcut_call_screen" />
         </service>
+
+        <!-- Smart Stop Alert keeps receiving location while Amica is in the
+             background. A location-typed foreground service started from the
+             foreground does not need ACCESS_BACKGROUND_LOCATION. -->
+        <service
+            android:name=".StopAlertMonitorService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
 
         <service
             android:name=".FakeCallSchedulerService"

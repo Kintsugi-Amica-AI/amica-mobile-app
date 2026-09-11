@@ -20,6 +20,12 @@ class EmergencyActionService {
     await _invokeBooleanMethod('prepareEmergencyPermissions');
   }
 
+  /// Requests only the notification permission, for features that show an
+  /// alert but have no reason to ask for SMS or phone access.
+  Future<void> prepareNotificationPermission() async {
+    await _invokeBooleanMethod('prepareNotificationPermission');
+  }
+
   Future<void> sendEmergencySms({
     required String phone,
     required String message,
@@ -69,6 +75,33 @@ class EmergencyActionService {
 
   Future<void> stopJourneySafetyMonitor() async {
     await _invokeBooleanMethod('stopJourneySafetyMonitor');
+  }
+
+  /// Starts native tracking of the distance to a bus drop-off.
+  ///
+  /// Runs in a foreground service so the alarm still sounds with Amica closed
+  /// and the screen off, which is exactly when a rider needs it.
+  Future<void> startStopAlertMonitor({
+    required double dropOffLatitude,
+    required double dropOffLongitude,
+    required String dropOffName,
+    required int alertDistanceMeters,
+    bool alreadyAlerted = false,
+  }) async {
+    await _invokeBooleanMethod(
+      'startStopAlertMonitor',
+      arguments: {
+        'dropOffLatitude': dropOffLatitude,
+        'dropOffLongitude': dropOffLongitude,
+        'dropOffName': dropOffName,
+        'alertDistanceMeters': alertDistanceMeters,
+        'alreadyAlerted': alreadyAlerted,
+      },
+    );
+  }
+
+  Future<void> stopStopAlertMonitor() async {
+    await _invokeBooleanMethod('stopStopAlertMonitor');
   }
 
   Future<void> startFakeCallShortcutMonitor() async {

@@ -43,6 +43,7 @@ class MainActivity : FlutterActivity() {
         emergencyChannel?.setMethodCallHandler { call, result ->
             when (call.method) {
                 "prepareEmergencyPermissions" -> prepareEmergencyPermissions(result)
+                "prepareNotificationPermission" -> prepareNotificationPermission(result)
                 "sendSms" -> handleSendSms(call, result)
                 "startCall" -> handleStartCall(call, result)
                 "vibrateTwice" -> handleVibrateTwice(result)
@@ -58,6 +59,8 @@ class MainActivity : FlutterActivity() {
                     handleScheduledFakeCallRemainingSeconds(result)
                 "consumePendingScheduledFakeCall" ->
                     consumePendingScheduledCall(result)
+                "startStopAlertMonitor" -> handleStartStopAlertMonitor(call, result)
+                "stopStopAlertMonitor" -> handleStopStopAlertMonitor(result)
                 else -> result.notImplemented()
             }
         }
@@ -131,6 +134,28 @@ class MainActivity : FlutterActivity() {
             PendingAction(PendingActionType.PREPARE_PERMISSIONS),
             result,
             missingPermissions.toTypedArray(),
+            preparePermissionsRequestCode,
+        )
+    }
+
+    /// Asks only for notifications, for features such as the Smart Stop Alert
+    /// that need to show an alarm but have no business requesting SMS or phone
+    /// permissions.
+    private fun prepareNotificationPermission(result: MethodChannel.Result) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            result.success(true)
+            return
+        }
+
+        if (hasPermission(Manifest.permission.POST_NOTIFICATIONS)) {
+            result.success(true)
+            return
+        }
+
+        startPendingPermissionRequest(
+            PendingAction(PendingActionType.PREPARE_PERMISSIONS),
+            result,
+            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
             preparePermissionsRequestCode,
         )
     }
@@ -213,6 +238,46 @@ class MainActivity : FlutterActivity() {
         pendingCallShortcut = true
         intent.removeExtra(openCallShortcutExtra)
         emergencyChannel?.invokeMethod("onVolumeDownTriplePress", null)
+    }
+
+    private fun handleStartStopAlertMonitor(
+        call: MethodCall,
+        result: MethodChannel.Result,
+    ) {
+        val dropOffLatitude = call.argument<Number>("dropOffLatitude")?.toDouble()
+        val dropOffLongitude = call.argument<Number>("dropOffLongitude")?.toDouble()
+
+        if (dropOffLatitude == null || dropOffLongitude == null) {
+            result.error(
+                "INVALID_STOP_ALERT_ARGUMENTS",
+                "Drop-off coordinates are required.",
+                null,
+            )
+            return
+        }
+
+        val intent = StopAlertMonitorService.startIntent(
+            context = this,
+            dropOffLatitude = dropOffLatitude,
+            dropOffLongitude = dropOffLongitude,
+            dropOffName = call.argument<String>("dropOffName")?.trim().orEmpty(),
+            alertDistanceMeters = call.argument<Number>("alertDistanceMeters")
+                ?.toInt()
+                ?: 2000,
+            alreadyAlerted = call.argument<Boolean>("alreadyAlerted") == true,
+        )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+        result.success(true)
+    }
+
+    private fun handleStopStopAlertMonitor(result: MethodChannel.Result) {
+        startService(StopAlertMonitorService.stopIntent(this))
+        result.success(true)
     }
 
     private fun handleScheduleFakeCall(

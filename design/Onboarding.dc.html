@@ -1,0 +1,217 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500;6..72,600&family=DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Playfair+Display:wght@400;500;600;700&family=Karla:wght@400;500;600;700&family=Cormorant+Garamond:wght@400;500;600;700&family=Jost:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Public+Sans:wght@400;500;600;700&display=swap">
+  <style>
+/* ── Amica · "Warm Dawn" design system ───────────────────────────────── */
+:root{
+  /* Type. Swap these two lines to change the whole design's voice. */
+  --serif:'Newsreader',Georgia,'Times New Roman',serif;
+  --sans:'Instrument Sans','Helvetica Neue',Arial,sans-serif;
+  /* Surfaces */
+  --ivory:#FDF8F4;      /* app background */
+  --shell:#F6EDE6;      /* recessed / secondary surface */
+  --card:#FFFFFF;       /* raised card */
+  /* Ink */
+  --plum:#3B2230;       /* primary text, deepest brand */
+  --plum-70:#6B4F5E;    /* secondary text */
+  --plum-45:#7E6473;    /* muted text, icons at rest — 4.95:1 on ivory */
+  --line:#EBDFD6;       /* hairline */
+  --line-soft:#F2E8E0;  /* card border */
+  /* Semantics. terracotta is a FILL; terracotta-deep is the ink-on-ivory
+     spelling of it (4.2:1 vs 6.2:1) — use -deep for any text or link. */
+  --terracotta:#C2543D; --terracotta-deep:#9E3E2B; --blush:#F7E2DA;
+  --sage:#4F7557;       --sage-ink:#3C5B43;        --sage-soft:#E6EEE6;
+  --gold:#8F6216;                                   --gold-soft:#F8EEDA;
+  --shadow-sm:0 1px 2px rgba(59,34,48,.05), 0 4px 12px rgba(59,34,48,.05);
+  --shadow:0 1px 2px rgba(59,34,48,.05), 0 10px 28px rgba(59,34,48,.07);
+  --lift:0 2px 4px rgba(59,34,48,.06), 0 18px 40px rgba(59,34,48,.10);
+}
+/* Night / discreet mode — same structure, matte, no glow */
+.night{
+  --ivory:#191015; --shell:#241821; --card:#241821;
+  --plum:#F4EAE3; --plum-70:#C3ABB6; --plum-45:#9A8290;
+  --line:#382933; --line-soft:#31242D;
+  --terracotta:#E0705A; --terracotta-deep:#C2543D; --blush:#3B2129;
+  --sage:#89B291; --sage-ink:#A7C9AD; --sage-soft:#1F2C22;
+  --gold:#D7A75C; --gold-soft:#332619;
+  --shadow-sm:none; --shadow:none; --lift:0 18px 40px rgba(0,0,0,.45);
+}
+
+*{box-sizing:border-box;}
+body{margin:0;background:#EDE4DC;}
+a{color:var(--terracotta);text-decoration:none;} a:hover{color:var(--terracotta-deep);}
+
+.screen{
+  width:390px;height:844px;overflow:hidden;position:relative;
+  background:var(--ivory);color:var(--plum);
+  font-family:var(--sans);
+  font-size:15px;line-height:1.47;font-weight:400;
+  -webkit-font-smoothing:antialiased;text-wrap:pretty;
+  display:flex;flex-direction:column;
+}
+/* Real status bar & home indicator render on top — reserve, never draw. */
+.statusbar-reserve{height:54px;flex-shrink:0;}
+.gesture-reserve{height:22px;flex-shrink:0;}
+.pad{padding-left:20px;padding-right:20px;}
+.flow{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;}
+
+/* ── Type ─────────────────────────────────────────────────────────── */
+.display{font-family:var(--serif);font-weight:400;
+  font-size:31px;line-height:1.14;letter-spacing:-.012em;margin:0;}
+.h1{font-family:var(--serif);font-weight:400;font-size:25px;line-height:1.2;margin:0;}
+.h2{font-size:18px;font-weight:600;line-height:1.3;letter-spacing:-.01em;margin:0;}
+.title{font-size:15.5px;font-weight:600;line-height:1.35;margin:0;}
+.body{font-size:14px;line-height:1.5;color:var(--plum-70);margin:0;}
+.label{font-size:12.5px;font-weight:500;line-height:1.4;color:var(--plum-70);margin:0;}
+.micro{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--plum-45);margin:0;}
+.num{font-variant-numeric:tabular-nums;}
+
+/* ── Primitives ───────────────────────────────────────────────────── */
+.card{background:var(--card);border:1px solid var(--line-soft);border-radius:20px;
+  padding:16px;box-shadow:var(--shadow-sm);}
+.row{display:flex;align-items:center;gap:12px;}
+.col{display:flex;flex-direction:column;}
+.spacer{flex:1 1 auto;}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:9px;height:54px;
+  border-radius:16px;border:0;font-size:15.5px;font-weight:600;letter-spacing:.005em;
+  background:var(--plum);color:var(--ivory);}
+.btn-quiet{background:var(--shell);color:var(--plum);border:1px solid var(--line);}
+.btn-danger{background:var(--terracotta);color:#FFF9F6;}
+.btn-safe{background:var(--sage);color:#F4F8F3;}
+
+.pill{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 11px;
+  border-radius:999px;font-size:12px;font-weight:600;letter-spacing:.005em;}
+.pill-sage{background:var(--sage-soft);color:var(--sage-ink);}
+.pill-gold{background:var(--gold-soft);color:var(--gold);}
+.pill-blush{background:var(--blush);color:var(--terracotta-deep);}
+.pill-quiet{background:var(--shell);color:var(--plum-70);}
+
+.avatar{width:40px;height:40px;border-radius:999px;display:flex;align-items:center;
+  justify-content:center;font-size:14px;font-weight:600;flex-shrink:0;}
+
+.dot{width:7px;height:7px;border-radius:999px;flex-shrink:0;}
+
+/* ── Bottom tab bar ───────────────────────────────────────────────── */
+.tabbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  background:var(--card);border-top:1px solid var(--line-soft);padding:9px 8px 4px;flex-shrink:0;}
+.tab{display:flex;flex-direction:column;align-items:center;gap:4px;
+  color:var(--plum-45);font-size:10.5px;font-weight:600;min-height:46px;justify-content:center;}
+.tab-on{color:var(--plum);}
+
+/* ── Hold-to-send SOS ─────────────────────────────────────────────── */
+.sos-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;}
+.sos{width:186px;height:186px;border-radius:999px;display:flex;align-items:center;
+  justify-content:center;position:relative;background:var(--blush);}
+.sos-core{width:150px;height:150px;border-radius:999px;background:var(--terracotta);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+  color:#FFF6F2;box-shadow:var(--lift);}
+.sos-ring{position:absolute;inset:0;border-radius:999px;}
+
+/* Icon defaults — every icon is stroke-based inline SVG on a 24 grid */
+svg{display:block;fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round;}
+svg.filled{fill:currentColor;stroke:none;}
+
+.tile{display:flex;flex-direction:column;align-items:flex-start;gap:9px;
+  background:var(--card);border:1px solid var(--line-soft);border-radius:18px;
+  padding:13px 11px;min-height:92px;box-shadow:var(--shadow-sm);}
+.tile-ic{width:34px;height:34px;border-radius:11px;display:flex;
+  align-items:center;justify-content:center;flex-shrink:0;}
+.tile-label{font-size:11.5px;font-weight:600;line-height:1.25;letter-spacing:-.005em;}
+
+.listrow{display:flex;align-items:center;gap:13px;min-height:60px;padding:10px 0;}
+.divider{height:1px;background:var(--line-soft);}
+
+/* ── Type options under review ─────────────────────────────────────────
+   Each class swaps only the two family variables (plus a little optical
+   tuning, so every candidate is judged at its best). Once one is chosen
+   its two lines move into :root and these classes go away.            */
+.type-a{ --serif:'DM Serif Display',Georgia,serif;
+         --sans:'DM Sans','Helvetica Neue',Arial,sans-serif; }
+.type-b{ --serif:'Playfair Display',Georgia,serif;
+         --sans:'Karla','Helvetica Neue',Arial,sans-serif; }
+.type-c{ --serif:'Cormorant Garamond',Georgia,serif;
+         --sans:'Jost','Helvetica Neue',Arial,sans-serif; }
+.type-d{ --serif:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;
+         --sans:'Public Sans','Helvetica Neue',Arial,sans-serif; }
+
+.type-a .display{font-size:30px;letter-spacing:-.005em;}
+.type-b .display{font-size:29px;}
+.type-c .display{font-size:36px;font-weight:600;letter-spacing:0;}
+.type-c .h1{font-weight:600;}
+.type-d .display{font-size:29px;font-weight:600;letter-spacing:-.022em;}
+.type-d .h1{font-weight:600;}
+  </style>
+</helmet>
+<div class="screen">
+  <div class="statusbar-reserve"></div>
+
+  <div class="pad row" style="height:40px;flex-shrink:0;">
+    <div style="font-family:var(--serif);font-size:23px;font-weight:500;letter-spacing:.01em;">Amica</div>
+    <div class="spacer"></div>
+    <span class="pill pill-quiet" style="font-weight:500;color:var(--plum-45);">&#7717;&#7717;&#7717;</span>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- Warm Dawn, drawn: layered light coming up over a horizon -->
+  <div class="pad" style="flex-shrink:0;">
+    <svg viewBox="0 0 350 196" width="100%" height="196">
+      <path d="M175 34a112 112 0 0 1 112 112H63A112 112 0 0 1 175 34Z" fill="#FAEBE3"/>
+      <path d="M175 64a82 82 0 0 1 82 82H93a82 82 0 0 1 82-82Z" fill="#F3D5C7"/>
+      <path d="M175 96a50 50 0 0 1 50 50h-100a50 50 0 0 1 50-50Z" fill="#C2543D"/>
+      <path d="M8 146h334" stroke="#E0D0C4" stroke-width="1.6" fill="none"/>
+      <g fill="none" stroke="#C2543D" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round">
+        <path d="M175 16v-9M108 34l-5-7.4M242 34l5-7.4M52 76l-7.8-4.6M298 76l7.8-4.6"/>
+      </g>
+      <circle cx="88" cy="146" r="7" fill="#4F7557"/>
+      <circle cx="262" cy="146" r="7" fill="#A9761F"/>
+    </svg>
+  </div>
+
+  <div style="height:34px;flex-shrink:0;"></div>
+
+  <div class="pad col" style="gap:12px;flex-shrink:0;">
+    <h1 class="display">You don't have to<br>walk home alone.</h1>
+    <p class="body" style="max-width:330px;font-size:15px;">
+      Amica keeps the people you trust one press away &mdash; and tells them where you are only when you say so.
+    </p>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="pad col" style="gap:10px;flex-shrink:0;">
+    <div class="btn">Create your account</div>
+    <div class="btn btn-quiet">
+      <svg viewBox="0 0 24 24" width="18" height="18"><path d="M21 12.2c0-.7-.06-1.4-.18-2H12v3.8h5.05a4.3 4.3 0 0 1-1.87 2.83v2.35h3.03A9.1 9.1 0 0 0 21 12.2Z"/><path d="M12 21.5a9 9 0 0 0 6.21-2.27l-3.03-2.35A5.7 5.7 0 0 1 6.7 14H3.57v2.42A9.5 9.5 0 0 0 12 21.5Z"/><path d="M6.7 14a5.6 5.6 0 0 1 0-3.6V8H3.57a9.5 9.5 0 0 0 0 8.42Z"/><path d="M12 6.4a5.1 5.1 0 0 1 3.6 1.42l2.7-2.7A9.1 9.1 0 0 0 12 2.5 9.5 9.5 0 0 0 3.57 8L6.7 10.4A5.7 5.7 0 0 1 12 6.4Z"/></svg>
+      Continue with Google
+    </div>
+    <div class="row" style="justify-content:center;gap:6px;padding-top:6px;">
+      <span class="label" style="font-size:13.5px;">Already with us?</span>
+      <span class="label" style="font-size:13.5px;color:var(--terracotta-deep);font-weight:600;">Log in</span>
+    </div>
+  </div>
+
+  <div style="height:18px;flex-shrink:0;"></div>
+
+  <div class="pad" style="flex-shrink:0;">
+    <p class="label" style="text-align:center;font-size:11px;color:var(--plum-45);line-height:1.45;">
+      Amica is not a replacement for the police. In an emergency, call 119.
+    </p>
+  </div>
+
+  <div style="height:14px;flex-shrink:0;"></div>
+  <div class="gesture-reserve"></div>
+</div>
+</x-dc>
+</body>
+</html>

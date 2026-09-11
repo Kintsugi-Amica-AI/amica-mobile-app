@@ -3,6 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'location_data_model.dart';
 
 class Journey {
+  /// Distance to the drop-off at which the Smart Stop Alert sounds.
+  static const int defaultAlertDistanceMeters = 2000;
+
   const Journey({
     required this.id,
     required this.userId,
@@ -14,6 +17,7 @@ class Journey {
     required this.estimatedEndTime,
     required this.status,
     required this.safetyCheck,
+    required this.stopAlert,
     required this.metadata,
     required this.schemaVersion,
     required this.createdAt,
@@ -32,12 +36,36 @@ class Journey {
   final DateTime? actualEndTime;
   final String status;
   final Map<String, dynamic> safetyCheck;
+
+  /// Smart Stop Alert settings, as sketched in the backend schema's
+  /// "Smart Stop Alert can use `destination` and `journeyType`" note.
+  ///
+  /// Present and enabled only on rides started from the bus stop alert flow;
+  /// ordinary timer journeys leave it empty.
+  final Map<String, dynamic> stopAlert;
   final Map<String, dynamic> metadata;
   final int schemaVersion;
   final DateTime createdAt;
   final DateTime updatedAt;
 
   bool get isActive => status == 'active';
+
+  /// Whether this ride is watching the distance to a drop-off point rather
+  /// than counting down a safety timer.
+  bool get isStopAlertRide => stopAlert['enabled'] == true;
+
+  /// How close to the drop-off the alarm should sound, in metres.
+  int get alertDistanceMeters {
+    final distance = stopAlert['alertDistanceMeters'];
+    if (distance is num && distance > 0) {
+      return distance.toInt();
+    }
+    return defaultAlertDistanceMeters;
+  }
+
+  /// Whether the approaching-stop alarm has already sounded for this ride,
+  /// so re-opening the screen does not sound it a second time.
+  bool get stopAlertTriggered => stopAlert['alertedAt'] != null;
 
   String get destinationName {
     final name = destination['name'];
@@ -91,6 +119,7 @@ class Journey {
           'respondedAt': null,
         },
       ),
+      stopAlert: _readMap(data['stopAlert']),
       metadata: _readMap(data['metadata']),
       schemaVersion: _readInt(data['schemaVersion'], 1),
       createdAt: _readDateTime(data['createdAt']),
@@ -112,6 +141,7 @@ class Journey {
           actualEndTime == null ? null : Timestamp.fromDate(actualEndTime!),
       'status': status,
       'safetyCheck': safetyCheck,
+      'stopAlert': stopAlert,
       'metadata': metadata,
       'schemaVersion': schemaVersion,
       'createdAt': Timestamp.fromDate(createdAt),

@@ -16,7 +16,7 @@ class PlateScanScreen extends StatefulWidget {
     super.key,
     PlateScanService? plateScanService,
     ImagePicker? imagePicker,
-  })  : plateScanService = plateScanService ?? PlateScanService(),
+  })  : plateScanService = plateScanService ?? const PlateScanService(),
         imagePicker = imagePicker ?? ImagePicker();
 
   final PlateScanService plateScanService;
