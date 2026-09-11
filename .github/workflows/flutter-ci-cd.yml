@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [dev, main]
 
+permissions:
+  contents: read
+
 jobs:
   build-debug-apk:
     runs-on: ubuntu-latest
@@ -35,6 +38,7 @@ jobs:
         run: flutter build apk --debug
 
       - name: Upload debug APK artifact
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: amica-debug-apk
