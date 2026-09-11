@@ -1,0 +1,29 @@
+# Dart and Flutter
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+coverage/
+android/.kotlin/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local environment and secrets
+.env
+.env.*
+android/local.properties
+*.jks
+*.keystore
+key.properties
+android/app/google-services.json
+android/google-services.json
+ios/Runner/GoogleService-Info.plist
+firebase_options.dart
