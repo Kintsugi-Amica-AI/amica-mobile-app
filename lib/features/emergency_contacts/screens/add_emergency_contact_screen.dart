@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_contacts/flutter_contacts.dart';
 
 import '../../../core/widgets/amica_background.dart';
 import '../../../core/widgets/custom_text_field.dart';
@@ -30,6 +31,7 @@ class _AddEmergencyContactScreenState extends State<AddEmergencyContactScreen> {
   final _priorityController = TextEditingController(text: '1');
 
   bool _isSaving = false;
+  bool _isImportingContact = false;
   String? _errorMessage;
 
   bool get _isEditing => widget.contact != null;
@@ -103,6 +105,54 @@ class _AddEmergencyContactScreenState extends State<AddEmergencyContactScreen> {
     }
   }
 
+  Future<void> _pickFromContacts() async {
+    setState(() {
+      _isImportingContact = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final hasPermission = await FlutterContacts.requestPermission();
+      if (!hasPermission) {
+        if (mounted) {
+          setState(
+            () => _errorMessage =
+                'Contacts permission is required to import a contact.',
+          );
+        }
+        return;
+      }
+
+      final contact = await FlutterContacts.openExternalPick();
+      if (contact == null || !mounted) {
+        return;
+      }
+
+      if (contact.phones.isEmpty) {
+        setState(
+          () => _errorMessage =
+              'That contact has no phone number saved. Enter one manually.',
+        );
+        return;
+      }
+
+      setState(() {
+        _nameController.text = contact.displayName;
+        _phoneController.text = contact.phones.first.number;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _errorMessage = 'Could not import that contact.',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isImportingContact = false);
+      }
+    }
+  }
+
   String? _required(String? value, String fieldName) {
     if (value == null || value.trim().isEmpty) {
       return '$fieldName is required';
@@ -133,6 +183,22 @@ class _AddEmergencyContactScreenState extends State<AddEmergencyContactScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
               children: [
+                OutlinedButton.icon(
+                  onPressed: _isImportingContact ? null : _pickFromContacts,
+                  icon: _isImportingContact
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.contact_page_outlined),
+                  label: Text(
+                    _isImportingContact
+                        ? 'Opening contacts...'
+                        : 'Import from phone contacts',
+                  ),
+                ),
+                const SizedBox(height: 16),
                 GlassCard(
                   child: Column(
                     children: [

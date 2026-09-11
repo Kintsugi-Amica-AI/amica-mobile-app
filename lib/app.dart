@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'core/constants/app_routes.dart';
 import 'core/constants/app_strings.dart';
+import 'core/navigation/amica_route_observer.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/loading_view.dart';
 import 'features/auth/services/auth_service.dart';
@@ -47,6 +48,7 @@ class _AmicaAppState extends State<AmicaApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: _navigatorKey,
+      navigatorObservers: [amicaRouteObserver],
       title: AppStrings.appName,
       theme: AppTheme.dark,
       darkTheme: AppTheme.dark,
