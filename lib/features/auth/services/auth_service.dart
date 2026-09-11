@@ -100,7 +100,7 @@ class AuthService {
       if (user == null) {
         throw const AuthServiceException('Login failed. Please try again.');
       }
-      return _loadUserProfile(user);
+      return await _loadUserProfile(user);
     } on FirebaseAuthException catch (error) {
       throw AuthServiceException(_authErrorMessage(error));
     }
@@ -129,7 +129,7 @@ class AuthService {
         );
       }
 
-      return _createOrUpdateGoogleUserProfile(firebaseUser);
+      return await _createOrUpdateGoogleUserProfile(firebaseUser);
     } on AuthServiceException {
       rethrow;
     } on FirebaseAuthException catch (error) {
