@@ -92,6 +92,57 @@ class EmergencyActionService {
     }
   }
 
+  /// Arms a deterrent call for [delay] from now.
+  ///
+  /// The countdown is held by a native foreground service, so it still rings
+  /// after the user leaves Amica or locks the phone — which is the whole point
+  /// of scheduling a call before getting into a vehicle.
+  Future<void> scheduleFakeCall({
+    required Duration delay,
+    required String callerName,
+  }) async {
+    await _invokeBooleanMethod(
+      'scheduleFakeCall',
+      arguments: {
+        'delaySeconds': delay.inSeconds,
+        'callerName': callerName,
+      },
+    );
+  }
+
+  Future<void> cancelScheduledFakeCall() async {
+    await _invokeBooleanMethod('cancelScheduledFakeCall');
+  }
+
+  /// Time left on an armed schedule, or [Duration.zero] when nothing is
+  /// pending. Lets the call screen restore its countdown after being closed.
+  Future<Duration> scheduledFakeCallRemaining() async {
+    try {
+      final seconds = await _channel.invokeMethod<int>(
+            'scheduledFakeCallRemainingSeconds',
+          ) ??
+          0;
+      return Duration(seconds: seconds < 0 ? 0 : seconds);
+    } on PlatformException {
+      return Duration.zero;
+    } on MissingPluginException {
+      return Duration.zero;
+    }
+  }
+
+  Future<bool> consumePendingScheduledFakeCall() async {
+    try {
+      return await _channel.invokeMethod<bool>(
+            'consumePendingScheduledFakeCall',
+          ) ??
+          false;
+    } on PlatformException catch (error) {
+      throw EmergencyActionException(
+        error.message ?? 'Could not check the scheduled call.',
+      );
+    }
+  }
+
   Future<void> setCallProximityEnabled({required bool enabled}) async {
     await _invokeBooleanMethod(
       'setCallProximityEnabled',

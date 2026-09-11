@@ -19,6 +19,7 @@ import '../../sos/services/sos_service.dart';
 import '../models/journey.dart';
 import '../models/location_data_model.dart';
 import '../services/journey_service.dart';
+import 'safety_check_screen.dart';
 
 class JourneyTimerScreen extends StatefulWidget {
   const JourneyTimerScreen({
@@ -44,6 +45,15 @@ class JourneyTimerScreen extends StatefulWidget {
 
 class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     with WidgetsBindingObserver {
+  /// How long after the safety check the primary emergency contact is
+  /// messaged, and then called, if the user still has not answered.
+  ///
+  /// These mirror `SMS_DELAY_MILLIS` and `CALL_DELAY_MILLIS` in the native
+  /// `EmergencySafetyMonitorService`, so the countdown shown on the safety
+  /// check screen matches what actually happens on either path.
+  static const Duration _messageEscalationDelay = Duration(minutes: 1);
+  static const Duration _callEscalationDelay = Duration(minutes: 3);
+
   final ValueNotifier<Duration> _remainingNotifier =
       ValueNotifier<Duration>(Duration.zero);
 
@@ -289,35 +299,41 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
       if (!mounted) {
         return;
       }
-      showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('Are you safe?'),
-            content: const Text(
-              'Your journey timer has ended. Confirm you are safe or send SOS.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _markSafe(journey);
-                },
-                child: const Text('I am safe'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _sendSos(journey, timerTriggered: true);
-                },
-                child: const Text('Send SOS'),
-              ),
-            ],
-          );
-        },
-      );
+      unawaited(_openSafetyCheck(journey));
     });
+  }
+
+  /// Opens the full-screen safety check and applies the user's answer.
+  ///
+  /// The screen itself only reports a decision; this screen keeps ownership of
+  /// the journey document, the native safety monitor, and the escalation
+  /// timers, which all keep running underneath while the check is on top.
+  Future<void> _openSafetyCheck(Journey journey) async {
+    final result = await Navigator.pushNamed<Object?>(
+      context,
+      AppRoutes.safetyCheck,
+      arguments: SafetyCheckArguments(
+        destinationName: journey.destinationName,
+        journeyId: journey.id,
+        escalationAt: journey.estimatedEndTime.add(_messageEscalationDelay),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    switch (result) {
+      case SafetyCheckResult.safe:
+        await _markSafe(journey);
+      case SafetyCheckResult.sos:
+        await _sendSos(journey, timerTriggered: true);
+      default:
+        // The check is not dismissible, so this only happens if the route was
+        // torn down (for example the app was killed). Leave the escalation
+        // timers and the native monitor running.
+        break;
+    }
   }
 
   Future<void> _vibrateTwiceForSafetyCheck() async {
@@ -382,11 +398,11 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     _safetyCallTimer?.cancel();
 
     _safetyMessageTimer = Timer(
-      const Duration(minutes: 1),
+      _messageEscalationDelay,
       () => unawaited(_handleMessageEscalation(journey)),
     );
     _safetyCallTimer = Timer(
-      const Duration(minutes: 3),
+      _callEscalationDelay,
       () => unawaited(_handleCallEscalation()),
     );
   }
@@ -403,11 +419,10 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     }
 
     final elapsed = DateTime.now().difference(shownAt);
-    if (elapsed >= const Duration(minutes: 1) &&
-        !_messageEscalationHandled) {
+    if (elapsed >= _messageEscalationDelay && !_messageEscalationHandled) {
       unawaited(_handleMessageEscalation(journey));
     }
-    if (elapsed >= const Duration(minutes: 3) && !_callEscalationHandled) {
+    if (elapsed >= _callEscalationDelay && !_callEscalationHandled) {
       unawaited(_handleCallEscalation());
     }
   }

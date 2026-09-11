@@ -79,14 +79,24 @@ class _AmicaAppState extends State<AmicaApp> {
           final args = ModalRoute.of(context)?.settings.arguments;
           return JourneyTimerScreen(journeyId: args is String ? args : null);
         },
-        AppRoutes.safetyCheck: (_) => const SafetyCheckScreen(),
+        AppRoutes.safetyCheck: (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          return SafetyCheckScreen(
+            arguments: args is SafetyCheckArguments ? args : null,
+          );
+        },
         AppRoutes.sosActive: (context) {
           final args = ModalRoute.of(context)?.settings.arguments;
           return SosActiveScreen(
             arguments: args is SosActiveArguments ? args : null,
           );
         },
-        AppRoutes.fakeCall: (_) => const FakeCallScreen(),
+        AppRoutes.fakeCall: (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          return FakeCallScreen(
+            arguments: args is FakeCallArguments ? args : null,
+          );
+        },
         AppRoutes.fakeCallActive: (context) {
           final args = ModalRoute.of(context)?.settings.arguments;
           return FakeCallActiveScreen(

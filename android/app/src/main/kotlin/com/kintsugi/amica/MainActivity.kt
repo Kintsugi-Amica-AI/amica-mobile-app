@@ -30,6 +30,7 @@ class MainActivity : FlutterActivity() {
     private var volumeShortcutPressCount = 0
     private var firstVolumeShortcutAtMillis = 0L
     private var pendingCallShortcut = false
+    private var pendingScheduledCall = false
     private var proximityWakeLock: PowerManager.WakeLock? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -51,16 +52,24 @@ class MainActivity : FlutterActivity() {
                 "stopFakeCallShortcutMonitor" -> handleStopFakeCallShortcutMonitor(result)
                 "consumePendingFakeCallShortcut" -> consumePendingCallShortcut(result)
                 "setCallProximityEnabled" -> handleSetCallProximityEnabled(call, result)
+                "scheduleFakeCall" -> handleScheduleFakeCall(call, result)
+                "cancelScheduledFakeCall" -> handleCancelScheduledFakeCall(result)
+                "scheduledFakeCallRemainingSeconds" ->
+                    handleScheduledFakeCallRemainingSeconds(result)
+                "consumePendingScheduledFakeCall" ->
+                    consumePendingScheduledCall(result)
                 else -> result.notImplemented()
             }
         }
         handleCallShortcutIntent(intent)
+        handleScheduledCallIntent(intent)
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
         handleCallShortcutIntent(intent)
+        handleScheduledCallIntent(intent)
     }
 
     override fun onDestroy() {
@@ -204,6 +213,69 @@ class MainActivity : FlutterActivity() {
         pendingCallShortcut = true
         intent.removeExtra(openCallShortcutExtra)
         emergencyChannel?.invokeMethod("onVolumeDownTriplePress", null)
+    }
+
+    private fun handleScheduleFakeCall(
+        call: MethodCall,
+        result: MethodChannel.Result,
+    ) {
+        val delaySeconds = call.argument<Number>("delaySeconds")?.toLong() ?: 0L
+        val callerName = call.argument<String>("callerName")?.trim().orEmpty()
+
+        if (delaySeconds <= 0L) {
+            result.error(
+                "INVALID_SCHEDULE_ARGUMENTS",
+                "Schedule delay must be greater than zero.",
+                null,
+            )
+            return
+        }
+
+        val intent = FakeCallSchedulerService.startIntent(
+            context = this,
+            triggerAtMillis = System.currentTimeMillis() + delaySeconds * 1000L,
+            callerName = callerName,
+        )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+        result.success(true)
+    }
+
+    private fun handleCancelScheduledFakeCall(result: MethodChannel.Result) {
+        startService(FakeCallSchedulerService.stopIntent(this))
+        result.success(true)
+    }
+
+    private fun handleScheduledFakeCallRemainingSeconds(
+        result: MethodChannel.Result,
+    ) {
+        val remainingMillis = FakeCallSchedulerService.remainingMillis(this)
+        result.success(((remainingMillis + 999L) / 1000L).toInt())
+    }
+
+    private fun consumePendingScheduledCall(result: MethodChannel.Result) {
+        val wasPending = pendingScheduledCall
+        pendingScheduledCall = false
+        result.success(wasPending)
+    }
+
+    private fun handleScheduledCallIntent(intent: Intent?) {
+        if (
+            intent?.getBooleanExtra(
+                FakeCallSchedulerService.EXTRA_OPEN_SCHEDULED_CALL,
+                false,
+            ) != true
+        ) {
+            return
+        }
+
+        pendingScheduledCall = true
+        intent.removeExtra(FakeCallSchedulerService.EXTRA_OPEN_SCHEDULED_CALL)
+        emergencyChannel?.invokeMethod("onScheduledFakeCallDue", null)
     }
 
     private fun handleSendSms(call: MethodCall, result: MethodChannel.Result) {
