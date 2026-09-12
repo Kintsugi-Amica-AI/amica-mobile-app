@@ -49,6 +49,10 @@ class MainActivity : FlutterActivity() {
                 "vibrateTwice" -> handleVibrateTwice(result)
                 "startJourneySafetyMonitor" -> handleStartJourneySafetyMonitor(call, result)
                 "stopJourneySafetyMonitor" -> handleStopJourneySafetyMonitor(result)
+                "hasJourneyCallEscalated" -> result.success(
+                    getSharedPreferences("amica_vehicle_escalations", MODE_PRIVATE)
+                        .getBoolean(call.argument<String>("journeyId").orEmpty(), false)
+                )
                 "startFakeCallShortcutMonitor" -> handleStartFakeCallShortcutMonitor(result)
                 "stopFakeCallShortcutMonitor" -> handleStopFakeCallShortcutMonitor(result)
                 "consumePendingFakeCallShortcut" -> consumePendingCallShortcut(result)
@@ -194,6 +198,7 @@ class MainActivity : FlutterActivity() {
             safetyCheckAtMillis = safetyCheckAtMillis,
             emergencyPhone = emergencyPhone,
             emergencyMessage = emergencyMessage,
+            emergencyPhones = call.argument<List<String>>("emergencyPhones") ?: emptyList(),
         )
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
