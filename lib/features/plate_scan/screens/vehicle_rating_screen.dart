@@ -26,21 +26,24 @@ class _CompletedVehicleJourneysScreenState
         body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream: _journeys,
             builder: (context, snapshot) {
-              if (snapshot.hasError)
+              if (snapshot.hasError) {
                 return const Center(
                     child:
                         Text('Could not load your rides. Please reconnect.'));
-              if (!snapshot.hasData)
+              }
+              if (!snapshot.hasData) {
                 return const Center(child: CircularProgressIndicator());
+              }
               final rides = snapshot.data!.docs.where((doc) {
                 final data = doc.data();
                 return data['status'] == 'safe' &&
                     data['metadata'] is Map &&
                     data['metadata']['vehiclePlate'] == widget.plate;
               }).toList();
-              if (rides.isEmpty)
+              if (rides.isEmpty) {
                 return const Center(
                     child: Text('No completed rides for this vehicle yet.'));
+              }
               return ListView(
                   children: rides.map((doc) {
                 final destination = doc.data()['destination'];
