@@ -9,5 +9,6 @@ class AppStrings {
   static const String liveSos = 'Live SOS';
   static const String fakeCall = 'Fake call';
   static const String plateScan = 'Scan before you ride';
+  static const String stopAlert = 'Bus stop alert';
   static const String voiceSos = 'Stealth voice SOS';
 }

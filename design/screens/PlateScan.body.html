@@ -1,0 +1,79 @@
+<div class="screen">
+  <div class="statusbar-reserve" style="background:#161114;"></div>
+
+  <div class="pad row" style="height:48px;flex-shrink:0;background:#161114;color:#F3E9E2;gap:12px;">
+    <div style="width:36px;height:36px;border-radius:999px;background:rgba(243,233,226,.12);display:flex;align-items:center;justify-content:center;">
+      <svg viewBox="0 0 24 24" width="18" height="18"><path d="m14 5.5-6.5 6.5 6.5 6.5"/></svg>
+    </div>
+    <p class="title" style="color:#F3E9E2;">Scan before you ride</p>
+    <div class="spacer"></div>
+    <div style="width:36px;height:36px;border-radius:999px;background:rgba(243,233,226,.12);display:flex;align-items:center;justify-content:center;">
+      <svg viewBox="0 0 24 24" width="18" height="18"><path d="M13.4 2.8 5.6 13.2h5.2l-.6 8 7.8-10.4h-5.2Z"/></svg>
+    </div>
+  </div>
+
+  <!-- Viewfinder -->
+  <div style="flex:1 1 auto;min-height:0;position:relative;background:#161114;overflow:hidden;">
+    <svg viewBox="0 0 390 380" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+      <rect x="0" y="0" width="390" height="380" fill="#161114"/>
+      <!-- three-wheeler seen from behind, at night -->
+      <path d="M96 372v-96a99 99 0 0 1 198 0v96Z" fill="#241B21"/>
+      <path d="M120 250a75 75 0 0 1 150 0v26H120Z" fill="#2E242B"/>
+      <rect x="134" y="212" width="122" height="46" rx="9" fill="#1D161B"/>
+      <circle cx="112" cy="352" r="22" fill="#1B1419"/>
+      <circle cx="278" cy="352" r="22" fill="#1B1419"/>
+      <rect x="124" y="300" width="26" height="13" rx="6" fill="#8A3B2C"/>
+      <rect x="240" y="300" width="26" height="13" rx="6" fill="#8A3B2C"/>
+      <!-- the plate, lit -->
+      <rect x="146" y="288" width="98" height="36" rx="5" fill="#E8DFA8"/>
+      <text x="195" y="313" text-anchor="middle" fill="#211A12" stroke="none"
+            style="font-family:'Instrument Sans',Arial,sans-serif;font-size:19px;font-weight:700;letter-spacing:.06em;">CAB-4417</text>
+    </svg>
+    <!-- framing brackets -->
+    <svg viewBox="0 0 390 380" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;">
+      <g stroke="#E9765C" stroke-width="3" fill="none" stroke-linecap="round">
+        <path d="M130 300v-22h24M260 278h24v22M284 334v22h-24M154 356h-24v-22"/>
+      </g>
+    </svg>
+    <div style="position:absolute;left:0;right:0;top:22px;display:flex;justify-content:center;">
+      <span class="pill" style="background:rgba(22,17,20,.72);color:#F3E9E2;height:30px;">Hold steady &mdash; plate found</span>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="pad col" style="background:var(--card);border-radius:24px 24px 0 0;margin-top:-20px;
+       padding-top:18px;flex-shrink:0;gap:0;box-shadow:var(--shadow);">
+    <p class="micro">Plate read</p>
+    <div style="height:10px;"></div>
+
+    <div class="row" style="gap:12px;">
+      <div style="border:2px solid var(--plum);border-radius:8px;padding:8px 14px;background:#F4EFD9;">
+        <span class="num" style="font-size:23px;font-weight:700;letter-spacing:.07em;color:var(--plum);">CAB-4417</span>
+      </div>
+      <div class="col" style="gap:2px;">
+        <p class="label" style="font-size:12.5px;color:var(--plum);font-weight:600;">Three-wheeler</p>
+        <p class="label" style="font-size:11.5px;color:var(--plum-45);">Western Province</p>
+      </div>
+    </div>
+
+    <div style="height:14px;"></div>
+    <div class="row" style="gap:10px;background:var(--sage-soft);border-radius:14px;padding:12px 13px;">
+      <div style="color:var(--sage);flex-shrink:0;">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 3.2 5.6 5.8v5.1c0 4 2.6 7.6 6.4 8.8 3.8-1.2 6.4-4.8 6.4-8.8V5.8L12 3.2Z"/><path d="m9.3 11.7 2 2 3.6-3.9"/></svg>
+      </div>
+      <p class="label" style="font-size:12.5px;color:var(--sage-ink);line-height:1.4;">
+        No reports from other Amica users. That isn't a safety guarantee &mdash; send it to someone anyway.
+      </p>
+    </div>
+
+    <div style="height:16px;"></div>
+    <div class="btn">
+      <svg viewBox="0 0 24 24" width="19" height="19"><path d="M20.6 3.4 10.8 13.2M20.6 3.4 14.4 20.8l-3.6-7.6-7.6-3.6Z"/></svg>
+      Send plate to my circle
+    </div>
+    <div style="height:10px;"></div>
+    <div class="btn btn-quiet" style="height:48px;">Scan again</div>
+    <div style="height:16px;"></div>
+  </div>
+  <div class="gesture-reserve" style="background:var(--card);"></div>
+</div>

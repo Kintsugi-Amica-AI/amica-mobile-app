@@ -30,6 +30,7 @@ class MainActivity : FlutterActivity() {
     private var volumeShortcutPressCount = 0
     private var firstVolumeShortcutAtMillis = 0L
     private var pendingCallShortcut = false
+    private var pendingScheduledCall = false
     private var proximityWakeLock: PowerManager.WakeLock? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -42,25 +43,40 @@ class MainActivity : FlutterActivity() {
         emergencyChannel?.setMethodCallHandler { call, result ->
             when (call.method) {
                 "prepareEmergencyPermissions" -> prepareEmergencyPermissions(result)
+                "prepareNotificationPermission" -> prepareNotificationPermission(result)
                 "sendSms" -> handleSendSms(call, result)
                 "startCall" -> handleStartCall(call, result)
                 "vibrateTwice" -> handleVibrateTwice(result)
                 "startJourneySafetyMonitor" -> handleStartJourneySafetyMonitor(call, result)
                 "stopJourneySafetyMonitor" -> handleStopJourneySafetyMonitor(result)
+                "hasJourneyCallEscalated" -> result.success(
+                    getSharedPreferences("amica_vehicle_escalations", MODE_PRIVATE)
+                        .getBoolean(call.argument<String>("journeyId").orEmpty(), false)
+                )
                 "startFakeCallShortcutMonitor" -> handleStartFakeCallShortcutMonitor(result)
                 "stopFakeCallShortcutMonitor" -> handleStopFakeCallShortcutMonitor(result)
                 "consumePendingFakeCallShortcut" -> consumePendingCallShortcut(result)
                 "setCallProximityEnabled" -> handleSetCallProximityEnabled(call, result)
+                "scheduleFakeCall" -> handleScheduleFakeCall(call, result)
+                "cancelScheduledFakeCall" -> handleCancelScheduledFakeCall(result)
+                "scheduledFakeCallRemainingSeconds" ->
+                    handleScheduledFakeCallRemainingSeconds(result)
+                "consumePendingScheduledFakeCall" ->
+                    consumePendingScheduledCall(result)
+                "startStopAlertMonitor" -> handleStartStopAlertMonitor(call, result)
+                "stopStopAlertMonitor" -> handleStopStopAlertMonitor(result)
                 else -> result.notImplemented()
             }
         }
         handleCallShortcutIntent(intent)
+        handleScheduledCallIntent(intent)
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
         handleCallShortcutIntent(intent)
+        handleScheduledCallIntent(intent)
     }
 
     override fun onDestroy() {
@@ -126,6 +142,28 @@ class MainActivity : FlutterActivity() {
         )
     }
 
+    /// Asks only for notifications, for features such as the Smart Stop Alert
+    /// that need to show an alarm but have no business requesting SMS or phone
+    /// permissions.
+    private fun prepareNotificationPermission(result: MethodChannel.Result) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            result.success(true)
+            return
+        }
+
+        if (hasPermission(Manifest.permission.POST_NOTIFICATIONS)) {
+            result.success(true)
+            return
+        }
+
+        startPendingPermissionRequest(
+            PendingAction(PendingActionType.PREPARE_PERMISSIONS),
+            result,
+            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+            preparePermissionsRequestCode,
+        )
+    }
+
     private fun handleStartJourneySafetyMonitor(
         call: MethodCall,
         result: MethodChannel.Result,
@@ -160,6 +198,7 @@ class MainActivity : FlutterActivity() {
             safetyCheckAtMillis = safetyCheckAtMillis,
             emergencyPhone = emergencyPhone,
             emergencyMessage = emergencyMessage,
+            emergencyPhones = call.argument<List<String>>("emergencyPhones") ?: emptyList(),
         )
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -204,6 +243,110 @@ class MainActivity : FlutterActivity() {
         pendingCallShortcut = true
         intent.removeExtra(openCallShortcutExtra)
         emergencyChannel?.invokeMethod("onVolumeDownTriplePress", null)
+    }
+
+    private fun handleStartStopAlertMonitor(
+        call: MethodCall,
+        result: MethodChannel.Result,
+    ) {
+        val dropOffLatitude = call.argument<Number>("dropOffLatitude")?.toDouble()
+        val dropOffLongitude = call.argument<Number>("dropOffLongitude")?.toDouble()
+
+        if (dropOffLatitude == null || dropOffLongitude == null) {
+            result.error(
+                "INVALID_STOP_ALERT_ARGUMENTS",
+                "Drop-off coordinates are required.",
+                null,
+            )
+            return
+        }
+
+        val intent = StopAlertMonitorService.startIntent(
+            context = this,
+            dropOffLatitude = dropOffLatitude,
+            dropOffLongitude = dropOffLongitude,
+            dropOffName = call.argument<String>("dropOffName")?.trim().orEmpty(),
+            alertDistanceMeters = call.argument<Number>("alertDistanceMeters")
+                ?.toInt()
+                ?: 2000,
+            routeFactor = call.argument<Number>("routeFactor")?.toFloat() ?: 1f,
+            alreadyAlerted = call.argument<Boolean>("alreadyAlerted") == true,
+        )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+        result.success(true)
+    }
+
+    private fun handleStopStopAlertMonitor(result: MethodChannel.Result) {
+        startService(StopAlertMonitorService.stopIntent(this))
+        result.success(true)
+    }
+
+    private fun handleScheduleFakeCall(
+        call: MethodCall,
+        result: MethodChannel.Result,
+    ) {
+        val delaySeconds = call.argument<Number>("delaySeconds")?.toLong() ?: 0L
+        val callerName = call.argument<String>("callerName")?.trim().orEmpty()
+
+        if (delaySeconds <= 0L) {
+            result.error(
+                "INVALID_SCHEDULE_ARGUMENTS",
+                "Schedule delay must be greater than zero.",
+                null,
+            )
+            return
+        }
+
+        val intent = FakeCallSchedulerService.startIntent(
+            context = this,
+            triggerAtMillis = System.currentTimeMillis() + delaySeconds * 1000L,
+            callerName = callerName,
+        )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+        result.success(true)
+    }
+
+    private fun handleCancelScheduledFakeCall(result: MethodChannel.Result) {
+        startService(FakeCallSchedulerService.stopIntent(this))
+        result.success(true)
+    }
+
+    private fun handleScheduledFakeCallRemainingSeconds(
+        result: MethodChannel.Result,
+    ) {
+        val remainingMillis = FakeCallSchedulerService.remainingMillis(this)
+        result.success(((remainingMillis + 999L) / 1000L).toInt())
+    }
+
+    private fun consumePendingScheduledCall(result: MethodChannel.Result) {
+        val wasPending = pendingScheduledCall
+        pendingScheduledCall = false
+        result.success(wasPending)
+    }
+
+    private fun handleScheduledCallIntent(intent: Intent?) {
+        if (
+            intent?.getBooleanExtra(
+                FakeCallSchedulerService.EXTRA_OPEN_SCHEDULED_CALL,
+                false,
+            ) != true
+        ) {
+            return
+        }
+
+        pendingScheduledCall = true
+        intent.removeExtra(FakeCallSchedulerService.EXTRA_OPEN_SCHEDULED_CALL)
+        emergencyChannel?.invokeMethod("onScheduledFakeCallDue", null)
     }
 
     private fun handleSendSms(call: MethodCall, result: MethodChannel.Result) {

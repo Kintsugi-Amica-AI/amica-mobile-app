@@ -20,6 +20,12 @@ class EmergencyActionService {
     await _invokeBooleanMethod('prepareEmergencyPermissions');
   }
 
+  /// Requests only the notification permission, for features that show an
+  /// alert but have no reason to ask for SMS or phone access.
+  Future<void> prepareNotificationPermission() async {
+    await _invokeBooleanMethod('prepareNotificationPermission');
+  }
+
   Future<void> sendEmergencySms({
     required String phone,
     required String message,
@@ -54,6 +60,7 @@ class EmergencyActionService {
     required DateTime safetyCheckAt,
     required String emergencyPhone,
     required String emergencyMessage,
+    List<String> emergencyPhones = const [],
   }) async {
     await _invokeBooleanMethod(
       'startJourneySafetyMonitor',
@@ -63,12 +70,54 @@ class EmergencyActionService {
         'safetyCheckAtMillis': safetyCheckAt.millisecondsSinceEpoch,
         'emergencyPhone': emergencyPhone,
         'emergencyMessage': emergencyMessage,
+        'emergencyPhones': emergencyPhones,
       },
     );
   }
 
   Future<void> stopJourneySafetyMonitor() async {
     await _invokeBooleanMethod('stopJourneySafetyMonitor');
+  }
+
+  Future<bool> hasJourneyCallEscalated(String journeyId) async {
+    try {
+      return await _channel.invokeMethod<bool>(
+              'hasJourneyCallEscalated', {'journeyId': journeyId}) ??
+          false;
+    } on MissingPluginException {
+      return false;
+    } on PlatformException {
+      return false;
+    }
+  }
+
+  /// Starts native tracking of the distance to a bus drop-off.
+  ///
+  /// Runs in a foreground service so the alarm still sounds with Amica closed
+  /// and the screen off, which is exactly when a rider needs it.
+  Future<void> startStopAlertMonitor({
+    required double dropOffLatitude,
+    required double dropOffLongitude,
+    required String dropOffName,
+    required int alertDistanceMeters,
+    double routeFactor = 1,
+    bool alreadyAlerted = false,
+  }) async {
+    await _invokeBooleanMethod(
+      'startStopAlertMonitor',
+      arguments: {
+        'dropOffLatitude': dropOffLatitude,
+        'dropOffLongitude': dropOffLongitude,
+        'dropOffName': dropOffName,
+        'alertDistanceMeters': alertDistanceMeters,
+        'routeFactor': routeFactor,
+        'alreadyAlerted': alreadyAlerted,
+      },
+    );
+  }
+
+  Future<void> stopStopAlertMonitor() async {
+    await _invokeBooleanMethod('stopStopAlertMonitor');
   }
 
   Future<void> startFakeCallShortcutMonitor() async {
@@ -88,6 +137,57 @@ class EmergencyActionService {
     } on PlatformException catch (error) {
       throw EmergencyActionException(
         error.message ?? 'Could not check the call shortcut.',
+      );
+    }
+  }
+
+  /// Arms a deterrent call for [delay] from now.
+  ///
+  /// The countdown is held by a native foreground service, so it still rings
+  /// after the user leaves Amica or locks the phone — which is the whole point
+  /// of scheduling a call before getting into a vehicle.
+  Future<void> scheduleFakeCall({
+    required Duration delay,
+    required String callerName,
+  }) async {
+    await _invokeBooleanMethod(
+      'scheduleFakeCall',
+      arguments: {
+        'delaySeconds': delay.inSeconds,
+        'callerName': callerName,
+      },
+    );
+  }
+
+  Future<void> cancelScheduledFakeCall() async {
+    await _invokeBooleanMethod('cancelScheduledFakeCall');
+  }
+
+  /// Time left on an armed schedule, or [Duration.zero] when nothing is
+  /// pending. Lets the call screen restore its countdown after being closed.
+  Future<Duration> scheduledFakeCallRemaining() async {
+    try {
+      final seconds = await _channel.invokeMethod<int>(
+            'scheduledFakeCallRemainingSeconds',
+          ) ??
+          0;
+      return Duration(seconds: seconds < 0 ? 0 : seconds);
+    } on PlatformException {
+      return Duration.zero;
+    } on MissingPluginException {
+      return Duration.zero;
+    }
+  }
+
+  Future<bool> consumePendingScheduledFakeCall() async {
+    try {
+      return await _channel.invokeMethod<bool>(
+            'consumePendingScheduledFakeCall',
+          ) ??
+          false;
+    } on PlatformException catch (error) {
+      throw EmergencyActionException(
+        error.message ?? 'Could not check the scheduled call.',
       );
     }
   }

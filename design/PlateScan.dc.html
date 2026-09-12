@@ -1,0 +1,236 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500;6..72,600&family=DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Playfair+Display:wght@400;500;600;700&family=Karla:wght@400;500;600;700&family=Cormorant+Garamond:wght@400;500;600;700&family=Jost:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Public+Sans:wght@400;500;600;700&display=swap">
+  <style>
+/* ── Amica · "Warm Dawn" design system ───────────────────────────────── */
+:root{
+  /* Type. Swap these two lines to change the whole design's voice. */
+  --serif:'Newsreader',Georgia,'Times New Roman',serif;
+  --sans:'Instrument Sans','Helvetica Neue',Arial,sans-serif;
+  /* Surfaces */
+  --ivory:#FDF8F4;      /* app background */
+  --shell:#F6EDE6;      /* recessed / secondary surface */
+  --card:#FFFFFF;       /* raised card */
+  /* Ink */
+  --plum:#3B2230;       /* primary text, deepest brand */
+  --plum-70:#6B4F5E;    /* secondary text */
+  --plum-45:#7E6473;    /* muted text, icons at rest — 4.95:1 on ivory */
+  --line:#EBDFD6;       /* hairline */
+  --line-soft:#F2E8E0;  /* card border */
+  /* Semantics. terracotta is a FILL; terracotta-deep is the ink-on-ivory
+     spelling of it (4.2:1 vs 6.2:1) — use -deep for any text or link. */
+  --terracotta:#C2543D; --terracotta-deep:#9E3E2B; --blush:#F7E2DA;
+  --sage:#4F7557;       --sage-ink:#3C5B43;        --sage-soft:#E6EEE6;
+  --gold:#8F6216;                                   --gold-soft:#F8EEDA;
+  --shadow-sm:0 1px 2px rgba(59,34,48,.05), 0 4px 12px rgba(59,34,48,.05);
+  --shadow:0 1px 2px rgba(59,34,48,.05), 0 10px 28px rgba(59,34,48,.07);
+  --lift:0 2px 4px rgba(59,34,48,.06), 0 18px 40px rgba(59,34,48,.10);
+}
+/* Night / discreet mode — same structure, matte, no glow */
+.night{
+  --ivory:#191015; --shell:#241821; --card:#241821;
+  --plum:#F4EAE3; --plum-70:#C3ABB6; --plum-45:#9A8290;
+  --line:#382933; --line-soft:#31242D;
+  --terracotta:#E0705A; --terracotta-deep:#C2543D; --blush:#3B2129;
+  --sage:#89B291; --sage-ink:#A7C9AD; --sage-soft:#1F2C22;
+  --gold:#D7A75C; --gold-soft:#332619;
+  --shadow-sm:none; --shadow:none; --lift:0 18px 40px rgba(0,0,0,.45);
+}
+
+*{box-sizing:border-box;}
+body{margin:0;background:#EDE4DC;}
+a{color:var(--terracotta);text-decoration:none;} a:hover{color:var(--terracotta-deep);}
+
+.screen{
+  width:390px;height:844px;overflow:hidden;position:relative;
+  background:var(--ivory);color:var(--plum);
+  font-family:var(--sans);
+  font-size:15px;line-height:1.47;font-weight:400;
+  -webkit-font-smoothing:antialiased;text-wrap:pretty;
+  display:flex;flex-direction:column;
+}
+/* Real status bar & home indicator render on top — reserve, never draw. */
+.statusbar-reserve{height:54px;flex-shrink:0;}
+.gesture-reserve{height:22px;flex-shrink:0;}
+.pad{padding-left:20px;padding-right:20px;}
+.flow{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;}
+
+/* ── Type ─────────────────────────────────────────────────────────── */
+.display{font-family:var(--serif);font-weight:400;
+  font-size:31px;line-height:1.14;letter-spacing:-.012em;margin:0;}
+.h1{font-family:var(--serif);font-weight:400;font-size:25px;line-height:1.2;margin:0;}
+.h2{font-size:18px;font-weight:600;line-height:1.3;letter-spacing:-.01em;margin:0;}
+.title{font-size:15.5px;font-weight:600;line-height:1.35;margin:0;}
+.body{font-size:14px;line-height:1.5;color:var(--plum-70);margin:0;}
+.label{font-size:12.5px;font-weight:500;line-height:1.4;color:var(--plum-70);margin:0;}
+.micro{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--plum-45);margin:0;}
+.num{font-variant-numeric:tabular-nums;}
+
+/* ── Primitives ───────────────────────────────────────────────────── */
+.card{background:var(--card);border:1px solid var(--line-soft);border-radius:20px;
+  padding:16px;box-shadow:var(--shadow-sm);}
+.row{display:flex;align-items:center;gap:12px;}
+.col{display:flex;flex-direction:column;}
+.spacer{flex:1 1 auto;}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:9px;height:54px;
+  border-radius:16px;border:0;font-size:15.5px;font-weight:600;letter-spacing:.005em;
+  background:var(--plum);color:var(--ivory);}
+.btn-quiet{background:var(--shell);color:var(--plum);border:1px solid var(--line);}
+.btn-danger{background:var(--terracotta);color:#FFF9F6;}
+.btn-safe{background:var(--sage);color:#F4F8F3;}
+
+.pill{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 11px;
+  border-radius:999px;font-size:12px;font-weight:600;letter-spacing:.005em;}
+.pill-sage{background:var(--sage-soft);color:var(--sage-ink);}
+.pill-gold{background:var(--gold-soft);color:var(--gold);}
+.pill-blush{background:var(--blush);color:var(--terracotta-deep);}
+.pill-quiet{background:var(--shell);color:var(--plum-70);}
+
+.avatar{width:40px;height:40px;border-radius:999px;display:flex;align-items:center;
+  justify-content:center;font-size:14px;font-weight:600;flex-shrink:0;}
+
+.dot{width:7px;height:7px;border-radius:999px;flex-shrink:0;}
+
+/* ── Bottom tab bar ───────────────────────────────────────────────── */
+.tabbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  background:var(--card);border-top:1px solid var(--line-soft);padding:9px 8px 4px;flex-shrink:0;}
+.tab{display:flex;flex-direction:column;align-items:center;gap:4px;
+  color:var(--plum-45);font-size:10.5px;font-weight:600;min-height:46px;justify-content:center;}
+.tab-on{color:var(--plum);}
+
+/* ── Hold-to-send SOS ─────────────────────────────────────────────── */
+.sos-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;}
+.sos{width:186px;height:186px;border-radius:999px;display:flex;align-items:center;
+  justify-content:center;position:relative;background:var(--blush);}
+.sos-core{width:150px;height:150px;border-radius:999px;background:var(--terracotta);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+  color:#FFF6F2;box-shadow:var(--lift);}
+.sos-ring{position:absolute;inset:0;border-radius:999px;}
+
+/* Icon defaults — every icon is stroke-based inline SVG on a 24 grid */
+svg{display:block;fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round;}
+svg.filled{fill:currentColor;stroke:none;}
+
+.tile{display:flex;flex-direction:column;align-items:flex-start;gap:9px;
+  background:var(--card);border:1px solid var(--line-soft);border-radius:18px;
+  padding:13px 11px;min-height:92px;box-shadow:var(--shadow-sm);}
+.tile-ic{width:34px;height:34px;border-radius:11px;display:flex;
+  align-items:center;justify-content:center;flex-shrink:0;}
+.tile-label{font-size:11.5px;font-weight:600;line-height:1.25;letter-spacing:-.005em;}
+
+.listrow{display:flex;align-items:center;gap:13px;min-height:60px;padding:10px 0;}
+.divider{height:1px;background:var(--line-soft);}
+
+/* ── Type options under review ─────────────────────────────────────────
+   Each class swaps only the two family variables (plus a little optical
+   tuning, so every candidate is judged at its best). Once one is chosen
+   its two lines move into :root and these classes go away.            */
+.type-a{ --serif:'DM Serif Display',Georgia,serif;
+         --sans:'DM Sans','Helvetica Neue',Arial,sans-serif; }
+.type-b{ --serif:'Playfair Display',Georgia,serif;
+         --sans:'Karla','Helvetica Neue',Arial,sans-serif; }
+.type-c{ --serif:'Cormorant Garamond',Georgia,serif;
+         --sans:'Jost','Helvetica Neue',Arial,sans-serif; }
+.type-d{ --serif:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;
+         --sans:'Public Sans','Helvetica Neue',Arial,sans-serif; }
+
+.type-a .display{font-size:30px;letter-spacing:-.005em;}
+.type-b .display{font-size:29px;}
+.type-c .display{font-size:36px;font-weight:600;letter-spacing:0;}
+.type-c .h1{font-weight:600;}
+.type-d .display{font-size:29px;font-weight:600;letter-spacing:-.022em;}
+.type-d .h1{font-weight:600;}
+  </style>
+</helmet>
+<div class="screen">
+  <div class="statusbar-reserve" style="background:#161114;"></div>
+
+  <div class="pad row" style="height:48px;flex-shrink:0;background:#161114;color:#F3E9E2;gap:12px;">
+    <div style="width:36px;height:36px;border-radius:999px;background:rgba(243,233,226,.12);display:flex;align-items:center;justify-content:center;">
+      <svg viewBox="0 0 24 24" width="18" height="18"><path d="m14 5.5-6.5 6.5 6.5 6.5"/></svg>
+    </div>
+    <p class="title" style="color:#F3E9E2;">Scan before you ride</p>
+    <div class="spacer"></div>
+    <div style="width:36px;height:36px;border-radius:999px;background:rgba(243,233,226,.12);display:flex;align-items:center;justify-content:center;">
+      <svg viewBox="0 0 24 24" width="18" height="18"><path d="M13.4 2.8 5.6 13.2h5.2l-.6 8 7.8-10.4h-5.2Z"/></svg>
+    </div>
+  </div>
+
+  <!-- Viewfinder -->
+  <div style="flex:1 1 auto;min-height:0;position:relative;background:#161114;overflow:hidden;">
+    <svg viewBox="0 0 390 380" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+      <rect x="0" y="0" width="390" height="380" fill="#161114"/>
+      <!-- three-wheeler seen from behind, at night -->
+      <path d="M96 372v-96a99 99 0 0 1 198 0v96Z" fill="#241B21"/>
+      <path d="M120 250a75 75 0 0 1 150 0v26H120Z" fill="#2E242B"/>
+      <rect x="134" y="212" width="122" height="46" rx="9" fill="#1D161B"/>
+      <circle cx="112" cy="352" r="22" fill="#1B1419"/>
+      <circle cx="278" cy="352" r="22" fill="#1B1419"/>
+      <rect x="124" y="300" width="26" height="13" rx="6" fill="#8A3B2C"/>
+      <rect x="240" y="300" width="26" height="13" rx="6" fill="#8A3B2C"/>
+      <!-- the plate, lit -->
+      <rect x="146" y="288" width="98" height="36" rx="5" fill="#E8DFA8"/>
+      <text x="195" y="313" text-anchor="middle" fill="#211A12" stroke="none"
+            style="font-family:'Instrument Sans',Arial,sans-serif;font-size:19px;font-weight:700;letter-spacing:.06em;">CAB-4417</text>
+    </svg>
+    <!-- framing brackets -->
+    <svg viewBox="0 0 390 380" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;">
+      <g stroke="#E9765C" stroke-width="3" fill="none" stroke-linecap="round">
+        <path d="M130 300v-22h24M260 278h24v22M284 334v22h-24M154 356h-24v-22"/>
+      </g>
+    </svg>
+    <div style="position:absolute;left:0;right:0;top:22px;display:flex;justify-content:center;">
+      <span class="pill" style="background:rgba(22,17,20,.72);color:#F3E9E2;height:30px;">Hold steady &mdash; plate found</span>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="pad col" style="background:var(--card);border-radius:24px 24px 0 0;margin-top:-20px;
+       padding-top:18px;flex-shrink:0;gap:0;box-shadow:var(--shadow);">
+    <p class="micro">Plate read</p>
+    <div style="height:10px;"></div>
+
+    <div class="row" style="gap:12px;">
+      <div style="border:2px solid var(--plum);border-radius:8px;padding:8px 14px;background:#F4EFD9;">
+        <span class="num" style="font-size:23px;font-weight:700;letter-spacing:.07em;color:var(--plum);">CAB-4417</span>
+      </div>
+      <div class="col" style="gap:2px;">
+        <p class="label" style="font-size:12.5px;color:var(--plum);font-weight:600;">Three-wheeler</p>
+        <p class="label" style="font-size:11.5px;color:var(--plum-45);">Western Province</p>
+      </div>
+    </div>
+
+    <div style="height:14px;"></div>
+    <div class="row" style="gap:10px;background:var(--sage-soft);border-radius:14px;padding:12px 13px;">
+      <div style="color:var(--sage);flex-shrink:0;">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 3.2 5.6 5.8v5.1c0 4 2.6 7.6 6.4 8.8 3.8-1.2 6.4-4.8 6.4-8.8V5.8L12 3.2Z"/><path d="m9.3 11.7 2 2 3.6-3.9"/></svg>
+      </div>
+      <p class="label" style="font-size:12.5px;color:var(--sage-ink);line-height:1.4;">
+        No reports from other Amica users. That isn't a safety guarantee &mdash; send it to someone anyway.
+      </p>
+    </div>
+
+    <div style="height:16px;"></div>
+    <div class="btn">
+      <svg viewBox="0 0 24 24" width="19" height="19"><path d="M20.6 3.4 10.8 13.2M20.6 3.4 14.4 20.8l-3.6-7.6-7.6-3.6Z"/></svg>
+      Send plate to my circle
+    </div>
+    <div style="height:10px;"></div>
+    <div class="btn btn-quiet" style="height:48px;">Scan again</div>
+    <div style="height:16px;"></div>
+  </div>
+  <div class="gesture-reserve" style="background:var(--card);"></div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -10,6 +10,8 @@ class AppRoutes {
   static const String startJourney = '/journey/start';
   static const String journeyTimer = '/journey/timer';
   static const String safetyCheck = '/journey/safety-check';
+  static const String stopAlert = '/stop-alert';
+  static const String stopAlertActive = '/stop-alert/active';
   static const String sosActive = '/sos/active';
   static const String fakeCall = '/fake-call';
   static const String fakeCallActive = '/fake-call/active';

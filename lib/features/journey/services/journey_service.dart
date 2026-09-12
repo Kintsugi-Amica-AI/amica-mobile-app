@@ -19,6 +19,7 @@ class JourneyService {
   const JourneyService();
 
   static const String _collectionName = 'journeys';
+  static const int _activeJourneyScanLimit = 10;
 
   FirebaseAuth get _auth => FirebaseAuth.instance;
 
@@ -30,6 +31,7 @@ class JourneyService {
     required int estimatedDurationMinutes,
     LocationDataModel? destinationLocation,
     String journeyType = 'walk',
+    String? vehiclePlate,
   }) async {
     final user = _currentUserOrThrow();
     final document = _firestore.collection(_collectionName).doc();
@@ -69,10 +71,12 @@ class JourneyService {
         'actualEndTime': null,
         'safetyCheck': {
           'required': true,
-          'responseDeadlineSeconds': 30,
+          'responseDeadlineSeconds': 60,
           'respondedAt': null,
         },
-        'metadata': const <String, dynamic>{},
+        'metadata': <String, dynamic>{
+          if (vehiclePlate != null) 'vehiclePlate': vehiclePlate,
+        },
         'schemaVersion': 1,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -94,7 +98,28 @@ class JourneyService {
     return document.id;
   }
 
+  /// The newest active timer journey.
+  ///
+  /// Smart Stop Alert rides live in this same collection (the backend schema
+  /// builds the feature on `journeyType` and `destination`), so they are
+  /// filtered out here — they have no safety countdown for the timer screen to
+  /// show. Use [watchActiveStopAlertRide] for those.
   Stream<Journey?> watchActiveJourney() {
+    return _watchNewestActiveJourney(
+      where: (journey) => !journey.isStopAlertRide,
+    );
+  }
+
+  /// The newest active bus ride that is watching the distance to a drop-off.
+  Stream<Journey?> watchActiveStopAlertRide() {
+    return _watchNewestActiveJourney(
+      where: (journey) => journey.isStopAlertRide,
+    );
+  }
+
+  Stream<Journey?> _watchNewestActiveJourney({
+    required bool Function(Journey journey) where,
+  }) {
     final user = _auth.currentUser;
     if (user == null) {
       return Stream<Journey?>.error(
@@ -107,13 +132,18 @@ class JourneyService {
         .where('userId', isEqualTo: user.uid)
         .where('status', isEqualTo: 'active')
         .orderBy('createdAt', descending: true)
-        .limit(1)
+        // Enough headroom to still find the newest match of each kind when a
+        // timer journey and a stop alert ride are active at the same time.
+        .limit(_activeJourneyScanLimit)
         .snapshots()
         .map((snapshot) {
-      if (snapshot.docs.isEmpty) {
-        return null;
+      for (final document in snapshot.docs) {
+        final journey = Journey.fromFirestore(document);
+        if (where(journey)) {
+          return journey;
+        }
       }
-      return Journey.fromFirestore(snapshot.docs.first);
+      return null;
     });
   }
 
@@ -134,6 +164,105 @@ class JourneyService {
         return null;
       }
       return Journey.fromFirestore(snapshot);
+    });
+  }
+
+  /// Starts a bus ride that watches the distance to a drop-off point.
+  ///
+  /// Stored as an ordinary `journeys` document with `journeyType: 'bus'` so it
+  /// reuses the collection and security rules, plus a `stopAlert` map holding
+  /// the alarm settings. The safety countdown is switched off: the rider is
+  /// asking to be told when the bus nears their stop, not to be asked whether
+  /// they arrived by a deadline they cannot predict.
+  Future<String> startStopAlertRide({
+    required LocationDataModel startLocation,
+    required LocationDataModel dropOffLocation,
+    required String dropOffName,
+    int alertDistanceMeters = Journey.defaultAlertDistanceMeters,
+    double routeFactor = 1,
+    double? routeDistanceMeters,
+  }) async {
+    final user = _currentUserOrThrow();
+    final document = _firestore.collection(_collectionName).doc();
+    final now = DateTime.now();
+    final safeDropOffName = dropOffName.trim();
+
+    try {
+      await document.set({
+        'id': document.id,
+        'userId': user.uid,
+        'journeyType': 'bus',
+        'status': 'active',
+        'startLocation': startLocation.toMap(),
+        'currentLocation': startLocation.toMap(),
+        'destination': {
+          'name': safeDropOffName,
+          'address': dropOffLocation.address.isEmpty
+              ? safeDropOffName
+              : dropOffLocation.address,
+          'latitude': dropOffLocation.latitude,
+          'longitude': dropOffLocation.longitude,
+          'updatedAt': Timestamp.fromDate(dropOffLocation.updatedAt),
+        },
+        // No timer countdown on a stop alert ride, but the fields stay present
+        // so anything reading `journeys` sees a consistent document shape.
+        'estimatedDurationMinutes': 0,
+        'estimatedEndTime': Timestamp.fromDate(now),
+        'actualEndTime': null,
+        'safetyCheck': {
+          'required': false,
+          'responseDeadlineSeconds': 30,
+          'respondedAt': null,
+        },
+        'stopAlert': {
+          'enabled': true,
+          'alertDistanceMeters': alertDistanceMeters,
+          'alertedAt': null,
+          // Resolved once at the start, then applied on-device for the rest of
+          // the ride so the alarm never needs the network.
+          'routeFactor': routeFactor,
+          'routeDistanceMeters': routeDistanceMeters,
+        },
+        'metadata': const <String, dynamic>{},
+        'schemaVersion': 1,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }).timeout(const Duration(seconds: 12));
+    } on TimeoutException {
+      // Firestore keeps the local write queued, and the alarm runs on-device,
+      // so a slow network must not stop the ride from starting.
+      return document.id;
+    } on FirebaseException catch (error) {
+      if (error.code == 'permission-denied') {
+        throw const JourneyServiceException(
+          'Firebase rules blocked this bus ride. Check the deployed rules and login status.',
+        );
+      }
+      throw JourneyServiceException(
+        error.message ?? 'Could not start the bus ride. Please try again.',
+      );
+    }
+
+    return document.id;
+  }
+
+  /// Records that the approaching-stop alarm sounded, so re-opening the ride
+  /// does not sound it again.
+  Future<void> markStopAlertTriggered(String journeyId) async {
+    _currentUserOrThrow();
+    await _firestore.collection(_collectionName).doc(journeyId).update({
+      'stopAlert.alertedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Ends a bus ride, whether the rider got off at their stop or gave up on it.
+  Future<void> endStopAlertRide(String journeyId) async {
+    _currentUserOrThrow();
+    await _firestore.collection(_collectionName).doc(journeyId).update({
+      'status': 'safe',
+      'actualEndTime': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 

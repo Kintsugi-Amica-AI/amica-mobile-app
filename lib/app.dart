@@ -23,6 +23,8 @@ import 'features/plate_scan/screens/plate_scan_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
 import 'features/profile/screens/settings_screen.dart';
 import 'features/sos/screens/sos_active_screen.dart';
+import 'features/stop_alert/screens/stop_alert_active_screen.dart';
+import 'features/stop_alert/screens/stop_alert_setup_screen.dart';
 
 class AmicaApp extends StatefulWidget {
   const AmicaApp({super.key});
@@ -79,14 +81,31 @@ class _AmicaAppState extends State<AmicaApp> {
           final args = ModalRoute.of(context)?.settings.arguments;
           return JourneyTimerScreen(journeyId: args is String ? args : null);
         },
-        AppRoutes.safetyCheck: (_) => const SafetyCheckScreen(),
+        AppRoutes.safetyCheck: (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          return SafetyCheckScreen(
+            arguments: args is SafetyCheckArguments ? args : null,
+          );
+        },
+        AppRoutes.stopAlert: (_) => const StopAlertSetupScreen(),
+        AppRoutes.stopAlertActive: (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          return StopAlertActiveScreen(
+            arguments: args is StopAlertActiveArguments ? args : null,
+          );
+        },
         AppRoutes.sosActive: (context) {
           final args = ModalRoute.of(context)?.settings.arguments;
           return SosActiveScreen(
             arguments: args is SosActiveArguments ? args : null,
           );
         },
-        AppRoutes.fakeCall: (_) => const FakeCallScreen(),
+        AppRoutes.fakeCall: (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          return FakeCallScreen(
+            arguments: args is FakeCallArguments ? args : null,
+          );
+        },
         AppRoutes.fakeCallActive: (context) {
           final args = ModalRoute.of(context)?.settings.arguments;
           return FakeCallActiveScreen(
