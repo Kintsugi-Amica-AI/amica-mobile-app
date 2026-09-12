@@ -25,7 +25,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _secretPhraseController = TextEditingController();
+  final _phraseControllers = <TextEditingController>[TextEditingController()];
   final _callerNameController = TextEditingController();
   final _callerNumberController = TextEditingController();
   final _voiceSosMessageController = TextEditingController();
@@ -45,7 +45,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   void dispose() {
-    _secretPhraseController.dispose();
+    for (final controller in _phraseControllers) {
+      controller.dispose();
+    }
     _callerNameController.dispose();
     _callerNumberController.dispose();
     _voiceSosMessageController.dispose();
@@ -54,7 +56,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadSettings() async {
     try {
-      final secretPhrase = await widget.userProfileService.getSecretPhrase();
+      final phrases = await widget.userProfileService.getSecretPhrases();
       final settings = await widget.userProfileService.getSafetySettings();
 
       if (!mounted) {
@@ -62,7 +64,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
 
       setState(() {
-        _secretPhraseController.text = secretPhrase;
+        for (final controller in _phraseControllers) {
+          controller.dispose();
+        }
+        _phraseControllers
+          ..clear()
+          ..addAll(
+              phrases.map((phrase) => TextEditingController(text: phrase)));
         _callerNameController.text =
             settings['fakeCallContactName'] as String? ??
                 UserProfileService.defaultFakeCallContactName;
@@ -101,7 +109,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     try {
       await widget.userProfileService.saveFakeCallVoiceSettings(
-        secretPhrase: _secretPhraseController.text,
+        secretPhrase: _phraseControllers.first.text,
+        secretPhrases: _phraseControllers.map((c) => c.text).toList(),
         fakeCallContactName: _callerNameController.text,
         fakeCallPhoneNumber: _callerNumberController.text,
         voiceSosEmergencyMessage: _voiceSosMessageController.text,
@@ -264,18 +273,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             'Use the phrase below to trigger Voice SOS.'),
                       ),
                       const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _secretPhraseController,
-                        decoration: const InputDecoration(
-                          labelText: 'Secret phrase',
-                          helperText: 'Example: amica help me',
+                      for (var index = 0;
+                          index < _phraseControllers.length;
+                          index++)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Row(children: [
+                            Expanded(
+                                child: TextFormField(
+                              controller: _phraseControllers[index],
+                              enabled: !_isSaving,
+                              maxLength: 120,
+                              decoration: InputDecoration(
+                                  labelText: 'Secret phrase ${index + 1}'),
+                              validator: (value) {
+                                final phrase =
+                                    UserProfileService.normalizeSecretPhrase(
+                                        value ?? '');
+                                if (phrase.isEmpty) return 'Enter a phrase.';
+                                if (_phraseControllers
+                                        .where((c) =>
+                                            UserProfileService
+                                                .normalizeSecretPhrase(
+                                                    c.text) ==
+                                            phrase)
+                                        .length >
+                                    1) {
+                                  return 'This phrase is already in the list.';
+                                }
+                                return null;
+                              },
+                            )),
+                            IconButton(
+                              tooltip: 'Remove phrase',
+                              onPressed: _isSaving ||
+                                      _phraseControllers.length == 1
+                                  ? null
+                                  : () {
+                                      final removed = _phraseControllers[index];
+                                      setState(() =>
+                                          _phraseControllers.removeAt(index));
+                                      WidgetsBinding.instance
+                                          .addPostFrameCallback(
+                                              (_) => removed.dispose());
+                                    },
+                              icon: const Icon(Icons.delete_outline),
+                            ),
+                          ]),
                         ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Enter a secret phrase.';
-                          }
-                          return null;
-                        },
+                      TextButton.icon(
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add phrase'),
+                        onPressed: _isSaving || _phraseControllers.length >= 10
+                            ? null
+                            : () => setState(() => _phraseControllers
+                                .add(TextEditingController())),
                       ),
                       const SizedBox(height: 12),
                       TextFormField(

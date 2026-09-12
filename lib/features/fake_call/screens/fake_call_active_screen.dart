@@ -86,7 +86,8 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
   }
 
   Future<void> _startVoiceSos() async {
-    final phrase = await widget.userProfileService.getSecretPhrase();
+    final phrases = await widget.userProfileService.getSecretPhrases();
+    final phrase = phrases.first;
     final settings = await widget.userProfileService.getSafetySettings();
     if (!mounted) {
       return;
@@ -115,6 +116,8 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
 
     await widget.voiceSosService.startListening(
       expectedPhrase: phrase,
+      expectedPhrases: phrases,
+      onMatchedPhrase: (matched) => _expectedPhrase = matched,
       onTextDetected: (detectedText) {
         _lastDetectedText = detectedText;
       },
@@ -148,7 +151,6 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
         location: location,
         detectedPhrase: phrase,
         expectedPhrase: _expectedPhrase,
-        confidenceScore: 0.85,
         emergencyMessage: _voiceSosEmergencyMessage,
       );
       await _sendVoiceSosMessageToPrimaryContact();

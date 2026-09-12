@@ -15,10 +15,30 @@ class UserProfileService {
   FirebaseFirestore get _firestore => FirebaseFirestore.instance;
 
   Future<String> getSecretPhrase() async {
-    final data = await _getCurrentUserData();
-    final phrase = _readString(data['secretPhrase']).trim();
-    return phrase.isEmpty ? defaultSecretPhrase : phrase;
+    return (await getSecretPhrases()).first;
   }
+
+  Future<List<String>> getSecretPhrases() async {
+    return readSecretPhrases(await _getCurrentUserData());
+  }
+
+  static List<String> readSecretPhrases(Map<String, dynamic> data) {
+    final stored = data['secretPhrases'];
+    final candidates = stored is List ? stored.whereType<String>() : <String>[];
+    final phrases = candidates
+        .map(normalizeSecretPhrase)
+        .where((phrase) => phrase.isNotEmpty)
+        .toSet()
+        .take(10)
+        .toList();
+    if (phrases.isNotEmpty) return phrases;
+    final legacy = data['secretPhrase'];
+    final fallback = legacy is String ? normalizeSecretPhrase(legacy) : '';
+    return [fallback.isEmpty ? defaultSecretPhrase : fallback];
+  }
+
+  static String normalizeSecretPhrase(String phrase) =>
+      phrase.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
 
   Future<Map<String, dynamic>> getSafetySettings() async {
     final data = await _getCurrentUserData();
@@ -62,6 +82,7 @@ class UserProfileService {
 
   Future<void> saveFakeCallVoiceSettings({
     required String secretPhrase,
+    List<String>? secretPhrases,
     required String fakeCallContactName,
     required String fakeCallPhoneNumber,
     required String voiceSosEmergencyMessage,
@@ -74,15 +95,24 @@ class UserProfileService {
       throw const UserProfileException('Please log in before saving settings.');
     }
 
-    final normalizedPhrase = secretPhrase.trim().isEmpty
-        ? defaultSecretPhrase
-        : secretPhrase.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+    final phrases = (secretPhrases ?? [secretPhrase])
+        .map(normalizeSecretPhrase)
+        .where((phrase) => phrase.isNotEmpty)
+        .toSet()
+        .toList();
+    if (phrases.isEmpty ||
+        phrases.length > 10 ||
+        phrases.any((p) => p.length > 120)) {
+      throw const UserProfileException(
+          'Add 1 to 10 phrases, each at most 120 characters.');
+    }
     final message = voiceSosEmergencyMessage.trim().isEmpty
         ? defaultVoiceSosEmergencyMessage
         : voiceSosEmergencyMessage.trim();
 
     await _firestore.collection('users').doc(user.uid).set({
-      'secretPhrase': normalizedPhrase,
+      'secretPhrase': phrases.first,
+      'secretPhrases': phrases,
       'safetySettings': {
         'defaultEmergencyMessage': message,
         'fakeCallContactName': fakeCallContactName.trim().isEmpty

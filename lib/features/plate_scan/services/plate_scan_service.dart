@@ -1,10 +1,21 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image/image.dart' as img;
 
 import '../models/vehicle_status.dart';
+
+List<int> _encodePlateCrop(img.Image image) =>
+    img.encodeJpg(image, quality: 92);
+
+List<int>? _rotatePlateImage(({List<int> bytes, int angle}) input) {
+  final decoded = img.decodeImage(Uint8List.fromList(input.bytes));
+  if (decoded == null) return null;
+  return img.encodeJpg(
+      img.copyRotate(img.bakeOrientation(decoded), angle: input.angle));
+}
 
 class PlateScanException implements Exception {
   const PlateScanException(this.message);
@@ -43,11 +54,33 @@ class PlateScanService {
   /// (a handful of letters and digits) rather than unrelated text ML Kit
   /// also picked up in the frame, such as a brand badge or dealer sticker.
   bool looksLikePlate(String cleaned) {
-    if (cleaned.length < 4 || cleaned.length > 11) {
-      return false;
+    return RegExp(r'^(?:(?:WP|CP|SP|NP|EP|NW|NC|SG|UP))?[A-Z]{2,3}[0-9]{4}$')
+        .hasMatch(cleaned);
+  }
+
+  /// Province is separate from the nationally unique modern registration.
+  /// Never turn letters into digits: silently guessing could identify another car.
+  String canonicalPlate(String text) {
+    var cleaned = cleanPlateText(text);
+    if (RegExp(r'^(WP|CP|SP|NP|EP|NW|NC|SG|UP)[A-Z]{2,3}[0-9]{4}$')
+        .hasMatch(cleaned)) {
+      cleaned = cleaned.substring(2);
     }
-    return RegExp(r'[A-Z]').hasMatch(cleaned) &&
-        RegExp(r'[0-9]').hasMatch(cleaned);
+    return RegExp(r'^[A-Z]{2,3}[0-9]{4}$').hasMatch(cleaned) ? cleaned : '';
+  }
+
+  String parseRecognizedText(String text) {
+    // The supplied older NC example has a small D security marking between
+    // its series and number. It is not part of that registration.
+    final upper = text.toUpperCase().replaceAllMapped(
+        RegExp(r'\bNC[\s-]+D[\s-]+(\d{4})\b'), (m) => 'NC ${m[1]}');
+    final matches = RegExp(
+      r'(?<![A-Z0-9])(?:(?:WP|CP|SP|NP|EP|NW|NC|SG|UP)[\s-]+)?([A-Z]{2,3})[\s-]*(\d{4})(?![A-Z0-9])',
+    ).allMatches(upper).map((m) => '${m[1]}${m[2]}').toSet();
+    // Two different plates in the frame require a tighter scan or manual entry.
+    if (matches.length == 1) return matches.single;
+    if (matches.length > 1) return '';
+    return canonicalPlate(text);
   }
 
   /// Crops [imagePath] down to a fractional region (each value 0.0-1.0,
@@ -69,7 +102,7 @@ class PlateScanService {
   }) async {
     try {
       final bytes = await File(imagePath).readAsBytes();
-      final decoded = img.decodeJpg(bytes);
+      final decoded = await compute(img.decodeJpg, bytes);
       if (decoded == null) {
         return imagePath;
       }
@@ -101,7 +134,8 @@ class PlateScanService {
 
       final croppedPath =
           '$imagePath.cropped.${DateTime.now().microsecondsSinceEpoch}.jpg';
-      await File(croppedPath).writeAsBytes(img.encodeJpg(cropped, quality: 92));
+      await File(croppedPath)
+          .writeAsBytes(await compute(_encodePlateCrop, cropped));
       return croppedPath;
     } catch (_) {
       return imagePath;
@@ -124,7 +158,8 @@ class PlateScanService {
   /// digits) over simply the longest text ML Kit found, since a vehicle's
   /// badge, dealer sticker, or background signage is often longer than the
   /// plate itself and would otherwise win by length.
-  Future<String> extractPlateText(String imagePath) async {
+  Future<String> extractPlateText(String imagePath,
+      {bool tryRotations = true}) async {
     final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
     try {
       final inputImage = InputImage.fromFilePath(imagePath);
@@ -136,36 +171,43 @@ class PlateScanService {
       // province code and the main plate code are separate ML Kit blocks
       // that never get clustered together (e.g. a province box set apart
       // from the main plate face).
-      final wholeImageCleaned = cleanPlateText(result.text);
+      final wholeImageCleaned = parseRecognizedText(result.text);
       if (wholeImageCleaned.length >= 4) {
         allCandidates.add(wholeImageCleaned);
       }
 
       for (final block in result.blocks) {
-        final blockCleaned = cleanPlateText(block.text);
+        final blockCleaned = parseRecognizedText(block.text);
         if (blockCleaned.length >= 4) {
           allCandidates.add(blockCleaned);
         }
         for (final line in block.lines) {
-          final lineCleaned = cleanPlateText(line.text);
+          final lineCleaned = parseRecognizedText(line.text);
           if (lineCleaned.length >= 4) {
             allCandidates.add(lineCleaned);
           }
         }
       }
 
-      final plateShaped = allCandidates.where(looksLikePlate).toList()
-        ..sort((a, b) => b.length.compareTo(a.length));
-      if (plateShaped.isNotEmpty) {
-        return plateShaped.first;
+      final plates = allCandidates.where(looksLikePlate).toSet();
+      if (plates.length == 1) return plates.single;
+      if (plates.length > 1 || !tryRotations) return '';
+      // Gallery photos may be sideways without EXIF rotation metadata.
+      final rotatedPlates = <String>{};
+      for (final angle in [90, 180, 270]) {
+        final path = '$imagePath.rotate$angle.jpg';
+        try {
+          final rotated = await compute(_rotatePlateImage,
+              (bytes: await File(imagePath).readAsBytes(), angle: angle));
+          if (rotated == null) continue;
+          await File(path).writeAsBytes(rotated);
+          final plate = await extractPlateText(path, tryRotations: false);
+          if (plate.isNotEmpty) rotatedPlates.add(plate);
+        } finally {
+          if (await File(path).exists()) await File(path).delete();
+        }
       }
-
-      if (allCandidates.isEmpty) {
-        return cleanPlateText(result.text);
-      }
-
-      allCandidates.sort((a, b) => b.length.compareTo(a.length));
-      return allCandidates.first;
+      return rotatedPlates.length == 1 ? rotatedPlates.single : '';
     } catch (_) {
       throw const PlateScanException(
         'Could not read the plate. Try a clearer, well-lit photo.',
@@ -178,7 +220,7 @@ class PlateScanService {
   /// Looks up a cleaned plate number against the shared Firestore
   /// `vehicles` collection (matching amica-cloud-backend's schema).
   Future<VehicleStatus> checkVehicle(String plateNumber) async {
-    final normalized = cleanPlateText(plateNumber);
+    final normalized = canonicalPlate(plateNumber);
     if (normalized.isEmpty) {
       return const VehicleStatus(
         plateNumber: '',
@@ -198,7 +240,8 @@ class PlateScanService {
         return VehicleStatus.fromFirestore(normalized, null);
       }
 
-      return VehicleStatus.fromFirestore(normalized, snapshot.docs.first.data());
+      return VehicleStatus.fromFirestore(
+          normalized, snapshot.docs.first.data());
     } on FirebaseException catch (error) {
       throw PlateScanException(
         error.message ?? 'Could not check vehicle status right now.',

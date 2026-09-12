@@ -11,6 +11,11 @@ class VehicleStatus {
     this.reportsCount = 0,
     this.riskLevel = 'unknown',
     this.notes,
+    this.normalizedPlateNumber = '',
+    this.ratingAverage = 0,
+    this.ratingCount = 0,
+    this.isDemo = false,
+    this.unverifiedSafetyCheckCount = 0,
   });
 
   final String plateNumber;
@@ -18,6 +23,11 @@ class VehicleStatus {
   final int reportsCount;
   final String riskLevel;
   final String? notes;
+  final String normalizedPlateNumber;
+  final double ratingAverage;
+  final int ratingCount;
+  final bool isDemo;
+  final int unverifiedSafetyCheckCount;
 
   factory VehicleStatus.fromFirestore(
     String normalizedPlateNumber,
@@ -26,12 +36,20 @@ class VehicleStatus {
     if (data == null) {
       return VehicleStatus(
         plateNumber: normalizedPlateNumber,
+        normalizedPlateNumber: normalizedPlateNumber,
         status: VehicleRiskStatus.unknown,
         notes: 'No record found for this plate. Ride with caution.',
       );
     }
 
     return VehicleStatus(
+      normalizedPlateNumber: normalizedPlateNumber,
+      ratingAverage: data['ratingAverage'] is num
+          ? (data['ratingAverage'] as num).toDouble()
+          : 0,
+      ratingCount: _readInt(data['ratingCount']),
+      unverifiedSafetyCheckCount: _readInt(data['unverifiedSafetyCheckCount']),
+      isDemo: data['metadata'] is Map && data['metadata']['demo'] == true,
       plateNumber: _readString(
         data['plateNumber'],
         normalizedPlateNumber,

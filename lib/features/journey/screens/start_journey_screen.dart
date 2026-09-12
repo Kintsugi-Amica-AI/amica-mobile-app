@@ -19,10 +19,14 @@ class StartJourneyScreen extends StatefulWidget {
     super.key,
     this.locationService = const LocationService(),
     this.journeyService = const JourneyService(),
+    this.vehiclePlate,
+    this.boardingStatus,
   });
 
   final LocationService locationService;
   final JourneyService journeyService;
+  final String? vehiclePlate;
+  final String? boardingStatus;
 
   @override
   State<StartJourneyScreen> createState() => _StartJourneyScreenState();
@@ -52,6 +56,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.vehiclePlate != null) _journeyType = 'taxi';
     _destinationController.addListener(_onDestinationTextChanged);
     _durationController.addListener(_onDurationTextChanged);
   }
@@ -77,12 +82,8 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
   void _onDestinationTextChanged() {
     final destinationName = _destinationController.text.trim();
 
-    if (_destinationLocation != null) {
-      _destinationLocation = _destinationLocation!.copyWith(
-        address: destinationName,
-        updatedAt: DateTime.now(),
-      );
-    }
+    // A previous pin must never silently become a different destination.
+    _destinationLocation = null;
 
     _scheduleDestinationLookup(destinationName);
   }
@@ -218,6 +219,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
         ),
         estimatedDurationMinutes: int.parse(_durationController.text.trim()),
         journeyType: _journeyType,
+        vehiclePlate: widget.vehiclePlate,
       );
 
       if (!mounted) {
@@ -254,6 +256,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
         updatedAt: DateTime.now(),
       );
       _destinationStatus = 'Destination pin selected.';
+      _isResolvingDestination = false;
       _errorMessage = null;
     });
     _applySuggestedDuration();
@@ -379,7 +382,10 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(title: const Text('Start Journey')),
+      appBar: AppBar(
+          title: Text(widget.vehiclePlate == null
+              ? 'Start Journey'
+              : 'Start Vehicle Journey')),
       extendBodyBehindAppBar: true,
       body: AmicaBackground(
         child: SafeArea(
@@ -388,6 +394,13 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
               children: [
+                if (widget.vehiclePlate != null) ...[
+                  Text('Vehicle: ${widget.vehiclePlate}',
+                      style: Theme.of(context).textTheme.titleLarge),
+                  if (widget.boardingStatus != null)
+                    Text(widget.boardingStatus!),
+                  const SizedBox(height: 16),
+                ],
                 GlassCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -468,19 +481,24 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Suggested duration: $_suggestedDurationMinutes minutes',
+                  'Suggested duration: $_suggestedDurationMinutes minutes (approximate; no traffic data)',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 if (_errorMessage != null) ...[
                   const SizedBox(height: 16),
                   Text(
                     _errorMessage!,
-                    style: TextStyle(color: Theme.of(context).colorScheme.error),
+                    style:
+                        TextStyle(color: Theme.of(context).colorScheme.error),
                   ),
                 ],
                 const SizedBox(height: 24),
                 PrimaryButton(
-                  label: _isStartingJourney ? 'Starting...' : 'Start Journey',
+                  label: _isStartingJourney
+                      ? 'Starting...'
+                      : widget.vehiclePlate == null
+                          ? 'Start Journey'
+                          : 'Start Vehicle Journey',
                   icon: Icons.play_arrow_rounded,
                   onPressed: (_isBusy || _isResolvingDestination)
                       ? null
