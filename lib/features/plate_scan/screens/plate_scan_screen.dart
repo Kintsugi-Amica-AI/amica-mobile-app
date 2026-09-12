@@ -34,6 +34,10 @@ class _PlateScanScreenState extends State<PlateScanScreen>
   final GlobalKey _frameBoxKey = GlobalKey();
 
   CameraController? _controller;
+  Timer? _autoScanTimer;
+  String _lastCandidate = '';
+  int _candidateCount = 0;
+  bool _appActive = true;
   bool _isCapturing = false;
   bool _isPausedByRoute = false;
   _ScanState _state = _ScanState.initializing;
@@ -66,6 +70,8 @@ class _PlateScanScreenState extends State<PlateScanScreen>
   void didPopNext() {
     // We're visible again after the screen above us was popped.
     _isPausedByRoute = false;
+    _candidateCount = 0;
+    _lastCandidate = '';
     if (_state == _ScanState.locked || _state == _ScanState.capturing) {
       setState(() {
         _state = _ScanState.scanning;
@@ -76,6 +82,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    _appActive = state == AppLifecycleState.resumed;
     if (state == AppLifecycleState.resumed) {
       if (!(_controller?.value.isInitialized ?? false)) {
         unawaited(_initializeCamera());
@@ -92,6 +99,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
 
     try {
       final cameras = await availableCameras();
+      if (!mounted) return;
       if (cameras.isEmpty) {
         setState(() {
           _state = _ScanState.error;
@@ -121,6 +129,12 @@ class _PlateScanScreenState extends State<PlateScanScreen>
         _controller = controller;
         _state = _ScanState.scanning;
         _statusMessage = 'Align the plate in the frame and tap the shutter';
+      });
+      _autoScanTimer?.cancel();
+      _autoScanTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+        if (mounted && _appActive && _state == _ScanState.scanning) {
+          unawaited(_captureAndAnalyze(automatic: true));
+        }
       });
     } on CameraException catch (error) {
       if (!mounted) {
@@ -180,7 +194,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
 
   /// Takes a single photo when the shutter button is tapped, crops it to
   /// the guide frame, and looks up whatever plate was recognized.
-  Future<void> _captureAndAnalyze() async {
+  Future<void> _captureAndAnalyze({bool automatic = false}) async {
     final controller = _controller;
     if (_isCapturing ||
         _isPausedByRoute ||
@@ -210,8 +224,8 @@ class _PlateScanScreenState extends State<PlateScanScreen>
               height: cropFraction.height,
             );
 
-      final plateText =
-          await widget.plateScanService.extractPlateText(analyzedPath);
+      final plateText = await widget.plateScanService
+          .extractPlateText(analyzedPath, tryRotations: !automatic);
       final isPlausible = widget.plateScanService.looksLikePlate(plateText);
 
       if (!mounted) {
@@ -219,8 +233,18 @@ class _PlateScanScreenState extends State<PlateScanScreen>
       }
 
       if (isPlausible) {
-        await _lockAndLookUp(plateText);
+        _candidateCount = plateText == _lastCandidate ? _candidateCount + 1 : 1;
+        _lastCandidate = plateText;
+        if (!automatic || _candidateCount >= 2) {
+          await _lockAndLookUp(plateText);
+        } else {
+          setState(() {
+            _state = _ScanState.scanning;
+            _statusMessage = 'Detected $plateText';
+          });
+        }
       } else {
+        _candidateCount = 0;
         setState(() {
           _state = _ScanState.scanning;
           _statusMessage =
@@ -284,6 +308,8 @@ class _PlateScanScreenState extends State<PlateScanScreen>
   }
 
   Future<void> _scanFromGallery() async {
+    if (_isCapturing) return;
+    _isCapturing = true;
     setState(() {
       _state = _ScanState.capturing;
       _errorMessage = null;
@@ -297,12 +323,17 @@ class _PlateScanScreenState extends State<PlateScanScreen>
       );
 
       if (photo == null) {
+        if (!mounted) return;
         setState(() => _state = _ScanState.scanning);
         return;
       }
 
       final plateText =
           await widget.plateScanService.extractPlateText(photo.path);
+      if (plateText.isEmpty) {
+        throw const PlateScanException(
+            'No single plate detected. Try another image or enter the plate.');
+      }
       final status = await widget.plateScanService.checkVehicle(plateText);
 
       if (!mounted) {
@@ -311,20 +342,59 @@ class _PlateScanScreenState extends State<PlateScanScreen>
       await Navigator.pushNamed(context, AppRoutes.plateResult,
           arguments: status);
     } on PlateScanException catch (error) {
+      if (!mounted) return;
       setState(() {
         _state = _ScanState.scanning;
         _errorMessage = error.message;
       });
     } catch (_) {
+      if (!mounted) return;
       setState(() {
         _state = _ScanState.scanning;
         _errorMessage = 'Could not scan the plate. Please try again.';
       });
+    } finally {
+      _isCapturing = false;
     }
+  }
+
+  Future<void> _enterPlate() async {
+    _isPausedByRoute = true;
+    final controller = TextEditingController();
+    final text = await showDialog<String>(
+        context: context,
+        builder: (context) => AlertDialog(
+              title: const Text('Enter plate number'),
+              content: TextField(
+                  controller: controller,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: const InputDecoration(hintText: 'CBR 6797')),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel')),
+                TextButton(
+                    onPressed: () => Navigator.pop(context, controller.text),
+                    child: const Text('Check')),
+              ],
+            ));
+    controller.dispose();
+    if (!mounted) return;
+    _isPausedByRoute = false;
+    if (text == null) return;
+    final plate = widget.plateScanService.canonicalPlate(text);
+    if (plate.isEmpty) {
+      setState(
+          () => _errorMessage = 'Enter two or three letters and four digits.');
+      return;
+    }
+    await _lockAndLookUp(plate);
   }
 
   @override
   void dispose() {
+    _autoScanTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     amicaRouteObserver.unsubscribe(this);
     _controller?.dispose();
@@ -467,7 +537,10 @@ class _PlateScanScreenState extends State<PlateScanScreen>
                       ? () => unawaited(_captureAndAnalyze())
                       : null,
                 ),
-                const SizedBox(width: 48),
+                _RoundIconButton(
+                    icon: Icons.keyboard,
+                    onPressed:
+                        _state == _ScanState.scanning ? _enterPlate : null),
               ],
             ),
           ),
@@ -564,9 +637,8 @@ class _ScanFrameState extends State<_ScanFrame>
   @override
   Widget build(BuildContext context) {
     const frameWidth = 280.0;
-    const frameHeight = 150.0;
-    final color =
-        widget.isActive ? AppColors.secondary : AppColors.success;
+    const frameHeight = 230.0;
+    final color = widget.isActive ? AppColors.secondary : AppColors.success;
 
     return SizedBox(
       width: frameWidth,
@@ -575,7 +647,8 @@ class _ScanFrameState extends State<_ScanFrame>
         children: [
           Container(
             decoration: BoxDecoration(
-              border: Border.all(color: color.withValues(alpha: 0.85), width: 2),
+              border:
+                  Border.all(color: color.withValues(alpha: 0.85), width: 2),
               borderRadius: BorderRadius.circular(16),
             ),
           ),

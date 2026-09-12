@@ -2,6 +2,63 @@
 
 Flutter mobile application for Amica, a women's safety and security app.
 
+## Scan Vehicle and Vehicle Journeys
+
+### Rating retries
+
+If a rating fails, the screen keeps the selected stars and explains whether the
+failure is connectivity, session, journey status, or missing backend access.
+Scan the same plate and choose **Rate a completed ride** to retry after leaving
+the original journey screen. Each journey still counts once.
+
+### Multiple voice phrases and launcher icon
+
+In Settings, add or remove up to ten secret phrases, then save. Any configured
+phrase can trigger Voice SOS during an active fake call; all phrases use the
+saved emergency message. Existing profiles with a single `secretPhrase` remain
+compatible. Settings stores `secretPhrases` plus its first entry in the legacy
+field. Empty and duplicate phrases are rejected. Test recognition on your device;
+the app does not claim measured recognition confidence.
+
+The Android launcher uses the supplied artwork in
+`android/app/src/main/res/drawable-nodpi/amica_logo.png`, with a legacy bitmap
+resource and an adaptive icon for modern Android. Reinstall the APK to update it;
+launchers can cache icons briefly.
+
+Scan Vehicle recognizes modern Sri Lankan registrations with two/three letters
+and four digits, including stacked rows and optional province prefixes. Automatic
+capture checks every two seconds and requires two matching readings. The shutter
+and gallery options also try rotated images. Keyboard entry is available when
+OCR is uncertain. Confirm the plate before boarding; OCR is not guaranteed.
+
+1. Deploy the backend vehicle-review rules/functions and import its demo fixtures
+   using `amica-cloud-backend/docs/scan_vehicle_setup.md`.
+2. Log in on Android, add your own consenting test contact, and enable camera,
+   location, SMS, phone, and notification permissions when requested. SMS/calls
+   need a working SIM and may incur charges; an emulator cannot verify delivery.
+3. Open Scan Vehicle. Test `WP NC 9024`, `CBR 6797`, `CBO 3286`, or `CBR 6307`.
+   These are fictional ratings on example plates, not real driver assessments.
+4. Tap **I am traveling in this vehicle**, check the plate and confirm. Boarding
+   SMS is submitted to all active contacts. The next screen reports submission
+   counts; submission does not confirm delivery. No contact/permission failures
+   should be mistaken for a sent message.
+5. Select the destination on the map and vehicle type, then accept or edit the
+   estimated minutes. The estimate uses distance and typical speed, not live
+   traffic or a road route. Tap **Start Vehicle Journey**.
+6. The existing safety timer asks whether you are safe at the deadline. Android's
+   foreground monitor submits SMS after one minute without a response and attempts
+   a call to the primary contact after three minutes. SMS includes the plate.
+   Background execution depends on Android permissions/device restrictions;
+   force-stop, reboot, missing SIM, or denied call access can prevent escalation.
+7. Mark the journey safe, select 1-5 stars, and submit. Firestore stores one review
+   per journey; the backend updates the average. Scan again to see the new average.
+
+Unanswered three-minute checks sync as unverified events when the journey screen
+is running again with network access. They do not automatically change passenger
+ratings or establish driver misconduct. The background message uses the journey's
+last saved location, not continuous live tracking. Test screen-off behavior on a
+real device before relying on it; this remains a university prototype.
+
 ## Planned Features
 
 - User authentication

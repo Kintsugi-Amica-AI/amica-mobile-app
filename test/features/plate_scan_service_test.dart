@@ -5,6 +5,23 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   const service = PlateScanService();
 
+  group('Sri Lankan registration extraction', () {
+    test('parses the supplied single and stacked plate examples', () {
+      expect(service.parseRecognizedText('WP NC-\nD\n9024'), 'NC9024');
+      expect(service.parseRecognizedText('CBR 6797'), 'CBR6797');
+      expect(service.parseRecognizedText('CBO\n3286'), 'CBO3286');
+      expect(service.parseRecognizedText('CBR\n6307'), 'CBR6307');
+      expect(service.parseRecognizedText('CBO 3286\nCBO 3286'), 'CBO3286');
+    });
+    test('rejects ambiguous registrations and does not guess OCR characters',
+        () {
+      expect(service.parseRecognizedText('CBR 6797\nCBO 3286'), '');
+      expect(service.parseRecognizedText('CBR 67O7'), '');
+      expect(service.parseRecognizedText('TOYOTA 2026'), '');
+      expect(service.canonicalPlate('WP NC 9024'), 'NC9024');
+    });
+  });
+
   group('cleanPlateText', () {
     test('strips separators and uppercases, matching plate_text_cleaner.py',
         () {

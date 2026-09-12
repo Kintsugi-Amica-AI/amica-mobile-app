@@ -60,6 +60,7 @@ class EmergencyActionService {
     required DateTime safetyCheckAt,
     required String emergencyPhone,
     required String emergencyMessage,
+    List<String> emergencyPhones = const [],
   }) async {
     await _invokeBooleanMethod(
       'startJourneySafetyMonitor',
@@ -69,12 +70,25 @@ class EmergencyActionService {
         'safetyCheckAtMillis': safetyCheckAt.millisecondsSinceEpoch,
         'emergencyPhone': emergencyPhone,
         'emergencyMessage': emergencyMessage,
+        'emergencyPhones': emergencyPhones,
       },
     );
   }
 
   Future<void> stopJourneySafetyMonitor() async {
     await _invokeBooleanMethod('stopJourneySafetyMonitor');
+  }
+
+  Future<bool> hasJourneyCallEscalated(String journeyId) async {
+    try {
+      return await _channel.invokeMethod<bool>(
+              'hasJourneyCallEscalated', {'journeyId': journeyId}) ??
+          false;
+    } on MissingPluginException {
+      return false;
+    } on PlatformException {
+      return false;
+    }
   }
 
   /// Starts native tracking of the distance to a bus drop-off.

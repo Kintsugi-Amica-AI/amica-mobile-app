@@ -31,6 +31,7 @@ class JourneyService {
     required int estimatedDurationMinutes,
     LocationDataModel? destinationLocation,
     String journeyType = 'walk',
+    String? vehiclePlate,
   }) async {
     final user = _currentUserOrThrow();
     final document = _firestore.collection(_collectionName).doc();
@@ -70,10 +71,12 @@ class JourneyService {
         'actualEndTime': null,
         'safetyCheck': {
           'required': true,
-          'responseDeadlineSeconds': 30,
+          'responseDeadlineSeconds': 60,
           'respondedAt': null,
         },
-        'metadata': const <String, dynamic>{},
+        'metadata': <String, dynamic>{
+          if (vehiclePlate != null) 'vehiclePlate': vehiclePlate,
+        },
         'schemaVersion': 1,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),

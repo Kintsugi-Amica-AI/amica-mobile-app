@@ -21,7 +21,8 @@
     <application
         android:label="Amica"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/amica_launcher"
+        android:roundIcon="@mipmap/amica_launcher">
         <!-- TODO: Set GOOGLE_MAPS_API_KEY locally in android/local.properties.
              Never commit a real Google Maps API key. -->
         <meta-data
