@@ -205,9 +205,21 @@ To test:
 11. Re-open Amica and confirm the screen shows the approaching-stop state rather than alarming a second time.
 12. Tap "I am getting off here" and confirm the journey status becomes `safe` and the notification clears.
 
+### Road distance
+
+A rider thinks in road distance: "2 km before my stop" means 2 km of bus travel, not 2 km as the crow flies. The device can only measure a straight line, and a road is always at least as long, so an uncalibrated 2 km straight-line alarm actually fires with *more* than 2 km of road left — early, which is safe, but not what was asked for.
+
+So the road distance is resolved **once, before the ride starts**, through the backend `getRouteDistance` callable, which returns how much further the road runs than the straight line. The device stores that factor on the ride and applies it offline for the rest of the journey.
+
+The alarm itself never touches the network. That is deliberate: a bus goes through tunnels and dead zones, and an alarm that needed a signal would fail exactly when it is needed. All the device does mid-ride is compare a GPS fix against a threshold it already has.
+
+- The factor is clamped to between 1x and 2x. A road cannot be shorter than a straight line, and capping the upper end means a bad reading makes the alarm sound early rather than late — the safe direction to be wrong in.
+- A nonsense value (NaN, infinity) is treated as no route data at all, not as a very winding road.
+- Road distance is **optional**. With no `GOOGLE_DIRECTIONS_API_KEY` configured on the backend, offline, or with the function undeployed, the lookup returns nothing and the ride falls back to straight-line distance — the alarm still works, it just sounds slightly early. The active screen shows which mode is in use under "Distance measured".
+
 MVP notes:
 
-- Distance is straight-line (great-circle), not road distance, so a route that loops away from the stop warns slightly late relative to road travel. Road distance needs the Directions API, which is out of scope for the MVP.
+- With road distance unavailable, the straight-line fallback warns slightly **early** relative to road travel, since a road is never shorter than the straight line between its ends.
 - Accuracy depends on the GPS fix. Inside a tunnel or a dense built-up area the distance may lag until the next good fix.
 - Manufacturer battery settings can still stop a foreground service. Disable battery optimization for Amica when testing a long ride.
 - Emulators without Google Play services may not deliver location updates to the native service.
@@ -314,7 +326,7 @@ MVP notes:
 MVP limits:
 
 - No route drawing yet.
-- No Google Directions API yet.
+- Google Directions API is used only for the Bus Stop Alert, once per ride, and only when a key is configured on the backend. There is no route drawing or turn-by-turn navigation.
 - Destination time suggestions are simple MVP estimates, not live traffic estimates.
 - Background execution uses a native Android foreground service plus a partial wake lock for MVP testing. Keep the Amica notification visible during an active journey.
 - Direct SMS and automatic call start are for debug APK testing. Publishing with these permissions requires careful Play Store policy review.

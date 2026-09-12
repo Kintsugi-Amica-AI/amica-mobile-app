@@ -264,6 +264,7 @@ class MainActivity : FlutterActivity() {
             alertDistanceMeters = call.argument<Number>("alertDistanceMeters")
                 ?.toInt()
                 ?: 2000,
+            routeFactor = call.argument<Number>("routeFactor")?.toFloat() ?: 1f,
             alreadyAlerted = call.argument<Boolean>("alreadyAlerted") == true,
         )
 

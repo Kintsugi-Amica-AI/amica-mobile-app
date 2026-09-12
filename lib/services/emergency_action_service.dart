@@ -86,6 +86,7 @@ class EmergencyActionService {
     required double dropOffLongitude,
     required String dropOffName,
     required int alertDistanceMeters,
+    double routeFactor = 1,
     bool alreadyAlerted = false,
   }) async {
     await _invokeBooleanMethod(
@@ -95,6 +96,7 @@ class EmergencyActionService {
         'dropOffLongitude': dropOffLongitude,
         'dropOffName': dropOffName,
         'alertDistanceMeters': alertDistanceMeters,
+        'routeFactor': routeFactor,
         'alreadyAlerted': alreadyAlerted,
       },
     );

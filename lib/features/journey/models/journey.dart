@@ -67,6 +67,28 @@ class Journey {
   /// so re-opening the screen does not sound it a second time.
   bool get stopAlertTriggered => stopAlert['alertedAt'] != null;
 
+  /// How much further the road runs than the straight line to the drop-off,
+  /// resolved once when the ride started.
+  ///
+  /// Defaults to 1 when the backend had no route data, which leaves the alarm
+  /// working on straight-line distance alone.
+  double get routeFactor {
+    final factor = stopAlert['routeFactor'];
+    if (factor is num && factor.isFinite && factor >= 1) {
+      return factor.toDouble();
+    }
+    return 1;
+  }
+
+  /// Road distance for the whole ride when it started, or null if unknown.
+  double? get routeDistanceMeters {
+    final distance = stopAlert['routeDistanceMeters'];
+    if (distance is num && distance.isFinite && distance > 0) {
+      return distance.toDouble();
+    }
+    return null;
+  }
+
   String get destinationName {
     final name = destination['name'];
     return name is String && name.isNotEmpty ? name : 'Destination';

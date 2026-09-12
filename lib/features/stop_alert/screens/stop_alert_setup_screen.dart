@@ -15,6 +15,7 @@ import '../../../services/location_service.dart';
 import '../../journey/models/journey.dart';
 import '../../journey/models/location_data_model.dart';
 import '../../journey/services/journey_service.dart';
+import '../services/route_distance_service.dart';
 import '../services/stop_alert_calculator.dart';
 import 'stop_alert_active_screen.dart';
 
@@ -26,12 +27,14 @@ class StopAlertSetupScreen extends StatefulWidget {
     this.journeyService = const JourneyService(),
     this.emergencyActionService = const EmergencyActionService(),
     this.calculator = const StopAlertCalculator(),
+    this.routeDistanceService = const RouteDistanceService(),
   });
 
   final LocationService locationService;
   final JourneyService journeyService;
   final EmergencyActionService emergencyActionService;
   final StopAlertCalculator calculator;
+  final RouteDistanceService routeDistanceService;
 
   @override
   State<StopAlertSetupScreen> createState() => _StopAlertSetupScreenState();
@@ -42,7 +45,11 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
   final _dropOffController = TextEditingController();
 
   Timer? _dropOffSearchDebounce;
+  Timer? _routeEstimateDebounce;
   int _dropOffSearchToken = 0;
+  int _routeEstimateToken = 0;
+  RouteEstimate? _routeEstimate;
+  bool _isEstimatingRoute = false;
   LocationDataModel? _currentLocation;
   LocationDataModel? _dropOffLocation;
   int _alertDistanceMeters = Journey.defaultAlertDistanceMeters;
@@ -64,6 +71,7 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
   @override
   void dispose() {
     _dropOffSearchDebounce?.cancel();
+    _routeEstimateDebounce?.cancel();
     _dropOffController
       ..removeListener(_onDropOffTextChanged)
       ..dispose();
@@ -141,6 +149,7 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
         );
         _dropOffStatus = 'Stop found on the map.';
       });
+      _scheduleRouteEstimate();
     } catch (_) {
       if (mounted && searchToken == _dropOffSearchToken) {
         setState(() {
@@ -168,6 +177,7 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
       _isResolvingDropOff = false;
       _errorMessage = null;
     });
+    _scheduleRouteEstimate();
   }
 
   Future<void> _getCurrentLocation() async {
@@ -180,6 +190,7 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
       final location = await widget.locationService.getCurrentLocationData();
       if (mounted) {
         setState(() => _currentLocation = location);
+        _scheduleRouteEstimate();
       }
     } on LocationServiceException catch (error) {
       if (mounted) {
@@ -200,9 +211,9 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
   // Starting the ride
   // ---------------------------------------------------------------------
 
-  /// Distance from where the rider is now to the stop they picked, or null
-  /// until both are known.
-  double? get _distanceToDropOff {
+  /// Straight-line distance from where the rider is now to the stop they
+  /// picked, or null until both are known.
+  double? get _straightLineToDropOff {
     final start = _currentLocation;
     final dropOff = _dropOffLocation;
     if (start == null || dropOff == null) {
@@ -216,6 +227,16 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
     );
   }
 
+  /// Distance the rider actually has to travel: road distance when the backend
+  /// could resolve it, straight-line otherwise.
+  double? get _distanceToDropOff {
+    final roadDistance = _routeEstimate?.roadDistanceMeters;
+    if (roadDistance != null) {
+      return roadDistance;
+    }
+    return _straightLineToDropOff;
+  }
+
   /// True when the stop is already inside the alert radius, which would make
   /// the alarm sound the moment the ride starts.
   bool get _alertDistanceTooLarge {
@@ -227,6 +248,60 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
       distanceMeters: distance,
       alertDistanceMeters: _alertDistanceMeters,
     );
+  }
+
+  /// Looks up road distance once the rider and their stop are both known.
+  ///
+  /// Debounced so dragging a pin around the map does not fire a lookup per
+  /// frame, and token-guarded so a slow answer for an old pin cannot overwrite
+  /// a newer one.
+  void _scheduleRouteEstimate() {
+    _routeEstimateDebounce?.cancel();
+    final start = _currentLocation;
+    final dropOff = _dropOffLocation;
+
+    if (start == null || dropOff == null) {
+      _routeEstimateToken++;
+      if (mounted) {
+        setState(() {
+          _routeEstimate = null;
+          _isEstimatingRoute = false;
+        });
+      }
+      return;
+    }
+
+    final token = ++_routeEstimateToken;
+    _routeEstimateDebounce = Timer(
+      const Duration(milliseconds: 500),
+      () => _refreshRouteEstimate(token, start, dropOff),
+    );
+  }
+
+  Future<void> _refreshRouteEstimate(
+    int token,
+    LocationDataModel start,
+    LocationDataModel dropOff,
+  ) async {
+    if (!mounted || token != _routeEstimateToken) {
+      return;
+    }
+    setState(() => _isEstimatingRoute = true);
+
+    final estimate = await widget.routeDistanceService.estimate(
+      originLatitude: start.latitude,
+      originLongitude: start.longitude,
+      destinationLatitude: dropOff.latitude,
+      destinationLongitude: dropOff.longitude,
+    );
+
+    if (!mounted || token != _routeEstimateToken) {
+      return;
+    }
+    setState(() {
+      _routeEstimate = estimate;
+      _isEstimatingRoute = false;
+    });
   }
 
   Future<void> _startRide() async {
@@ -262,6 +337,8 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
         ),
         dropOffName: dropOffName,
         alertDistanceMeters: _alertDistanceMeters,
+        routeFactor: _routeEstimate?.routeFactor ?? 1,
+        routeDistanceMeters: _routeEstimate?.roadDistanceMeters,
       );
 
       if (!mounted) {
@@ -452,11 +529,22 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
               },
             ).toList(),
           ),
-          if (distance != null) ...[
+          if (_isEstimatingRoute) ...[
             const SizedBox(height: 14),
             Text(
-              'Your stop is ${widget.calculator.formatDistance(distance)} away '
-              'right now.',
+              'Checking the road distance to your stop...',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ] else if (distance != null) ...[
+            const SizedBox(height: 14),
+            Text(
+              _routeEstimate == null
+                  // Said plainly, because it reads shorter than the ride will
+                  // actually be.
+                  ? 'Your stop is ${widget.calculator.formatDistance(distance)} '
+                      'away in a straight line.'
+                  : 'Your stop is about '
+                      '${widget.calculator.formatDistance(distance)} away by road.',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],

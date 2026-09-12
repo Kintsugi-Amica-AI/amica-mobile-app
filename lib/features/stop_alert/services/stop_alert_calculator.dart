@@ -39,6 +39,49 @@ class StopAlertCalculator {
     return _earthRadiusMeters * c;
   }
 
+  /// A road is never shorter than the straight line between its ends.
+  static const double minRouteFactor = 1.0;
+
+  /// Matches the cap the backend applies. Capping low makes the alarm sound
+  /// early rather than late, which is the safe direction to be wrong in.
+  static const double maxRouteFactor = 2.0;
+
+  /// The straight-line distance at which the alarm should sound, for a rider
+  /// who asked to be warned [alertDistanceMeters] before their stop *by road*.
+  ///
+  /// The device measures straight-line distance, but a rider thinks in road
+  /// distance: "2 km before my stop" means 2 km of bus travel, not 2 km as the
+  /// crow flies. With a road 1.4x longer than the straight line, 2 km of road
+  /// left is only about 1.43 km of straight line, so the alarm has to wait
+  /// until the rider is that much closer.
+  ///
+  /// With no route data [routeFactor] is 1 and this returns the alert distance
+  /// unchanged, which is how the alarm behaved before road distance existed —
+  /// sounding early, never late.
+  double straightLineThresholdMeters({
+    required int alertDistanceMeters,
+    double routeFactor = minRouteFactor,
+  }) {
+    return alertDistanceMeters / _safeRouteFactor(routeFactor);
+  }
+
+  /// Estimated road distance still to travel, from the measured straight-line
+  /// distance.
+  double estimatedRoadDistanceMeters({
+    required double straightLineMeters,
+    double routeFactor = minRouteFactor,
+  }) {
+    return straightLineMeters * _safeRouteFactor(routeFactor);
+  }
+
+  /// Keeps a missing, malformed, or out-of-range factor from moving the alarm.
+  double _safeRouteFactor(double routeFactor) {
+    if (!routeFactor.isFinite || routeFactor <= minRouteFactor) {
+      return minRouteFactor;
+    }
+    return routeFactor > maxRouteFactor ? maxRouteFactor : routeFactor;
+  }
+
   /// Whether the approaching-stop alarm should sound right now.
   ///
   /// The alarm fires once per ride: [alreadyAlerted] keeps a bus that weaves

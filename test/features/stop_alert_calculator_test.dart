@@ -209,6 +209,152 @@ void main() {
     });
   });
 
+  group('straightLineThresholdMeters', () {
+    test('is the alert distance unchanged with no route data', () {
+      // Without a route factor the alarm behaves exactly as it did before road
+      // distance existed.
+      expect(
+        calculator.straightLineThresholdMeters(alertDistanceMeters: 2000),
+        2000,
+      );
+    });
+
+    test('tightens the radius when the road winds', () {
+      // A rider who asked for 2 km of warning by road, on a route 1.4x longer
+      // than the straight line, must be about 1.43 km away in a straight line
+      // before the alarm sounds.
+      final threshold = calculator.straightLineThresholdMeters(
+        alertDistanceMeters: 2000,
+        routeFactor: 1.4,
+      );
+
+      expect(threshold, closeTo(1428.6, 0.1));
+    });
+
+    test('never widens the radius for a factor below one', () {
+      // A road cannot be shorter than the straight line, so a bad reading must
+      // not push the alarm further out than the rider asked for.
+      for (final factor in [0.5, 1.0, 0.0, -3.0]) {
+        expect(
+          calculator.straightLineThresholdMeters(
+            alertDistanceMeters: 2000,
+            routeFactor: factor,
+          ),
+          2000,
+        );
+      }
+    });
+
+    test('caps how far a wild factor can shrink the radius', () {
+      // Capping low makes the alarm sound early rather than late, which is the
+      // safe direction to be wrong in.
+      expect(
+        calculator.straightLineThresholdMeters(
+          alertDistanceMeters: 2000,
+          routeFactor: 50,
+        ),
+        1000,
+      );
+    });
+
+    test('treats a nonsense factor as no route data at all', () {
+      // NaN and infinity are not "a very winding road", they are a broken
+      // reading. Falling back to the unadjusted radius makes the alarm sound
+      // early, rather than shrinking it on the strength of a bad number.
+      for (final factor in [double.nan, double.infinity]) {
+        expect(
+          calculator.straightLineThresholdMeters(
+            alertDistanceMeters: 2000,
+            routeFactor: factor,
+          ),
+          2000,
+        );
+      }
+    });
+
+    test('an adjusted threshold still fires the alarm at the right point', () {
+      // End to end: 2 km of road left on a 1.4x route is 1428 m straight line,
+      // so the alarm holds at 1500 m and fires at 1400 m.
+      final threshold = calculator
+          .straightLineThresholdMeters(
+            alertDistanceMeters: 2000,
+            routeFactor: 1.4,
+          )
+          .round();
+
+      expect(
+        calculator.shouldAlert(
+          distanceMeters: 1500,
+          alertDistanceMeters: threshold,
+          alreadyAlerted: false,
+        ),
+        isFalse,
+      );
+      expect(
+        calculator.shouldAlert(
+          distanceMeters: 1400,
+          alertDistanceMeters: threshold,
+          alreadyAlerted: false,
+        ),
+        isTrue,
+      );
+    });
+  });
+
+  group('estimatedRoadDistanceMeters', () {
+    test('is the straight line itself with no route data', () {
+      expect(
+        calculator.estimatedRoadDistanceMeters(straightLineMeters: 1500),
+        1500,
+      );
+    });
+
+    test('stretches the straight line by the route factor', () {
+      expect(
+        calculator.estimatedRoadDistanceMeters(
+          straightLineMeters: 1000,
+          routeFactor: 1.4,
+        ),
+        closeTo(1400, 0.001),
+      );
+    });
+
+    test('applies the same clamps as the threshold', () {
+      expect(
+        calculator.estimatedRoadDistanceMeters(
+          straightLineMeters: 1000,
+          routeFactor: 0.2,
+        ),
+        1000,
+      );
+      expect(
+        calculator.estimatedRoadDistanceMeters(
+          straightLineMeters: 1000,
+          routeFactor: 99,
+        ),
+        2000,
+      );
+    });
+
+    test('round trips with the threshold it is paired with', () {
+      // Converting the alert distance into a straight-line threshold and back
+      // into road distance must return what the rider asked for.
+      const alertDistance = 2000;
+      const factor = 1.6;
+
+      final threshold = calculator.straightLineThresholdMeters(
+        alertDistanceMeters: alertDistance,
+        routeFactor: factor,
+      );
+      final roadAtThreshold = calculator.estimatedRoadDistanceMeters(
+        straightLineMeters: threshold,
+        routeFactor: factor,
+      );
+
+      expect(roadAtThreshold, closeTo(alertDistance, 0.001));
+    });
+  });
+
   group('formatDistance', () {
     test('uses metres under a kilometre', () {
       expect(calculator.formatDistance(0), '0 m');

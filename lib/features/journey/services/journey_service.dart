@@ -176,6 +176,8 @@ class JourneyService {
     required LocationDataModel dropOffLocation,
     required String dropOffName,
     int alertDistanceMeters = Journey.defaultAlertDistanceMeters,
+    double routeFactor = 1,
+    double? routeDistanceMeters,
   }) async {
     final user = _currentUserOrThrow();
     final document = _firestore.collection(_collectionName).doc();
@@ -213,6 +215,10 @@ class JourneyService {
           'enabled': true,
           'alertDistanceMeters': alertDistanceMeters,
           'alertedAt': null,
+          // Resolved once at the start, then applied on-device for the rest of
+          // the ride so the alarm never needs the network.
+          'routeFactor': routeFactor,
+          'routeDistanceMeters': routeDistanceMeters,
         },
         'metadata': const <String, dynamic>{},
         'schemaVersion': 1,

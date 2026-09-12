@@ -48,6 +48,7 @@ class StopAlertMonitorService : Service(), LocationListener {
     private var dropOffLongitude = 0.0
     private var dropOffName = DEFAULT_DROP_OFF_NAME
     private var alertDistanceMeters = DEFAULT_ALERT_DISTANCE_METERS
+    private var routeFactor = MIN_ROUTE_FACTOR
     private var hasAlerted = false
     private var lastDistanceMeters: Float? = null
 
@@ -89,6 +90,7 @@ class StopAlertMonitorService : Service(), LocationListener {
                 EXTRA_ALERT_DISTANCE_METERS,
                 DEFAULT_ALERT_DISTANCE_METERS,
             ),
+            factor = intent.getFloatExtra(EXTRA_ROUTE_FACTOR, MIN_ROUTE_FACTOR),
             alreadyAlerted = intent.getBooleanExtra(EXTRA_ALREADY_ALERTED, false),
         )
     }
@@ -112,6 +114,7 @@ class StopAlertMonitorService : Service(), LocationListener {
                 PREF_ALERT_DISTANCE_METERS,
                 DEFAULT_ALERT_DISTANCE_METERS,
             ),
+            factor = prefs.getFloat(PREF_ROUTE_FACTOR, MIN_ROUTE_FACTOR),
             alreadyAlerted = prefs.getBoolean(PREF_ALREADY_ALERTED, false),
         )
     }
@@ -121,12 +124,14 @@ class StopAlertMonitorService : Service(), LocationListener {
         longitude: Double,
         name: String?,
         alertDistance: Int,
+        factor: Float,
         alreadyAlerted: Boolean,
     ) {
         dropOffLatitude = latitude
         dropOffLongitude = longitude
         dropOffName = name?.takeIf { it.isNotBlank() } ?: DEFAULT_DROP_OFF_NAME
         alertDistanceMeters = alertDistance
+        routeFactor = safeRouteFactor(factor)
         hasAlerted = alreadyAlerted
         lastDistanceMeters = null
 
@@ -257,7 +262,11 @@ class StopAlertMonitorService : Service(), LocationListener {
         }
         lastDistanceMeters = distanceMeters
 
-        if (!hasAlerted && distanceMeters <= alertDistanceMeters) {
+        // The rider asked to be warned a road distance before their stop, but
+        // this is a straight line, so the threshold is converted with the route
+        // factor resolved before the ride began. No network is needed here,
+        // which is the point: a bus goes through tunnels and dead zones.
+        if (!hasAlerted && distanceMeters <= alertDistanceMeters / routeFactor) {
             hasAlerted = true
             // Persist before alarming so a restart mid-ride cannot sound it
             // a second time.
@@ -271,8 +280,21 @@ class StopAlertMonitorService : Service(), LocationListener {
             } else {
                 "Watching your stop"
             },
-            text = "${formatDistance(distanceMeters)} to $dropOffName.",
+            text = "${formatDistance(roadDistanceOf(distanceMeters))} to $dropOffName.",
         )
+    }
+
+    /// Straight-line distance restated as the road distance still to travel,
+    /// so the notification agrees with what the app shows.
+    private fun roadDistanceOf(straightLineMeters: Float): Float {
+        return straightLineMeters * routeFactor
+    }
+
+    private fun safeRouteFactor(factor: Float): Float {
+        if (!factor.isFinite() || factor <= MIN_ROUTE_FACTOR) {
+            return MIN_ROUTE_FACTOR
+        }
+        return if (factor > MAX_ROUTE_FACTOR) MAX_ROUTE_FACTOR else factor
     }
 
     private fun soundApproachingStopAlarm(distanceMeters: Float) {
@@ -448,7 +470,7 @@ class StopAlertMonitorService : Service(), LocationListener {
             .setSmallIcon(android.R.drawable.ic_popup_reminder)
             .setContentTitle("Your stop is coming up")
             .setContentText(
-                "${formatDistance(distanceMeters)} to $dropOffName. " +
+                "${formatDistance(roadDistanceOf(distanceMeters))} to $dropOffName. " +
                     "Get ready to get off.",
             )
             .setContentIntent(openAppPendingIntent())
@@ -510,9 +532,17 @@ class StopAlertMonitorService : Service(), LocationListener {
         private const val EXTRA_DROP_OFF_LONGITUDE = "dropOffLongitude"
         private const val EXTRA_DROP_OFF_NAME = "dropOffName"
         private const val EXTRA_ALERT_DISTANCE_METERS = "alertDistanceMeters"
+        private const val EXTRA_ROUTE_FACTOR = "routeFactor"
         private const val EXTRA_ALREADY_ALERTED = "alreadyAlerted"
         private const val DEFAULT_DROP_OFF_NAME = "your stop"
         private const val DEFAULT_ALERT_DISTANCE_METERS = 2000
+
+        /// A road is never shorter than the straight line between its ends.
+        private const val MIN_ROUTE_FACTOR = 1f
+
+        /// Matches the cap the backend applies. Capping low makes the alarm
+        /// sound early rather than late, the safe direction to be wrong in.
+        private const val MAX_ROUTE_FACTOR = 2f
         private const val MIN_UPDATE_INTERVAL_MILLIS = 10_000L
         private const val MIN_UPDATE_DISTANCE_METERS = 25f
 
@@ -528,6 +558,7 @@ class StopAlertMonitorService : Service(), LocationListener {
         private const val PREF_DROP_OFF_LONGITUDE = "dropOffLongitude"
         private const val PREF_DROP_OFF_NAME = "dropOffName"
         private const val PREF_ALERT_DISTANCE_METERS = "alertDistanceMeters"
+        private const val PREF_ROUTE_FACTOR = "routeFactor"
         private const val PREF_ALREADY_ALERTED = "alreadyAlerted"
 
         fun startIntent(
@@ -536,6 +567,7 @@ class StopAlertMonitorService : Service(), LocationListener {
             dropOffLongitude: Double,
             dropOffName: String,
             alertDistanceMeters: Int,
+            routeFactor: Float,
             alreadyAlerted: Boolean,
         ): Intent {
             return Intent(context, StopAlertMonitorService::class.java).apply {
@@ -544,6 +576,7 @@ class StopAlertMonitorService : Service(), LocationListener {
                 putExtra(EXTRA_DROP_OFF_LONGITUDE, dropOffLongitude)
                 putExtra(EXTRA_DROP_OFF_NAME, dropOffName)
                 putExtra(EXTRA_ALERT_DISTANCE_METERS, alertDistanceMeters)
+                putExtra(EXTRA_ROUTE_FACTOR, routeFactor)
                 putExtra(EXTRA_ALREADY_ALERTED, alreadyAlerted)
             }
         }
@@ -577,6 +610,7 @@ class StopAlertMonitorService : Service(), LocationListener {
             )
             .putString(PREF_DROP_OFF_NAME, dropOffName)
             .putInt(PREF_ALERT_DISTANCE_METERS, alertDistanceMeters)
+            .putFloat(PREF_ROUTE_FACTOR, routeFactor)
             .putBoolean(PREF_ALREADY_ALERTED, hasAlerted)
             .apply()
     }

@@ -180,9 +180,17 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
       setState(() => _distanceMeters = distance);
     }
 
+    // The device measures a straight line, but the rider asked to be warned a
+    // road distance before their stop, so the threshold is converted with the
+    // route factor resolved when the ride started.
     if (widget.calculator.shouldAlert(
       distanceMeters: distance,
-      alertDistanceMeters: ride.alertDistanceMeters,
+      alertDistanceMeters: widget.calculator
+          .straightLineThresholdMeters(
+            alertDistanceMeters: ride.alertDistanceMeters,
+            routeFactor: ride.routeFactor,
+          )
+          .round(),
       alreadyAlerted: _hasAlerted,
     )) {
       unawaited(_handleApproachingStop(ride));
@@ -235,6 +243,7 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
         dropOffLongitude: dropOff.longitude,
         dropOffName: ride.destinationName,
         alertDistanceMeters: ride.alertDistanceMeters,
+        routeFactor: ride.routeFactor,
         alreadyAlerted: _hasAlerted,
       );
       _nativeMonitorStarted = true;
@@ -343,6 +352,11 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
                 label: 'Background alarm',
                 value: _nativeMonitorStarted ? 'Active' : 'App only',
               ),
+              const Divider(height: 22),
+              _InfoRow(
+                label: 'Distance measured',
+                value: ride.routeFactor > 1 ? 'By road' : 'Straight line',
+              ),
             ],
           ),
         ),
@@ -397,7 +411,14 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
             child: Text(
               distance == null
                   ? '--'
-                  : widget.calculator.formatDistance(distance),
+                  : widget.calculator.formatDistance(
+                      // Shown as road distance so the number matches the
+                      // distance the alarm is actually counting down.
+                      widget.calculator.estimatedRoadDistanceMeters(
+                        straightLineMeters: distance,
+                        routeFactor: ride.routeFactor,
+                      ),
+                    ),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 46,
