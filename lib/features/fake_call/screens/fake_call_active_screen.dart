@@ -154,7 +154,8 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
         expectedPhrase: _expectedPhrase,
         emergencyMessage: _voiceSosEmergencyMessage,
       );
-      await _sendVoiceSosMessageToPrimaryContact();
+      // The SOS screen texts the whole circle (not just the first contact)
+      // and shows who was actually reached.
 
       if (!mounted) {
         return;
@@ -183,19 +184,6 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
         AppLocalizations.of(context).fakeCallActiveCouldNotCompleteVoiceSos,
       );
     }
-  }
-
-  Future<void> _sendVoiceSosMessageToPrimaryContact() async {
-    final contact =
-        await widget.emergencyContactService.getPrimaryActiveEmergencyContact();
-    if (contact == null) {
-      return;
-    }
-
-    await widget.emergencyActionService.sendEmergencySms(
-      phone: contact.phone,
-      message: _voiceSosEmergencyMessage,
-    );
   }
 
   void _showError(String message) {

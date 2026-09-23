@@ -224,7 +224,22 @@ class TransitTripCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          body,
+          // The timeline grows smoothly out of the "finding stops…" line
+          // instead of popping in.
+          AnimatedSize(
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 260),
+              child: KeyedSubtree(
+                key: ValueKey(plan == null
+                    ? 'status-$isLoading-$unavailable'
+                    : '${plan.boardStop.id}-${plan.alightStop.id}'),
+                child: body,
+              ),
+            ),
+          ),
         ],
       ),
     );

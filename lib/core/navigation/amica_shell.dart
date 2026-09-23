@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
 import '../../l10n/generated/app_localizations.dart';
-import '../constants/app_colors.dart';
+import '../widgets/glass_card.dart';
+import '../widgets/motion.dart';
 
 import '../../features/emergency_contacts/screens/emergency_contacts_screen.dart';
 import '../../features/home/screens/home_screen.dart';
@@ -31,7 +33,7 @@ class _AmicaShellState extends State<AmicaShell> {
   late int _index = widget.initialIndex;
 
   /// Mirrors [_index] so a tab can react when it is actually shown — the
-  /// IndexedStack builds every tab up front.
+  /// tab stack builds every tab up front.
   late final ValueNotifier<int> _currentTab = ValueNotifier(_index);
 
   void _select(int i) {
@@ -45,7 +47,7 @@ class _AmicaShellState extends State<AmicaShell> {
     super.dispose();
   }
 
-  /// [IndexedStack] rather than swapping children, so a half-filled journey
+  /// [AnimatedTabStack] rather than swapping children, so a half-filled journey
   /// form or a scrolled contact list survives a trip to another tab.
   static const List<Widget> _tabs = [
     HomeScreen(),
@@ -57,14 +59,19 @@ class _AmicaShellState extends State<AmicaShell> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
-    final c = Theme.of(context).amica;
     const radius = BorderRadius.all(Radius.circular(30));
 
     return Scaffold(
+      // The tabs run underneath the floating glass pill (and the system
+      // navigation bar), so a map fills the whole screen instead of ending
+      // in a strip of background under the pill. Scaffold adds the pill's
+      // height to each tab's bottom padding, so content stays reachable.
+      extendBody: true,
       body: AmicaShellScope(
         selectTab: _select,
         currentTab: _currentTab,
-        child: IndexedStack(index: _index, children: _tabs),
+        // Tabs cross-fade with a gentle rise instead of cutting.
+        child: AnimatedTabStack(index: _index, children: _tabs),
       ),
       // A floating pill rather than an edge-to-edge bar, as in the
       // reference designs: it reads as part of the soft ground instead of
@@ -74,52 +81,39 @@ class _AmicaShellState extends State<AmicaShell> {
         minimum: const EdgeInsets.only(bottom: 12),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-          child: DecoratedBox(
-            // Frosted glass pill: translucent over the pastel ground, with
-            // a slightly denser fill than cards so the icons stay crisp.
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color.alphaBlend(c.glassHighlight, c.glassFill),
-                  Color.lerp(c.glassFill, c.card, 0.35)!,
-                ],
-              ),
-              borderRadius: radius,
-              border: Border.all(color: c.glassBorder),
-              boxShadow: c.shadow,
-            ),
-            child: ClipRRect(
-              borderRadius: radius,
-              child: NavigationBar(
+          // Frosted-glass pill (translucent fill + rim, no live blur).
+          child: AmicaGlass(
+            borderRadius: radius,
+            blur: 0, // Live blur here stuttered over the map; the glass fill + rim stay.
+            child: NavigationBar(
                 backgroundColor: Colors.transparent,
+                // The selection pill slides and stretches between tabs.
+                animationDuration: const Duration(milliseconds: 420),
                 selectedIndex: _index,
                 onDestinationSelected: _select,
                 destinations: [
                   NavigationDestination(
                     icon: const Icon(Icons.home_outlined),
-                    selectedIcon: const Icon(Icons.home_rounded),
+                    selectedIcon: const _PopIcon(Icons.home_rounded),
                     label: loc.navHome,
                   ),
                   NavigationDestination(
                     icon: const Icon(Icons.route_outlined),
-                    selectedIcon: const Icon(Icons.route_rounded),
+                    selectedIcon: const _PopIcon(Icons.route_rounded),
                     label: loc.navJourneys,
                   ),
                   NavigationDestination(
                     icon: const Icon(Icons.people_outline_rounded),
-                    selectedIcon: const Icon(Icons.people_rounded),
+                    selectedIcon: const _PopIcon(Icons.people_rounded),
                     label: loc.navCircle,
                   ),
                   NavigationDestination(
                     icon: const Icon(Icons.person_outline_rounded),
-                    selectedIcon: const Icon(Icons.person_rounded),
+                    selectedIcon: const _PopIcon(Icons.person_rounded),
                     label: loc.navYou,
                   ),
                 ],
               ),
-            ),
           ),
         ),
       ),
@@ -153,4 +147,24 @@ class AmicaShellScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(AmicaShellScope oldWidget) => false;
+}
+
+/// The selected tab's icon arrives with a small springy pop.
+class _PopIcon extends StatelessWidget {
+  const _PopIcon(this.icon);
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    if (AmicaMotion.reduced(context)) return Icon(icon);
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.7, end: 1),
+      duration: AmicaMotion.slow,
+      curve: Curves.elasticOut,
+      builder: (context, scale, child) =>
+          Transform.scale(scale: scale, child: child),
+      child: Icon(icon),
+    );
+  }
 }

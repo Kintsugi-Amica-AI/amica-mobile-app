@@ -9,6 +9,15 @@ class EmergencyActionException implements Exception {
   String toString() => message;
 }
 
+/// What the phone reported after trying to send an SMS.
+enum SmsSendStatus {
+  /// The radio confirmed the message left the phone.
+  sent,
+
+  /// Handed to the SIM, but no confirmation came back in time.
+  unconfirmed,
+}
+
 class EmergencyActionService {
   const EmergencyActionService();
 
@@ -26,17 +35,44 @@ class EmergencyActionService {
     await _invokeBooleanMethod('prepareNotificationPermission');
   }
 
-  Future<void> sendEmergencySms({
+  /// Sends an SMS from the phone's own SIM and waits for the radio to
+  /// confirm it left the phone.
+  ///
+  /// Returns [SmsSendStatus.sent], or [SmsSendStatus.unconfirmed] when the
+  /// phone gave no confirmation within 20 s (it may still arrive). Throws
+  /// [EmergencyActionException] when sending definitely failed — no service,
+  /// no SMS balance, permission refused — so callers never report a message
+  /// as delivered when it was not.
+  Future<SmsSendStatus> sendEmergencySms({
     required String phone,
     required String message,
   }) async {
-    await _invokeBooleanMethod(
-      'sendSms',
-      arguments: {
+    try {
+      final result = await _channel.invokeMethod<Object?>('sendSms', {
         'phone': phone,
         'message': message,
-      },
-    );
+      });
+      if (result is Map) {
+        final status = result['status'];
+        final error = result['error'];
+        if (status == 'failed') {
+          throw EmergencyActionException(
+            error is String && error.isNotEmpty ? error : 'SMS failed.',
+          );
+        }
+        return status == 'sent'
+            ? SmsSendStatus.sent
+            : SmsSendStatus.unconfirmed;
+      }
+      // Older native side that only answered `true`.
+      return SmsSendStatus.unconfirmed;
+    } on PlatformException catch (error) {
+      throw EmergencyActionException(error.message ?? 'SMS failed.');
+    } on MissingPluginException {
+      throw const EmergencyActionException(
+        'SMS sending is only available on Android.',
+      );
+    }
   }
 
   Future<void> startEmergencyCall({

@@ -6,6 +6,7 @@ import '../../../core/navigation/amica_shell.dart';
 import '../../../core/theme/theme_controller.dart';
 import '../../../core/widgets/amica_primitives.dart';
 import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/motion.dart';
 import '../../auth/models/app_user.dart';
 import '../../auth/services/auth_service.dart';
 import '../../emergency_contacts/models/emergency_contact.dart';
@@ -71,27 +72,48 @@ class HomeScreen extends StatelessWidget {
                             BoxConstraints(minHeight: constraints.maxHeight),
                         child: Column(
                           children: [
-                            _Header(
-                              initial: firstName,
-                              onProfile: () => Navigator.pushNamed(
-                                context,
-                                AppRoutes.profile,
+                            // Sections drift in one after another the
+                            // first time Home appears.
+                            FadeSlideIn(
+                              child: _Header(
+                                initial: firstName,
+                                onProfile: () => Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.profile,
+                                ),
                               ),
                             ),
-                            _Greeting(
-                              greeting: HomeScreen.greetingFor(DateTime.now(), loc),
-                              firstName: firstName,
-                              guardianCount: guardians.length,
-                            ),
-                            const SizedBox(height: 18),
-                            _ProtectionStatus(guardianCount: guardians.length),
-                            const SizedBox(height: 28),
-                            _SosHero(guardians: guardians),
-                            const SizedBox(height: 30),
-                            _QuieterOptions(),
                             const SizedBox(height: 16),
-                            const _SafetyTip(),
-                            const SizedBox(height: 20),
+                            FadeSlideIn(
+                              delay: const Duration(milliseconds: 80),
+                              child: _HeroCard(
+                                greeting:
+                                    HomeScreen.greetingFor(DateTime.now(), loc),
+                                firstName: firstName,
+                                guardianCount: guardians.length,
+                              ),
+                            ),
+                            const SizedBox(height: 28),
+                            FadeSlideIn(
+                              delay: const Duration(milliseconds: 160),
+                              offset: const Offset(0, 0.04),
+                              child: _SosHero(guardians: guardians),
+                            ),
+                            const SizedBox(height: 30),
+                            FadeSlideIn(
+                              delay: const Duration(milliseconds: 240),
+                              child: _QuieterOptions(),
+                            ),
+                            const SizedBox(height: 16),
+                            const FadeSlideIn(
+                              delay: Duration(milliseconds: 320),
+                              child: _SafetyTip(),
+                            ),
+                            // Clear the floating nav pill the page scrolls
+                            // under.
+                            SizedBox(
+                              height: 20 + MediaQuery.paddingOf(context).bottom,
+                            ),
                           ],
                         ),
                       ),
@@ -190,8 +212,11 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _Greeting extends StatelessWidget {
-  const _Greeting({
+/// The top of Home: a frosted glass card holding the greeting and, inside
+/// it, the standing reassurance — is she set up, how many people can reach
+/// her. Trust in a safety app is built before the emergency, not during it.
+class _HeroCard extends StatelessWidget {
+  const _HeroCard({
     required this.greeting,
     required this.firstName,
     required this.guardianCount,
@@ -199,52 +224,6 @@ class _Greeting extends StatelessWidget {
 
   final String greeting;
   final String firstName;
-  final int guardianCount;
-
-  /// Says how many people can reach her, in words, because a number alone
-  /// ("3 contacts") reads as a database row rather than as company.
-  String _subline(AppLocalizations loc) {
-    if (guardianCount == 0) {
-      return loc.homeNoGuardiansSubline;
-    }
-    return loc.homeGuardianCountSubline(guardianCount);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final loc = AppLocalizations.of(context);
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            firstName.isEmpty
-                ? loc.homeGreetingNoName(greeting)
-                : loc.homeGreetingWithName(greeting, firstName),
-            style: theme.textTheme.displaySmall,
-          ),
-          const SizedBox(height: 7),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 320),
-            child: Text(_subline(loc), style: theme.textTheme.bodyMedium),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Standing reassurance: what is actually armed right now.
-///
-/// Trust in a safety app is built before the emergency, not during it. If
-/// she cannot tell at a glance whether location is on, she will not believe
-/// the button works either.
-class _ProtectionStatus extends StatelessWidget {
-  const _ProtectionStatus({required this.guardianCount});
-
   final int guardianCount;
 
   @override
@@ -257,48 +236,101 @@ class _ProtectionStatus extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: AmicaCard(
-        padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-        onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
-        child: Row(
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
+        borderRadius: 28,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: ready ? c.sageSoft : c.goldSoft,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                ready ? Icons.verified_user_outlined : Icons.shield_outlined,
-                size: 20,
-                color: ready ? c.sage : c.gold,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    firstName.isEmpty
+                        ? loc.homeGreetingNoName(greeting)
+                        : loc.homeGreetingWithName(greeting, firstName),
+                    style: theme.textTheme.displaySmall?.copyWith(fontSize: 26),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ShaderMask(
+                  blendMode: BlendMode.srcIn,
+                  shaderCallback: (b) => c.accentGradient.createShader(b),
+                  child: const Icon(Icons.auto_awesome_rounded, size: 22),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              guardianCount == 0
+                  ? loc.homeNoGuardiansSubline
+                  : loc.homeGuardianCountSubline(guardianCount),
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 14),
+            // Protection status, as a tinted pill inside the glass.
+            Material(
+              color: (ready ? c.sageSoft : c.goldSoft).withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(18),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(18),
+                onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 10, 8, 10),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: ready ? c.sage : c.gold,
+                        ),
+                        child: Icon(
+                          ready
+                              ? Icons.verified_user_rounded
+                              : Icons.shield_outlined,
+                          size: 18,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              ready
+                                  ? loc.homeYouAreProtected
+                                  : loc.homeFinishSettingUp,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                color: ready ? c.sageInk : c.gold,
+                              ),
+                            ),
+                            Text(
+                              ready
+                                  ? loc.homeProtectionReadySubline(guardianCount)
+                                  : loc.homeAddGuardianPrompt,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w500,
+                                color: c.plum70,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 20,
+                        color: ready ? c.sageInk : c.gold,
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    ready ? loc.homeYouAreProtected : loc.homeFinishSettingUp,
-                    style: theme.textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    ready
-                        ? loc.homeProtectionReadySubline(guardianCount)
-                        : loc.homeAddGuardianPrompt,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: c.plum45,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded, size: 18, color: c.plum45),
           ],
         ),
       ),
@@ -388,8 +420,8 @@ class _QuieterOptions extends StatelessWidget {
                 child: AmicaTile(
                   label: loc.homeTileFakeCall,
                   icon: Icons.phone_outlined,
-                  tint: c.goldSoft,
-                  iconColor: c.gold,
+                  tint: c.orchidSoft,
+                  iconColor: c.orchidInk,
                   onTap: () => Navigator.pushNamed(context, AppRoutes.fakeCall),
                 ),
               ),

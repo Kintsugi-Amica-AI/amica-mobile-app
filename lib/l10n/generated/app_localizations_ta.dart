@@ -651,6 +651,49 @@ class AppLocalizationsTa extends AppLocalizations {
   }
 
   @override
+  String get sosSmsDefaultMessage => 'எனக்கு உதவி தேவை.';
+
+  @override
+  String sosSmsWithName(String name, String message, String link) {
+    return '$name இடமிருந்து AMICA SOS: $message என் இருப்பிடம்: $link';
+  }
+
+  @override
+  String sosSmsNoName(String message, String link) {
+    return 'AMICA SOS: $message என் இருப்பிடம்: $link';
+  }
+
+  @override
+  String get sosCircleSending => 'உங்கள் வட்டத்திற்குச் செய்தி அனுப்புகிறது…';
+
+  @override
+  String get sosCircleLoadFailed =>
+      'உங்கள் வட்டத்தை ஏற்ற முடியவில்லை. இணைப்பைச் சரிபார்க்கவும்.';
+
+  @override
+  String get sosCircleTryAgain => 'மீண்டும் முயல்க';
+
+  @override
+  String get sosCircleOpenSmsApp => 'SMS செயலியைத் திற';
+
+  @override
+  String sosCircleReachedCount(int reached, int total) {
+    return '$total இல் $reached பேருக்குச் சென்றது';
+  }
+
+  @override
+  String get sosCircleStatusSending => 'அனுப்புகிறது';
+
+  @override
+  String get sosCircleStatusSent => 'அனுப்பப்பட்டது';
+
+  @override
+  String get sosCircleStatusUnconfirmed => 'உறுதிசெய்யப்படவில்லை';
+
+  @override
+  String get sosCircleStatusFailed => 'தோல்வி';
+
+  @override
   String get profileLogOut => 'வெளியேறு';
 
   @override

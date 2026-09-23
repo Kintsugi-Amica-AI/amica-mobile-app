@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'core/constants/app_routes.dart';
@@ -63,10 +64,19 @@ class _AmicaAppState extends State<AmicaApp> {
 
   Widget _buildApp(ThemeMode themeMode, Locale? locale) {
     return MaterialApp(
+      // Screens without an AppBar (Home, the maps) still need transparent,
+      // correctly tinted system bars.
+      builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+        value: AppTheme.overlayFor(Theme.of(context).brightness),
+        child: child ?? const SizedBox.shrink(),
+      ),
       navigatorKey: _navigatorKey,
       navigatorObservers: [amicaRouteObserver],
       title: AppStrings.appName,
       theme: AppTheme.light,
+      // Light ⇄ dark cross-fades instead of snapping.
+      themeAnimationDuration: const Duration(milliseconds: 450),
+      themeAnimationCurve: Curves.easeInOutCubic,
       darkTheme: AppTheme.dark,
       themeMode: themeMode,
       locale: locale,

@@ -1168,6 +1168,78 @@ abstract class AppLocalizations {
   /// **'Amica will alert you before {stop}, the stop to get off at.'**
   String stopAlertWakeBefore(String stop);
 
+  /// No description provided for @sosSmsDefaultMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'I need help.'**
+  String get sosSmsDefaultMessage;
+
+  /// No description provided for @sosSmsWithName.
+  ///
+  /// In en, this message translates to:
+  /// **'AMICA SOS from {name}: {message} My location: {link}'**
+  String sosSmsWithName(String name, String message, String link);
+
+  /// No description provided for @sosSmsNoName.
+  ///
+  /// In en, this message translates to:
+  /// **'AMICA SOS: {message} My location: {link}'**
+  String sosSmsNoName(String message, String link);
+
+  /// No description provided for @sosCircleSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Texting your circle…'**
+  String get sosCircleSending;
+
+  /// No description provided for @sosCircleLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your circle. Check your connection.'**
+  String get sosCircleLoadFailed;
+
+  /// No description provided for @sosCircleTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get sosCircleTryAgain;
+
+  /// No description provided for @sosCircleOpenSmsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Open SMS app'**
+  String get sosCircleOpenSmsApp;
+
+  /// No description provided for @sosCircleReachedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{reached} of {total} reached'**
+  String sosCircleReachedCount(int reached, int total);
+
+  /// No description provided for @sosCircleStatusSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending'**
+  String get sosCircleStatusSending;
+
+  /// No description provided for @sosCircleStatusSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get sosCircleStatusSent;
+
+  /// No description provided for @sosCircleStatusUnconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not confirmed'**
+  String get sosCircleStatusUnconfirmed;
+
+  /// No description provided for @sosCircleStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get sosCircleStatusFailed;
+
   /// No description provided for @profileLogOut.
   ///
   /// In en, this message translates to:

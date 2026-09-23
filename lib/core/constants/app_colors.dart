@@ -35,15 +35,19 @@ class AppColors {
   const AppColors._();
 
   // ── Light ────────────────────────────────────────────────────────────
-  static const Color ivory = Color(0xFFFFF8FB); // app ground
-  static const Color shell = Color(0xFFF7EEF6); // recessed surface
+  // A cool pearl white with a breath of lavender — replaces the warm
+  // cream/ivory ground, which read as beige next to the pastels.
+  static const Color ivory = Color(0xFFFAF7FF); // app ground
+  static const Color shell = Color(0xFFF2EEFA); // recessed surface
   static const Color card = Color(0xFFFFFFFF); // raised surface
 
   static const Color plum = Color(0xFF2B1B3A); // primary text · 15.2:1
   static const Color plum70 = Color(0xFF5E4C6E); // secondary text · 7.3:1
-  static const Color plum45 = Color(0xFF756385); // muted text · 4.8:1 on shell
-  static const Color line = Color(0xFFEEE2EE); // hairline
-  static const Color lineSoft = Color(0xFFF4EBF3); // card border
+  // Muted text, darkened so it still clears 4.5:1 on glass over the
+  // strongest pastel wash (5.3:1 on lavender glass).
+  static const Color plum45 = Color(0xFF665577);
+  static const Color line = Color(0xFFE9E2F3); // hairline
+  static const Color lineSoft = Color(0xFFF0EBF7); // card border
 
   /// Brand gradient — lavender → orchid. White text clears 4.6:1 on both
   /// ends. Used for primary actions, active nav, selected states.
@@ -55,68 +59,84 @@ class AppColors {
   /// Emergency rose. A FILL — white on it is 4.6:1. For text/icons on light
   /// grounds use [terracottaDeep] (6.4:1 on white).
   static const Color terracotta = Color(0xFFD93360);
-  static const Color terracottaDeep = Color(0xFFB3264B);
+  static const Color terracottaDeep = Color(0xFFA82246); // 5.5:1 on glass
   static const Color blush = Color(0xFFFDE4EC);
 
-  static const Color sage = Color(0xFF3A7A5A); // success · 5.1:1
-  static const Color sageInk = Color(0xFF2C5F45);
+  static const Color sage = Color(0xFF2F6A4D); // success · 5.0:1 on glass
+  static const Color sageInk = Color(0xFF255A40);
   static const Color sageSoft = Color(0xFFE2F3E9);
 
-  static const Color gold = Color(0xFF8A5A10); // warning · 5.3:1
+  static const Color gold = Color(0xFF7A4F0C); // warning · 5.6:1 on glass
   static const Color goldSoft = Color(0xFFFFF0DD); // peach
 
   static const Color sky = Color(0xFFE3F0FD);
-  static const Color skyInk = Color(0xFF2D6AA3); // 4.9:1 on sky
 
-  // Ground glows — the soft pastel washes behind every screen.
-  static const Color glowRose = Color(0xFFFFD9E8);
-  static const Color glowLavender = Color(0xFFE6DCFF);
-  static const Color glowPeach = Color(0xFFFFE6D8);
+  /// Orchid — a fourth calm tint for tiles (fake call), in place of the
+  /// cream/amber one. Ink is 5.4:1 on its tint, 5.5:1 on glass.
+  static const Color orchidSoft = Color(0xFFF7E6FB);
+  static const Color orchidInk = Color(0xFF8E3A9E);
+  static const Color skyInk = Color(0xFF2B6199); // 5.0:1 on glass
 
-  // Glass — frosted white over the pastel ground. Fill is 72% white, so
-  // muted text still clears 4.8:1 over the strongest rose wash.
-  static const Color glassFill = Color(0xB8FFFFFF);
-  static const Color glassBorder = Color(0xE6FFFFFF);
-  static const Color glassHighlight = Color(0x99FFFFFF);
+  // Ground washes — saturated enough that frosted glass over them visibly
+  // picks up their colour (a pale ground makes glass look like plain white).
+  static const Color glowRose = Color(0xFFFFB3D1);
+  static const Color glowLavender = Color(0xFFC4B2FF);
+  // (Named "peach" for history; now a soft orchid — the peach wash is what
+  // gave the lower half of every screen its creamy cast.)
+  static const Color glowPeach = Color(0xFFEBC2F5);
+  static const Color glowSky = Color(0xFFB5DCFF);
+
+  // Glass — 60% white over the washes. Every text token above clears 4.5:1
+  // on it, measured over the strongest (lavender) wash at full strength.
+  static const Color glassFill = Color(0x99FFFFFF);
+  static const Color glassBorder = Color(0xF2FFFFFF);
+  static const Color glassHighlight = Color(0x73FFFFFF);
 
   // ── Dark ─────────────────────────────────────────────────────────────
   // Deep aubergine night. Glows are kept very faint: a bright screen on a
   // bus at night announces that you are using a safety app.
-  static const Color nIvory = Color(0xFF140F1C);
-  static const Color nShell = Color(0xFF1E1729);
-  static const Color nCard = Color(0xFF211A2D);
+  static const Color nIvory = Color(0xFF0E0A17); // midnight plum
+  static const Color nShell = Color(0xFF1A1426);
+  static const Color nCard = Color(0xFF1E1730);
 
   static const Color nPlum = Color(0xFFF5EEF8); // 16.6:1
   static const Color nPlum70 = Color(0xFFC7B8D2); // 9.0:1
-  static const Color nPlum45 = Color(0xFF9D8DAB); // 5.5:1
-  static const Color nLine = Color(0xFF33283F);
-  static const Color nLineSoft = Color(0xFF2B2236);
+  static const Color nPlum45 = Color(0xFFA898B8); // 5.0:1 on glass
+  static const Color nLine = Color(0xFF2E2540);
+  static const Color nLineSoft = Color(0xFF251D35);
 
   static const Color nAccent = Color(0xFF7C4DEB);
   static const Color nAccentEnd = Color(0xFFB84A9C);
   static const Color nAccentInk = Color(0xFFC3AEFF); // 8.7:1
-  static const Color nAccentSoft = Color(0xFF2A2140);
+  static const Color nAccentSoft = Color(0xFF2F2358);
 
   static const Color nTerracotta = Color(0xFFD93360);
   static const Color nTerracottaDeep = Color(0xFFFF8FA8); // text · 7.1:1
-  static const Color nBlush = Color(0xFF3A1C2B);
+  static const Color nBlush = Color(0xFF4A1830);
 
   static const Color nSage = Color(0xFF7CC39B);
   static const Color nSageInk = Color(0xFFA5DDBC);
-  static const Color nSageSoft = Color(0xFF17291F);
+  static const Color nSageSoft = Color(0xFF173527);
 
   static const Color nGold = Color(0xFFE6B566);
-  static const Color nGoldSoft = Color(0xFF33261A);
+  static const Color nGoldSoft = Color(0xFF3A2A14);
 
-  static const Color nSky = Color(0xFF1A2638);
+  static const Color nSky = Color(0xFF172E4A);
+  static const Color nOrchidSoft = Color(0xFF3F2150);
+  static const Color nOrchidInk = Color(0xFFE3A6F0); // 7.3:1
   static const Color nSkyInk = Color(0xFF9CC7F2);
 
-  static const Color nGlowRose = Color(0xFF3A1830);
-  static const Color nGlowLavender = Color(0xFF261C44);
-  static const Color nGlowPeach = Color(0xFF2A1A22);
+  // Deep jewel washes: enough colour for the glass to read, still dark and
+  // low-glare.
+  static const Color nGlowRose = Color(0xFF6B2257);
+  static const Color nGlowLavender = Color(0xFF43308F);
+  static const Color nGlowPeach = Color(0xFF5A2A6E); // orchid
+  static const Color nGlowSky = Color(0xFF1D3D6E);
 
-  static const Color nGlassFill = Color(0x9E2A2238);
-  static const Color nGlassBorder = Color(0x1FFFFFFF);
+  // Smoked glass: 62% midnight over the jewel washes; every text token
+  // clears 4.5:1 on it over the strongest wash.
+  static const Color nGlassFill = Color(0x9E1A1426);
+  static const Color nGlassBorder = Color(0x40FFFFFF);
   static const Color nGlassHighlight = Color(0x14FFFFFF);
 
   // ── Ink used ON coloured fills ───────────────────────────────────────
@@ -154,9 +174,12 @@ class AmicaColors extends ThemeExtension<AmicaColors> {
     required this.goldSoft,
     required this.sky,
     required this.skyInk,
+    required this.orchidSoft,
+    required this.orchidInk,
     required this.glowRose,
     required this.glowLavender,
     required this.glowPeach,
+    required this.glowSky,
     required this.glassFill,
     required this.glassBorder,
     required this.glassHighlight,
@@ -186,9 +209,12 @@ class AmicaColors extends ThemeExtension<AmicaColors> {
   final Color goldSoft;
   final Color sky;
   final Color skyInk;
+  final Color orchidSoft;
+  final Color orchidInk;
   final Color glowRose;
   final Color glowLavender;
   final Color glowPeach;
+  final Color glowSky;
 
   /// Translucent frosted-glass fill, its bright rim, and the sheen laid
   /// across the top-left of a glass surface.
@@ -233,8 +259,16 @@ class AmicaColors extends ThemeExtension<AmicaColors> {
       );
 
   /// Soft coloured glow under an accent-filled control.
+  /// In dark mode this becomes a soft luminous halo — the one place the
+  /// night theme glows, so primary actions stand out on the midnight ground.
   List<BoxShadow> get accentGlow => shadow.isEmpty
-      ? const []
+      ? [
+          BoxShadow(
+            color: accentEnd.withValues(alpha: 0.35),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ]
       : [
           BoxShadow(
             color: accent.withValues(alpha: 0.28),
@@ -266,9 +300,12 @@ class AmicaColors extends ThemeExtension<AmicaColors> {
     goldSoft: AppColors.goldSoft,
     sky: AppColors.sky,
     skyInk: AppColors.skyInk,
+    orchidSoft: AppColors.orchidSoft,
+    orchidInk: AppColors.orchidInk,
     glowRose: AppColors.glowRose,
     glowLavender: AppColors.glowLavender,
     glowPeach: AppColors.glowPeach,
+    glowSky: AppColors.glowSky,
     glassFill: AppColors.glassFill,
     glassBorder: AppColors.glassBorder,
     glassHighlight: AppColors.glassHighlight,
@@ -313,19 +350,24 @@ class AmicaColors extends ThemeExtension<AmicaColors> {
     goldSoft: AppColors.nGoldSoft,
     sky: AppColors.nSky,
     skyInk: AppColors.nSkyInk,
+    orchidSoft: AppColors.nOrchidSoft,
+    orchidInk: AppColors.nOrchidInk,
     glowRose: AppColors.nGlowRose,
     glowLavender: AppColors.nGlowLavender,
     glowPeach: AppColors.nGlowPeach,
+    glowSky: AppColors.nGlowSky,
     glassFill: AppColors.nGlassFill,
     glassBorder: AppColors.nGlassBorder,
     glassHighlight: AppColors.nGlassHighlight,
     shadow: [],
+    // A deep rose glow under the SOS core rather than a black smudge.
     lift: [
       BoxShadow(
-        color: Color(0x59000000),
-        blurRadius: 36,
-        offset: Offset(0, 16),
+        color: Color(0x66D93360),
+        blurRadius: 40,
+        offset: Offset(0, 14),
       ),
+      BoxShadow(color: Color(0x66000000), blurRadius: 10, offset: Offset(0, 4)),
     ],
   );
 
@@ -353,9 +395,12 @@ class AmicaColors extends ThemeExtension<AmicaColors> {
     Color? goldSoft,
     Color? sky,
     Color? skyInk,
+    Color? orchidSoft,
+    Color? orchidInk,
     Color? glowRose,
     Color? glowLavender,
     Color? glowPeach,
+    Color? glowSky,
     Color? glassFill,
     Color? glassBorder,
     Color? glassHighlight,
@@ -385,9 +430,12 @@ class AmicaColors extends ThemeExtension<AmicaColors> {
       goldSoft: goldSoft ?? this.goldSoft,
       sky: sky ?? this.sky,
       skyInk: skyInk ?? this.skyInk,
+      orchidSoft: orchidSoft ?? this.orchidSoft,
+      orchidInk: orchidInk ?? this.orchidInk,
       glowRose: glowRose ?? this.glowRose,
       glowLavender: glowLavender ?? this.glowLavender,
       glowPeach: glowPeach ?? this.glowPeach,
+      glowSky: glowSky ?? this.glowSky,
       glassFill: glassFill ?? this.glassFill,
       glassBorder: glassBorder ?? this.glassBorder,
       glassHighlight: glassHighlight ?? this.glassHighlight,
@@ -423,9 +471,12 @@ class AmicaColors extends ThemeExtension<AmicaColors> {
       goldSoft: l(goldSoft, other.goldSoft),
       sky: l(sky, other.sky),
       skyInk: l(skyInk, other.skyInk),
+      orchidSoft: l(orchidSoft, other.orchidSoft),
+      orchidInk: l(orchidInk, other.orchidInk),
       glowRose: l(glowRose, other.glowRose),
       glowLavender: l(glowLavender, other.glowLavender),
       glowPeach: l(glowPeach, other.glowPeach),
+      glowSky: l(glowSky, other.glowSky),
       glassFill: l(glassFill, other.glassFill),
       glassBorder: l(glassBorder, other.glassBorder),
       glassHighlight: l(glassHighlight, other.glassHighlight),

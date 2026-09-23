@@ -33,12 +33,22 @@ class JourneyGlassSheet extends StatelessWidget {
     final c = Theme.of(context).amica;
     return AmicaGlass(
       strong: true,
+      // No live blur over the map: blurring a platform view every frame
+      // (while dragging the sheet or panning) was a major cause of jank,
+      // and at this fill strength it was barely visible anyway.
+      blur: 0,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-      child: SafeArea(
-        top: false,
-        child: ListView(
+      // No SafeArea here: that left an empty strip of glass under the
+      // floating nav pill. The list itself pads its end instead, so its
+      // content scrolls under the pill like Home does.
+      child: ListView(
           controller: scrollController,
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+          padding: EdgeInsets.fromLTRB(
+            20,
+            10,
+            20,
+            24 + MediaQuery.paddingOf(context).bottom,
+          ),
           children: [
             Center(
               child: Container(
@@ -54,7 +64,6 @@ class JourneyGlassSheet extends StatelessWidget {
             ...children,
           ],
         ),
-      ),
     );
   }
 }

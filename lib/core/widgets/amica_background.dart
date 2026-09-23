@@ -42,11 +42,11 @@ class AmicaBackground extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color.lerp(c.ivory, c.glowLavender, 0.35)!,
+              Color.lerp(c.ivory, c.glowLavender, 0.25)!,
               c.ivory,
-              c.ivory,
+              Color.lerp(c.ivory, c.glowPeach, 0.2)!,
             ],
-            stops: const [0, 0.45, 1],
+            stops: const [0, 0.5, 1],
           ),
         ),
         child: Stack(
@@ -59,6 +59,7 @@ class AmicaBackground extends StatelessWidget {
                     rose: c.glowRose,
                     lavender: c.glowLavender,
                     peach: c.glowPeach,
+                    sky: c.glowSky,
                   ),
                 ),
               ),
@@ -88,17 +89,24 @@ class _WashPainter extends CustomPainter {
     required this.rose,
     required this.lavender,
     required this.peach,
+    required this.sky,
   });
 
   final Color rose;
   final Color lavender;
   final Color peach;
+  final Color sky;
 
   void _wash(Canvas canvas, Offset center, double radius, Color color) {
     final rect = Rect.fromCircle(center: center, radius: radius);
     final paint = Paint()
       ..shader = RadialGradient(
-        colors: [color, color.withValues(alpha: 0)],
+        colors: [
+          color,
+          color.withValues(alpha: 0.55),
+          color.withValues(alpha: 0),
+        ],
+        stops: const [0, 0.45, 1],
       ).createShader(rect);
     canvas.drawCircle(center, radius, paint);
   }
@@ -107,12 +115,18 @@ class _WashPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    _wash(canvas, Offset(w * 1.0, h * 0.02), w * 0.85, rose);
-    _wash(canvas, Offset(w * -0.1, h * 0.38), w * 0.75, lavender);
-    _wash(canvas, Offset(w * 0.95, h * 0.95), w * 0.8, peach);
+    // Spread down the whole screen, so every card has colour behind it
+    // for the frosted glass to pick up.
+    _wash(canvas, Offset(w * 1.02, h * 0.06), w * 0.95, rose);
+    _wash(canvas, Offset(w * -0.12, h * 0.36), w * 0.9, lavender);
+    _wash(canvas, Offset(w * 1.1, h * 0.63), w * 0.8, sky);
+    _wash(canvas, Offset(w * 0.08, h * 0.98), w * 0.95, peach);
   }
 
   @override
   bool shouldRepaint(_WashPainter old) =>
-      old.rose != rose || old.lavender != lavender || old.peach != peach;
+      old.rose != rose ||
+      old.lavender != lavender ||
+      old.peach != peach ||
+      old.sky != sky;
 }

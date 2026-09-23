@@ -124,6 +124,9 @@ class EmergencyContactsScreen extends StatelessWidget {
       ),
       body: SafeArea(
         top: false,
+        // The list scrolls under the floating nav pill (like Home) rather
+        // than stopping above an empty strip.
+        bottom: false,
         child: StreamBuilder<List<EmergencyContact>>(
             stream: service.watchEmergencyContacts(),
             builder: (context, snapshot) {
@@ -164,7 +167,12 @@ class EmergencyContactsScreen extends StatelessWidget {
               }
 
               return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  4,
+                  20,
+                  100 + MediaQuery.paddingOf(context).bottom,
+                ),
                 itemCount: contacts.length + 1,
                 separatorBuilder: (_, __) => const SizedBox(height: 10),
                 itemBuilder: (context, i) {
@@ -194,17 +202,22 @@ class EmergencyContactsScreen extends StatelessWidget {
             },
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: c.accent,
-        foregroundColor: AppColors.onAccent,
-        elevation: 0,
-        shape: const StadiumBorder(),
-        onPressed: () => Navigator.pushNamed(
-          context,
-          AppRoutes.addEmergencyContact,
+      // Lifted clear of the floating nav pill: the tab runs underneath the
+      // pill, and the Scaffold does not move the button up by itself.
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
+        child: FloatingActionButton.extended(
+          backgroundColor: c.accent,
+          foregroundColor: AppColors.onAccent,
+          elevation: 0,
+          shape: const StadiumBorder(),
+          onPressed: () => Navigator.pushNamed(
+            context,
+            AppRoutes.addEmergencyContact,
+          ),
+          icon: const Icon(Icons.person_add_alt_1_rounded, size: 19),
+          label: Text(loc.contactsAddGuardianFab),
         ),
-        icon: const Icon(Icons.person_add_alt_1_rounded, size: 19),
-        label: Text(loc.contactsAddGuardianFab),
       ),
     );
   }

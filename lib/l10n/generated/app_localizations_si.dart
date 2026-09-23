@@ -648,6 +648,49 @@ class AppLocalizationsSi extends AppLocalizations {
   }
 
   @override
+  String get sosSmsDefaultMessage => 'මට උදව් අවශ්‍යයි.';
+
+  @override
+  String sosSmsWithName(String name, String message, String link) {
+    return '$name ගෙන් AMICA SOS: $message මගේ ස්ථානය: $link';
+  }
+
+  @override
+  String sosSmsNoName(String message, String link) {
+    return 'AMICA SOS: $message මගේ ස්ථානය: $link';
+  }
+
+  @override
+  String get sosCircleSending => 'ඔබේ කවයට පණිවිඩ යවමින්…';
+
+  @override
+  String get sosCircleLoadFailed =>
+      'ඔබේ කවය පූරණය කළ නොහැකි විය. සම්බන්ධතාව පරීක්ෂා කරන්න.';
+
+  @override
+  String get sosCircleTryAgain => 'නැවත උත්සාහ කරන්න';
+
+  @override
+  String get sosCircleOpenSmsApp => 'SMS යෙදුම විවෘත කරන්න';
+
+  @override
+  String sosCircleReachedCount(int reached, int total) {
+    return '$total න් $reached දෙනෙකුට ළඟා විය';
+  }
+
+  @override
+  String get sosCircleStatusSending => 'යවමින්';
+
+  @override
+  String get sosCircleStatusSent => 'යැව්වා';
+
+  @override
+  String get sosCircleStatusUnconfirmed => 'තහවුරු නැත';
+
+  @override
+  String get sosCircleStatusFailed => 'අසාර්ථකයි';
+
+  @override
   String get profileLogOut => 'පිටවන්න';
 
   @override

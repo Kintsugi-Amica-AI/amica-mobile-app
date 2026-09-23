@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../constants/app_colors.dart';
 import 'glass_card.dart';
+import 'motion.dart';
 
 /// Small shared pieces of the Blossom vocabulary, one-to-one with the
 /// design system sheet. Kept together because each is a handful of lines
@@ -117,7 +118,8 @@ class AmicaTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
 
-    return AmicaCard(
+    return PressableScale(
+      child: AmicaCard(
       onTap: onTap,
       padding: const EdgeInsets.fromLTRB(10, 14, 10, 13),
       borderRadius: 22,
@@ -156,6 +158,7 @@ class AmicaTile extends StatelessWidget {
             ),
           ],
         ],
+      ),
       ),
     );
   }

@@ -582,7 +582,8 @@ class _MapButton extends StatelessWidget {
         child: AmicaGlass(
           shape: BoxShape.circle,
           strong: true,
-          blur: 14,
+          // No blur over the live map (see JourneyGlassSheet).
+          blur: 0,
           child: Material(
             color: Colors.transparent,
             shape: const CircleBorder(),
@@ -824,21 +825,21 @@ const String _dayMapStyle = '''
 /// discreet dark theme.
 const String _nightMapStyle = '''
 [
-  {"elementType": "geometry", "stylers": [{"color": "#1a1324"}]},
-  {"elementType": "labels.icon", "stylers": [{"saturation": -70}, {"lightness": -30}]},
-  {"elementType": "labels.text.stroke", "stylers": [{"color": "#1a1324"}]},
-  {"elementType": "labels.text.fill", "stylers": [{"color": "#9d8dab"}]},
-  {"featureType": "administrative", "elementType": "geometry", "stylers": [{"color": "#33283f"}]},
-  {"featureType": "poi", "elementType": "geometry", "stylers": [{"color": "#211a2d"}]},
+  {"elementType": "geometry", "stylers": [{"color": "#120d1d"}]},
+  {"elementType": "labels.icon", "stylers": [{"saturation": -60}, {"lightness": -35}]},
+  {"elementType": "labels.text.stroke", "stylers": [{"color": "#120d1d"}]},
+  {"elementType": "labels.text.fill", "stylers": [{"color": "#a898b8"}]},
+  {"featureType": "administrative", "elementType": "geometry", "stylers": [{"color": "#2e2540"}]},
+  {"featureType": "poi", "elementType": "geometry", "stylers": [{"color": "#1a1426"}]},
   {"featureType": "poi.business", "stylers": [{"visibility": "off"}]},
-  {"featureType": "poi.park", "elementType": "geometry", "stylers": [{"color": "#1b2a22"}]},
-  {"featureType": "road", "elementType": "geometry", "stylers": [{"color": "#2b2238"}]},
-  {"featureType": "road", "elementType": "geometry.stroke", "stylers": [{"color": "#1a1324"}]},
-  {"featureType": "road", "elementType": "labels.text.fill", "stylers": [{"color": "#b5a6c4"}]},
-  {"featureType": "road.highway", "elementType": "geometry", "stylers": [{"color": "#3a2b4a"}]},
-  {"featureType": "road.highway", "elementType": "geometry.stroke", "stylers": [{"color": "#1a1324"}]},
-  {"featureType": "transit", "elementType": "geometry", "stylers": [{"color": "#2b2238"}]},
-  {"featureType": "water", "elementType": "geometry", "stylers": [{"color": "#101a2a"}]},
-  {"featureType": "water", "elementType": "labels.text.fill", "stylers": [{"color": "#5f7fa0"}]}
+  {"featureType": "poi.park", "elementType": "geometry", "stylers": [{"color": "#15271f"}]},
+  {"featureType": "road", "elementType": "geometry", "stylers": [{"color": "#251d38"}]},
+  {"featureType": "road", "elementType": "geometry.stroke", "stylers": [{"color": "#120d1d"}]},
+  {"featureType": "road", "elementType": "labels.text.fill", "stylers": [{"color": "#bcaecb"}]},
+  {"featureType": "road.highway", "elementType": "geometry", "stylers": [{"color": "#35284f"}]},
+  {"featureType": "road.highway", "elementType": "geometry.stroke", "stylers": [{"color": "#5a2a6e"}, {"weight": 0.4}]},
+  {"featureType": "transit", "elementType": "geometry", "stylers": [{"color": "#251d38"}]},
+  {"featureType": "water", "elementType": "geometry", "stylers": [{"color": "#0b1830"}]},
+  {"featureType": "water", "elementType": "labels.text.fill", "stylers": [{"color": "#6f8fb4"}]}
 ]
 ''';

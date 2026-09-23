@@ -37,7 +37,12 @@ class AppTheme {
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
       statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
-      systemNavigationBarColor: isDark ? AppColors.nCard : AppColors.card,
+      // Edge-to-edge: the app draws behind the system navigation bar, so
+      // maps and the frosted nav pill run to the bottom of the screen
+      // instead of stopping above a solid strip.
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      systemNavigationBarContrastEnforced: false,
       systemNavigationBarIconBrightness:
           isDark ? Brightness.light : Brightness.dark,
     );

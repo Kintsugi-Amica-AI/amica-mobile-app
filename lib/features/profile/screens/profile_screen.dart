@@ -103,6 +103,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       body: SafeArea(
         top: false,
+        // Scrolls under the floating nav pill, like Home.
+        bottom: false,
         child: StreamBuilder<AppUser?>(
           stream: _profile,
           builder: (context, snapshot) {
@@ -129,7 +131,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     (contactSnap.data ?? []).where((g) => g.isActive).toList();
 
                 return ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    4,
+                    20,
+                    28 + MediaQuery.paddingOf(context).bottom,
+                  ),
                   children: [
                     _Identity(
                       user: user,

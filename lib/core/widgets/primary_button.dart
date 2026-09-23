@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../constants/app_colors.dart';
+import 'motion.dart';
 
 /// What an Amica button means, by colour.
 enum AmicaButtonTone {
@@ -84,7 +85,10 @@ class PrimaryButton extends StatelessWidget {
             _ => const [],
           };
 
-    return Opacity(
+    return PressableScale(
+      enabled: enabled,
+      scale: 0.97,
+      child: Opacity(
       opacity: enabled || isBusy ? 1 : 0.45,
       child: SizedBox(
         height: height,
@@ -142,6 +146,7 @@ class PrimaryButton extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }

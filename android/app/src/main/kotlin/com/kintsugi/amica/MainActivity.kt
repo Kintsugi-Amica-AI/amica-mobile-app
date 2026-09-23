@@ -9,7 +9,6 @@ import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import android.telephony.SmsManager
 import android.view.KeyEvent
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -536,11 +535,17 @@ class MainActivity : FlutterActivity() {
             when (action.type) {
                 PendingActionType.PREPARE_PERMISSIONS -> result.success(true)
                 PendingActionType.SEND_SMS -> {
-                    sendSmsDirectly(
-                        phone = action.phone.orEmpty(),
-                        message = action.message.orEmpty(),
-                    )
-                    result.success(true)
+                    // Replies only once the radio says the SMS left the
+                    // phone (or failed), so the app can show real status.
+                    SmsSender.sendWithReport(
+                        this,
+                        action.phone.orEmpty(),
+                        action.message.orEmpty(),
+                    ) { status, error ->
+                        result.success(
+                            mapOf("status" to status, "error" to error),
+                        )
+                    }
                 }
                 PendingActionType.START_CALL -> {
                     startPhoneCall(action.phone.orEmpty())
@@ -554,25 +559,6 @@ class MainActivity : FlutterActivity() {
                 null,
             )
         }
-    }
-
-    private fun sendSmsDirectly(phone: String, message: String) {
-        @Suppress("DEPRECATION")
-        val smsManager = SmsManager.getDefault()
-        val messageParts = smsManager.divideMessage(message)
-
-        if (messageParts.size > 1) {
-            smsManager.sendMultipartTextMessage(
-                phone,
-                null,
-                messageParts,
-                null,
-                null,
-            )
-            return
-        }
-
-        smsManager.sendTextMessage(phone, null, message, null, null)
     }
 
     private fun startPhoneCall(phone: String) {

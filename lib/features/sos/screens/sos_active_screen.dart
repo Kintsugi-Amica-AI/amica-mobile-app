@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
@@ -11,6 +13,7 @@ import '../../../core/widgets/primary_button.dart';
 import '../../emergency_contacts/models/emergency_contact.dart';
 import '../../emergency_contacts/services/emergency_contact_service.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../services/circle_alert_service.dart';
 import '../../journey/models/location_data_model.dart';
 
 class SosActiveArguments {
@@ -20,7 +23,11 @@ class SosActiveArguments {
     required this.location,
     this.message,
     this.status = 'active',
+    this.notifyCircle = true,
   });
+
+  /// Text every active guardian from this screen as soon as it opens.
+  final bool notifyCircle;
 
   final String alertId;
   final String triggerType;
@@ -41,10 +48,12 @@ class SosActiveScreen extends StatefulWidget {
     super.key,
     this.arguments,
     this.contactService = const EmergencyContactService(),
+    this.circleAlertService = const CircleAlertService(),
   });
 
   final SosActiveArguments? arguments;
   final EmergencyContactService contactService;
+  final CircleAlertService circleAlertService;
 
   @override
   State<SosActiveScreen> createState() => _SosActiveScreenState();
@@ -55,6 +64,13 @@ class _SosActiveScreenState extends State<SosActiveScreen> {
   final Stopwatch _elapsed = Stopwatch()..start();
   bool _sirenOn = false;
 
+  // Who the SOS text reached, per guardian — shown honestly, as it happens.
+  List<EmergencyContact>? _guardians;
+  final Map<String, CircleDeliveryResult> _deliveries = {};
+  bool _loadingCircle = false;
+  bool _sendingToCircle = false;
+  bool _circleLoadFailed = false;
+
   @override
   void initState() {
     super.initState();
@@ -62,6 +78,95 @@ class _SosActiveScreenState extends State<SosActiveScreen> {
       const Duration(seconds: 1),
       (_) => mounted ? setState(() {}) : null,
     );
+    if (widget.arguments?.notifyCircle ?? false) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _alertCircle());
+    }
+  }
+
+  String _composeMessage(AppLocalizations loc) {
+    final args = widget.arguments;
+    final text = args?.message?.trim().isNotEmpty == true
+        ? args!.message!.trim()
+        : loc.sosSmsDefaultMessage;
+    final link = args == null
+        ? ''
+        : CircleAlertService.mapsLink(
+            args.location.latitude,
+            args.location.longitude,
+          );
+    final name = FirebaseAuth.instance.currentUser?.displayName?.trim() ?? '';
+    return name.isEmpty
+        ? loc.sosSmsNoName(text, link)
+        : loc.sosSmsWithName(name, text, link);
+  }
+
+  /// Texts every active guardian — or, with [only], just those — and keeps
+  /// the per-person status on screen up to date.
+  Future<void> _alertCircle({List<EmergencyContact>? only}) async {
+    if (_sendingToCircle || !mounted) return;
+    final loc = AppLocalizations.of(context);
+    final message = _composeMessage(loc);
+
+    var guardians = only ?? _guardians;
+    if (guardians == null) {
+      setState(() {
+        _loadingCircle = true;
+        _circleLoadFailed = false;
+      });
+      try {
+        guardians = await widget.circleAlertService.activeGuardians();
+      } catch (_) {
+        if (mounted) {
+          setState(() {
+            _loadingCircle = false;
+            _circleLoadFailed = true;
+          });
+        }
+        return;
+      }
+      if (!mounted) return;
+      setState(() {
+        _guardians = guardians;
+        _loadingCircle = false;
+      });
+    }
+
+    final targets = guardians;
+    if (targets.isEmpty) return;
+    setState(() {
+      _sendingToCircle = true;
+      for (final g in targets) {
+        _deliveries[g.id] = CircleDeliveryResult(
+          contact: g,
+          delivery: CircleDelivery.sending,
+        );
+      }
+    });
+
+    await widget.circleAlertService.sendToCircle(
+      guardians: targets,
+      message: message,
+      alertId: widget.arguments?.alertId,
+      onUpdate: (result) {
+        if (mounted) setState(() => _deliveries[result.contact.id] = result);
+      },
+    );
+    if (mounted) setState(() => _sendingToCircle = false);
+  }
+
+  /// If SMS could not be sent from Amica (no permission, no balance), open
+  /// the phone's own messages app with everything filled in.
+  Future<void> _openSmsApp() async {
+    final loc = AppLocalizations.of(context);
+    final guardians = _guardians ?? const <EmergencyContact>[];
+    final uri = Uri(
+      scheme: 'sms',
+      path: guardians.map((g) => g.phone.replaceAll(' ', '')).join(','),
+      queryParameters: {'body': _composeMessage(loc)},
+    );
+    try {
+      await launchUrl(uri);
+    } catch (_) {/* Nothing more we can do from here. */}
   }
 
   @override
@@ -113,7 +218,23 @@ class _SosActiveScreenState extends State<SosActiveScreen> {
                             ?.copyWith(color: c.plum45),
                       ),
                       const SizedBox(height: 18),
-                      _CircleReached(service: widget.contactService),
+                      _CircleStatus(
+                        guardians: _guardians,
+                        deliveries: _deliveries,
+                        loading: _loadingCircle,
+                        loadFailed: _circleLoadFailed,
+                        sending: _sendingToCircle,
+                        onRetry: () => _alertCircle(
+                          only: [
+                            for (final r in _deliveries.values)
+                              if (r.delivery == CircleDelivery.failed ||
+                                  r.delivery == CircleDelivery.unconfirmed)
+                                r.contact,
+                          ],
+                        ),
+                        onReload: () => _alertCircle(),
+                        onOpenSmsApp: _openSmsApp,
+                      ),
                       const SizedBox(height: 22),
                       SectionLabel(loc.sosActiveWhatAmicaIsDoing),
                       const SizedBox(height: 10),
@@ -161,7 +282,9 @@ class _SosActiveScreenState extends State<SosActiveScreen> {
                         icon: Icons.phone_outlined,
                         tone: AmicaButtonTone.quiet,
                         height: 48,
-                        onPressed: () {},
+                        // Opens the dialler with 119 filled in; she presses
+                        // call herself.
+                        onPressed: () => launchUrl(Uri(scheme: 'tel', path: '119')),
                       ),
                       const SizedBox(height: 12),
                       Center(
@@ -352,91 +475,262 @@ class _LocationBlock extends StatelessWidget {
   }
 }
 
-class _CircleReached extends StatelessWidget {
-  const _CircleReached({required this.service});
+/// Who the SOS text reached — per guardian, as it happens, never assumed.
+class _CircleStatus extends StatelessWidget {
+  const _CircleStatus({
+    required this.guardians,
+    required this.deliveries,
+    required this.loading,
+    required this.loadFailed,
+    required this.sending,
+    required this.onRetry,
+    required this.onReload,
+    required this.onOpenSmsApp,
+  });
 
-  final EmergencyContactService service;
+  final List<EmergencyContact>? guardians;
+  final Map<String, CircleDeliveryResult> deliveries;
+  final bool loading;
+  final bool loadFailed;
+  final bool sending;
+  final VoidCallback onRetry;
+  final VoidCallback onReload;
+  final VoidCallback onOpenSmsApp;
 
   @override
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
     final loc = AppLocalizations.of(context);
+    final list = guardians;
 
-    return StreamBuilder<List<EmergencyContact>>(
-      stream: service.watchEmergencyContacts(),
-      builder: (context, snapshot) {
-        final guardians =
-            (snapshot.data ?? []).where((g) => g.isActive).toList();
+    if (loading || (list == null && !loadFailed)) {
+      return AmicaCard(
+        child: Row(
+          children: [
+            const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Text(loc.sosCircleSending)),
+          ],
+        ),
+      );
+    }
 
-        if (guardians.isEmpty) {
-          return AmicaCard(
-            borderColor: c.gold,
-            child: Row(
+    if (loadFailed || list == null) {
+      return _Notice(
+        color: c.gold,
+        icon: Icons.cloud_off_rounded,
+        text: loc.sosCircleLoadFailed,
+        actionLabel: loc.sosCircleTryAgain,
+        onAction: onReload,
+      );
+    }
+
+    if (list.isEmpty) {
+      return _Notice(
+        color: c.gold,
+        icon: Icons.error_outline_rounded,
+        text: loc.sosActiveNoOneInCircle,
+      );
+    }
+
+    final results = [for (final g in list) deliveries[g.id]];
+    final reached = results.where((r) => r?.reached ?? false).length;
+    final problems = results.any(
+      (r) =>
+          r != null &&
+          (r.delivery == CircleDelivery.failed ||
+              r.delivery == CircleDelivery.unconfirmed),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionLabel(
+          sending
+              ? loc.sosCircleSending
+              : loc.sosCircleReachedCount(reached, list.length),
+        ),
+        const SizedBox(height: 10),
+        AmicaCard(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          child: Column(
+            children: [
+              for (var i = 0; i < list.length; i++) ...[
+                if (i > 0) const AmicaDivider(),
+                _GuardianRow(
+                  contact: list[i],
+                  result: deliveries[list[i].id],
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (!sending && problems) ...[
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: PrimaryButton(
+                  label: loc.sosCircleTryAgain,
+                  icon: Icons.refresh_rounded,
+                  tone: AmicaButtonTone.danger,
+                  height: 46,
+                  onPressed: onRetry,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: PrimaryButton(
+                  label: loc.sosCircleOpenSmsApp,
+                  icon: Icons.sms_outlined,
+                  tone: AmicaButtonTone.quiet,
+                  height: 46,
+                  onPressed: onOpenSmsApp,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _GuardianRow extends StatelessWidget {
+  const _GuardianRow({required this.contact, required this.result});
+
+  final EmergencyContact contact;
+  final CircleDeliveryResult? result;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Theme.of(context).amica;
+    final loc = AppLocalizations.of(context);
+    final delivery = result?.delivery ?? CircleDelivery.sending;
+
+    final (String label, Color color, IconData icon) = switch (delivery) {
+      CircleDelivery.sending => (
+          loc.sosCircleStatusSending,
+          c.plum45,
+          Icons.schedule_rounded,
+        ),
+      CircleDelivery.sent => (
+          loc.sosCircleStatusSent,
+          c.sage,
+          Icons.check_circle_rounded,
+        ),
+      CircleDelivery.unconfirmed => (
+          loc.sosCircleStatusUnconfirmed,
+          c.gold,
+          Icons.help_outline_rounded,
+        ),
+      CircleDelivery.failed => (
+          loc.sosCircleStatusFailed,
+          c.terracottaDeep,
+          Icons.error_outline_rounded,
+        ),
+    };
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          AmicaAvatar(initial: contact.name, size: 38),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.error_outline_rounded, size: 19, color: c.gold),
-                const SizedBox(width: 11),
-                Expanded(
-                  child: Text(
-                    loc.sosActiveNoOneInCircle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: c.plum,
-                      height: 1.4,
-                    ),
+                Text(
+                  contact.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: c.plum,
+                  ),
+                ),
+                Text(
+                  result?.error ?? contact.phone,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                    color: result?.error != null ? c.terracottaDeep : c.plum45,
                   ),
                 ),
               ],
             ),
-          );
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SectionLabel(loc.sosActiveCircleReachedHeader(guardians.length)),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                for (final g in guardians.take(4)) ...[
-                  Expanded(
-                    child: Column(
-                      children: [
-                        AmicaAvatar(
-                          initial: g.name,
-                          size: 42,
-                          background: c.blush,
-                          foreground: c.terracottaDeep,
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          g.name.split(RegExp(r'\s+')).first,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: c.plum,
-                          ),
-                        ),
-                        Text(
-                          loc.sosActiveNotified,
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.6,
-                            color: c.sage,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
+          ),
+          const SizedBox(width: 8),
+          if (delivery == CircleDelivery.sending)
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          else
+            Icon(icon, size: 18, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: color,
             ),
-          ],
-        );
-      },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Notice extends StatelessWidget {
+  const _Notice({
+    required this.color,
+    required this.icon,
+    required this.text,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final Color color;
+  final IconData icon;
+  final String text;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Theme.of(context).amica;
+    return AmicaCard(
+      borderColor: color,
+      child: Row(
+        children: [
+          Icon(icon, size: 19, color: color),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: c.plum,
+                height: 1.4,
+              ),
+            ),
+          ),
+          if (actionLabel != null)
+            TextButton(onPressed: onAction, child: Text(actionLabel!)),
+        ],
+      ),
     );
   }
 }

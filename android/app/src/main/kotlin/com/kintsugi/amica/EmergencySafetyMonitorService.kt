@@ -18,7 +18,6 @@ import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import android.telephony.SmsManager
 import kotlin.math.max
 
 class EmergencySafetyMonitorService : Service() {
@@ -326,16 +325,7 @@ class EmergencySafetyMonitorService : Service() {
     }
 
     private fun sendSmsDirectly(phone: String, message: String) {
-        @Suppress("DEPRECATION")
-        val smsManager = SmsManager.getDefault()
-        val messageParts = smsManager.divideMessage(message)
-
-        if (messageParts.size > 1) {
-            smsManager.sendMultipartTextMessage(phone, null, messageParts, null, null)
-            return
-        }
-
-        smsManager.sendTextMessage(phone, null, message, null, null)
+        SmsSender.sendQuietly(this, phone, message)
     }
 
     private fun startPhoneCall(phone: String) {
