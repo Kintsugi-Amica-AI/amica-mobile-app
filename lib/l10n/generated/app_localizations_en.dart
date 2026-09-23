@@ -695,6 +695,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapTypeTerrain => 'Terrain';
 
   @override
+  String get tripFeederBusHint => 'Too far to walk to the station';
+
+  @override
+  String tripRideToStation(String station) {
+    return 'Take a bus or tuk-tuk to $station';
+  }
+
+  @override
   String get profileLogOut => 'Log out';
 
   @override

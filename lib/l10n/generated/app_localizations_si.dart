@@ -703,6 +703,14 @@ class AppLocalizationsSi extends AppLocalizations {
   String get mapTypeTerrain => 'භූ දර්ශනය';
 
   @override
+  String get tripFeederBusHint => 'දුම්රිය ස්ථානයට ඇවිදීමට දුර වැඩියි';
+
+  @override
+  String tripRideToStation(String station) {
+    return '$station දක්වා බසයකින් හෝ ත්‍රීරෝද රථයකින් යන්න';
+  }
+
+  @override
   String get profileLogOut => 'පිටවන්න';
 
   @override

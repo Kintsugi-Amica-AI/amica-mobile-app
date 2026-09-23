@@ -36,6 +36,28 @@ List<MapTransitStop> mapStopsFor(
       role: MapStopRole.alight,
       train: plan.isTrain,
     ),
+    // Bus stops on the way to / from the station (train trips).
+    if (plan.isTrain)
+      for (var i = 0; i < plan.legs.length; i++)
+        if (plan.legs[i].isBus) ...[
+          if (plan.legs[i].from != null && plan.legs[i].fromName.isNotEmpty)
+            MapTransitStop(
+              id: 'feeder-$i-on',
+              name: plan.legs[i].fromName,
+              position: plan.legs[i].from!,
+              role: MapStopRole.board,
+            ),
+          if (plan.legs[i].to != null &&
+              plan.legs[i].fromName.isNotEmpty &&
+              plan.legs[i].toName != plan.alightStop.name &&
+              plan.legs[i].toName != plan.boardStop.name)
+            MapTransitStop(
+              id: 'feeder-$i-off',
+              name: plan.legs[i].toName,
+              position: plan.legs[i].to!,
+              role: MapStopRole.alight,
+            ),
+        ],
     if (withCandidates)
       for (final stop in {
         for (final s in [...plan.boardCandidates, ...plan.alightCandidates])
@@ -114,51 +136,10 @@ class TransitTripCard extends StatelessWidget {
         ],
       );
     } else {
-      final ride = plan.legs.firstWhere(
-        (l) => !l.isWalk,
-        orElse: () => plan.legs.first,
-      );
-      final lineLabel = ride.lineName.isEmpty
-          ? null
-          : (train ? loc.tripTrainLine(ride.lineName) : loc.tripBusLine(ride.lineName));
       body = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (plan.walkToStopMeters > 0)
-            _Step(
-              icon: Icons.directions_walk_rounded,
-              title: loc.tripWalkToStop(
-                formatDistance(plan.walkToStopMeters),
-                plan.boardStop.name,
-              ),
-              trailing: _minutes(loc, plan.legs.first.durationSeconds),
-              dotted: true,
-            ),
-          _Step(
-            icon: train ? Icons.train_rounded : Icons.directions_bus_rounded,
-            title: loc.tripGetOnAt(plan.boardStop.name),
-            subtitle: lineLabel,
-            highlight: true,
-          ),
-          _Step(
-            icon: Icons.flag_rounded,
-            title: loc.tripGetOffAt(plan.alightStop.name),
-            subtitle: loc.tripRideSummary(
-              formatDistance(ride.distanceMeters),
-              (ride.durationSeconds / 60).ceil(),
-            ),
-            highlight: true,
-            dotted: plan.walkFromStopMeters > 0,
-          ),
-          if (plan.walkFromStopMeters > 0)
-            _Step(
-              icon: Icons.directions_walk_rounded,
-              title: loc.tripWalkToDestination(
-                formatDistance(plan.walkFromStopMeters),
-              ),
-              trailing: _minutes(loc, plan.legs.last.durationSeconds),
-              last: true,
-            ),
+          ..._timeline(loc, plan),
           if (plan.isEstimated) ...[
             const SizedBox(height: 8),
             Row(
@@ -243,6 +224,82 @@ class TransitTripCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// One row per thing she does, straight from the plan's legs — so a
+  /// train trip that starts with a bus to the station reads:
+  /// walk → get on bus → get off → walk → get on train → get off → walk.
+  List<Widget> _timeline(AppLocalizations loc, TransitPlan plan) {
+    final steps = <Widget>[];
+    final legs = plan.legs;
+    for (var i = 0; i < legs.length; i++) {
+      final leg = legs[i];
+      final isLast = i == legs.length - 1;
+      final nextIsWalk = !isLast && legs[i + 1].isWalk;
+
+      if (leg.isWalk) {
+        final toDestination = isLast || leg.toName.isEmpty;
+        steps.add(_Step(
+          icon: Icons.directions_walk_rounded,
+          title: toDestination
+              ? loc.tripWalkToDestination(formatDistance(leg.distanceMeters))
+              : loc.tripWalkToStop(
+                  formatDistance(leg.distanceMeters),
+                  leg.toName,
+                ),
+          trailing: _minutes(loc, leg.durationSeconds),
+          dotted: true,
+          last: isLast,
+        ));
+        continue;
+      }
+
+      final isBus = leg.vehicle == 'bus' || (leg.vehicle.isEmpty && !plan.isTrain);
+      final line = leg.lineName.isEmpty
+          ? null
+          : (isBus ? loc.tripBusLine(leg.lineName) : loc.tripTrainLine(leg.lineName));
+      // A bus leg on a train trip is only how she gets to / from the
+      // station — say why, so it isn't confusing.
+      final feeder = plan.isTrain && isBus;
+      final summary = loc.tripRideSummary(
+        formatDistance(leg.distanceMeters),
+        (leg.durationSeconds / 60).ceil(),
+      );
+
+      if (leg.fromName.isEmpty) {
+        // No stops known: one row, "take a bus or tuk-tuk to <station>".
+        steps.add(_Step(
+          icon: Icons.directions_bus_rounded,
+          title: loc.tripRideToStation(
+            leg.toName.isEmpty ? plan.boardStop.name : leg.toName,
+          ),
+          subtitle: summary,
+          highlight: true,
+          dotted: nextIsWalk,
+          last: isLast,
+        ));
+        continue;
+      }
+
+      steps.add(_Step(
+        icon: isBus ? Icons.directions_bus_rounded : Icons.train_rounded,
+        title: loc.tripGetOnAt(leg.fromName),
+        subtitle: [
+          if (line != null) line,
+          if (feeder) loc.tripFeederBusHint,
+        ].join(' · ').ifEmptyNull,
+        highlight: true,
+      ));
+      steps.add(_Step(
+        icon: Icons.flag_rounded,
+        title: loc.tripGetOffAt(leg.toName),
+        subtitle: summary,
+        highlight: true,
+        dotted: nextIsWalk,
+        last: isLast,
+      ));
+    }
+    return steps;
   }
 }
 
@@ -440,4 +497,8 @@ class _DotsPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_DotsPainter old) => old.color != color;
+}
+
+extension on String {
+  String? get ifEmptyNull => isEmpty ? null : this;
 }

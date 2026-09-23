@@ -706,6 +706,14 @@ class AppLocalizationsTa extends AppLocalizations {
   String get mapTypeTerrain => 'நிலப்பரப்பு';
 
   @override
+  String get tripFeederBusHint => 'நிலையத்திற்கு நடக்க தூரம் அதிகம்';
+
+  @override
+  String tripRideToStation(String station) {
+    return '$station வரை பேருந்து அல்லது ஆட்டோவில் செல்லவும்';
+  }
+
+  @override
   String get profileLogOut => 'வெளியேறு';
 
   @override

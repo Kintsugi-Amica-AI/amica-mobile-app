@@ -194,6 +194,8 @@
   "mapTypeDefault": "සාමාන්‍ය",
   "mapTypeSatellite": "චන්ද්‍රිකා",
   "mapTypeTerrain": "භූ දර්ශනය",
+  "tripFeederBusHint": "දුම්රිය ස්ථානයට ඇවිදීමට දුර වැඩියි",
+  "tripRideToStation": "{station} දක්වා බසයකින් හෝ ත්‍රීරෝද රථයකින් යන්න",
   "profileLogOut": "පිටවන්න",
   "profileLogOutConfirmTitle": "Amica වෙතින් පිටවන්නද?",
   "profileLogOutConfirmBody": "ඔබ නැවත පිවිසෙන තෙක් ඔබේ කවයට Amica හරහා ඔබ හා සම්බන්ධ විය නොහැක.",

@@ -1264,6 +1264,18 @@ abstract class AppLocalizations {
   /// **'Terrain'**
   String get mapTypeTerrain;
 
+  /// No description provided for @tripFeederBusHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Too far to walk to the station'**
+  String get tripFeederBusHint;
+
+  /// No description provided for @tripRideToStation.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a bus or tuk-tuk to {station}'**
+  String tripRideToStation(String station);
+
   /// No description provided for @profileLogOut.
   ///
   /// In en, this message translates to:

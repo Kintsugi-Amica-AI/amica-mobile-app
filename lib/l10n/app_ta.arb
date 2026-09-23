@@ -194,6 +194,8 @@
   "mapTypeDefault": "இயல்புநிலை",
   "mapTypeSatellite": "செயற்கைக்கோள்",
   "mapTypeTerrain": "நிலப்பரப்பு",
+  "tripFeederBusHint": "நிலையத்திற்கு நடக்க தூரம் அதிகம்",
+  "tripRideToStation": "{station} வரை பேருந்து அல்லது ஆட்டோவில் செல்லவும்",
   "profileLogOut": "வெளியேறு",
   "profileLogOutConfirmTitle": "Amica-விலிருந்து வெளியேறவா?",
   "profileLogOutConfirmBody": "நீங்கள் மீண்டும் உள்நுழையும் வரை உங்கள் வட்டத்தினர் Amica வழியாக உங்களைத் தொடர்பு கொள்ள முடியாது.",
