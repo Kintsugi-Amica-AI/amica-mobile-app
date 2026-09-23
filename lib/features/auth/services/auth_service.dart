@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../../../services/live_location_tracker.dart';
+import '../../../services/push_notification_service.dart';
 import '../models/app_user.dart';
 
 class AuthServiceException implements Exception {
@@ -205,6 +207,10 @@ class AuthService {
     if (!_isFirebaseReady) {
       return;
     }
+    // Stop this phone receiving her circle's alerts before the session ends
+    // (the token document can only be deleted while signed in).
+    await PushNotificationService.instance.unregister();
+    await LiveLocationTracker.instance.stop();
     try {
       await GoogleSignIn().signOut();
     } catch (_) {

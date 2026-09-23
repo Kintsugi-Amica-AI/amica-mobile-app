@@ -6,6 +6,7 @@ import '../../../core/widgets/amica_primitives.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/loading_view.dart';
+import '../../circle/widgets/connect_contact_sheet.dart';
 import '../models/emergency_contact.dart';
 import '../services/emergency_contact_service.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -191,6 +192,7 @@ class EmergencyContactsScreen extends StatelessWidget {
                   return _EmergencyContactCard(
                     contact: contact,
                     onEdit: () => _openEditScreen(context, contact),
+                    onConnect: () => showConnectContactSheet(context, contact),
                     onDelete: () => _confirmDelete(context, contact),
                     onActiveChanged: (value) => _toggleActive(
                       context,
@@ -228,12 +230,14 @@ class _EmergencyContactCard extends StatelessWidget {
   const _EmergencyContactCard({
     required this.contact,
     required this.onEdit,
+    required this.onConnect,
     required this.onDelete,
     required this.onActiveChanged,
   });
 
   final EmergencyContact contact;
   final VoidCallback onEdit;
+  final VoidCallback onConnect;
   final VoidCallback onDelete;
   final ValueChanged<bool> onActiveChanged;
 
@@ -304,6 +308,44 @@ class _EmergencyContactCard extends StatelessWidget {
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: contact.isActive ? c.sage : c.plum45,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                // Push alerts for contacts who have Amica themselves.
+                InkWell(
+                  onTap: onConnect,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          contact.isLinkedInAmica
+                              ? Icons.notifications_active_rounded
+                              : Icons.add_link_rounded,
+                          size: 14,
+                          color: contact.isLinkedInAmica
+                              ? c.sage
+                              : c.accentInk,
+                        ),
+                        const SizedBox(width: 5),
+                        Flexible(
+                          child: Text(
+                            contact.isLinkedInAmica
+                                ? loc.contactsLinkedInAmica
+                                : loc.contactsConnectInAmica,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: contact.isLinkedInAmica
+                                  ? c.sage
+                                  : c.accentInk,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

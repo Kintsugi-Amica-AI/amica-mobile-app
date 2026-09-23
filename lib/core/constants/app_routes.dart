@@ -19,4 +19,6 @@ class AppRoutes {
   static const String plateResult = '/plate-scan/result';
   static const String profile = '/profile';
   static const String settings = '/settings';
+  static const String guardianAlert = '/circle/alert';
+  static const String circleLink = '/circle/link';
 }

@@ -1917,5 +1917,348 @@ class AppLocalizationsTa extends AppLocalizations {
   String get journeyTimerOpenInMaps => 'Google Maps இல் வழிசெலுத்து';
 
   @override
+  String get liveShareToggleTitle => 'என் வட்டத்துடன் நேரலையில் பகிர்';
+
+  @override
+  String get liveShareToggleSubtitle => 'இந்தப் பயணத்தை வரைபடத்தில் பார்க்க உங்கள் தொடர்புகளுக்கு ஒரு இணைப்பு கிடைக்கும் — செயலி தேவையில்லை.';
+
+  @override
+  String get liveShareOnTitle => 'உங்கள் வட்டத்துடன் நேரலையில் பகிரப்படுகிறது';
+
+  @override
+  String get liveShareOnSubtitle => 'உங்கள் தொடர்புகள் இந்தப் பயணத்தை வரைபடத்தில் பார்க்கலாம்.';
+
+  @override
+  String get liveShareOffTitle => 'உங்கள் வட்டம் நேரலையில் பார்க்கட்டும்';
+
+  @override
+  String get liveShareOffSubtitle => 'நீங்கள் சென்றடையும் வரை நீங்கள் இருக்கும் இடத்தைக் காட்டும் இணைப்பை அனுப்பு.';
+
+  @override
+  String get liveShareSending => 'நேரலை இணைப்பை அனுப்புகிறது…';
+
+  @override
+  String liveShareSentSummary(int pushed, int texted) {
+    return 'அனுப்பப்பட்டது: Amica அறிவிப்பு மூலம் $pushed, SMS மூலம் $texted.';
+  }
+
+  @override
+  String liveShareSomeFailed(int count) {
+    return '$count பேரை அடைய முடியவில்லை.';
+  }
+
+  @override
+  String get liveShareShareNow => 'நேரலை இணைப்பைப் பகிர்';
+
+  @override
+  String get liveShareSendAgain => 'இணைப்பை மீண்டும் அனுப்பு';
+
+  @override
+  String get liveShareCopyLink => 'இணைப்பை நகலெடு';
+
+  @override
+  String get liveShareLinkCopied => 'நேரலை இணைப்பு நகலெடுக்கப்பட்டது.';
+
+  @override
+  String get liveShareCreateFailed => 'நேரலை இணைப்பை உருவாக்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.';
+
+  @override
+  String get liveShareContactsFailed => 'இணைப்பு தயார், ஆனால் அனுப்ப உங்கள் தொடர்புகளை ஏற்ற முடியவில்லை.';
+
+  @override
+  String liveShareSmsWithName(String name, String destination, String url) {
+    return 'Amica: $name $destination நோக்கிச் செல்கிறார். அவரது பயணத்தை நேரலையில் பாருங்கள்: $url';
+  }
+
+  @override
+  String liveShareSmsNoName(String destination, String url) {
+    return 'Amica: நான் $destination நோக்கிச் செல்கிறேன். என் பயணத்தை நேரலையில் பாருங்கள்: $url';
+  }
+
+  @override
+  String liveShareEmergencyLine(String url) {
+    return 'நேரலை: $url';
+  }
+
+  @override
+  String get liveShareTrackingTitle => 'உங்கள் நேரலை இருப்பிடம் பகிரப்படுகிறது';
+
+  @override
+  String get liveShareTrackingText => 'நீங்கள் சென்றடையும் வரை உங்கள் வட்டம் இந்தப் பயணத்தைப் பின்தொடரலாம்.';
+
+  @override
+  String get contactsConnectInAmica => 'உடனடி எச்சரிக்கைகளுக்கு Amica இல் இணை';
+
+  @override
+  String get contactsLinkedInAmica => 'Amica இல் உடனடி எச்சரிக்கைகள் பெறுகிறார்';
+
+  @override
+  String circleConnectTitle(String name) {
+    return '$name ஐ Amica இல் இணை';
+  }
+
+  @override
+  String circleConnectBody(String name) {
+    return '$name இடம் Amica இருந்தால், உங்கள் SOS எச்சரிக்கைகளும் நேரலை பயணங்களும் உடனடி அறிவிப்புகளாக அவரைச் சேரும் — இலவசம், SMS ஐ விட வேகமானது. அவர் ஒரே தட்டலில் பதிலளிக்கலாம். அவரது செயலியில் உள்ளிட ஒரு குறியீட்டை SMS மூலம் அனுப்புவோம்.';
+  }
+
+  @override
+  String circleConnectLinkedTitle(String name) {
+    return '$name Amica இல் இணைக்கப்பட்டுள்ளார்';
+  }
+
+  @override
+  String circleConnectLinkedBody(String name) {
+    return '$name உங்கள் SOS எச்சரிக்கைகளையும் நேரலை பயணங்களையும் SMS உடன் உடனடி அறிவிப்புகளாகவும் பெறுகிறார்.';
+  }
+
+  @override
+  String circleConnectSendCode(String name) {
+    return '$name க்கு குறியீட்டை SMS செய்';
+  }
+
+  @override
+  String get circleConnectCopyCode => 'குறியீட்டை நகலெடு';
+
+  @override
+  String circleConnectTexted(String name) {
+    return '$name க்கு அனுப்பப்பட்டது. அவர் அதை Amica இல் நீங்கள் → ஒருவருக்கான எச்சரிக்கைகளைப் பெறு என்பதில் உள்ளிட வேண்டும். இது ஒரு முறை மட்டுமே செயல்படும், 7 நாட்களில் காலாவதியாகும்.';
+  }
+
+  @override
+  String circleConnectTextFailed(String name) {
+    return 'SMS அனுப்ப முடியவில்லை. இந்தக் குறியீட்டை வேறு வழியில் $name க்குக் கொடுங்கள் — இது ஒரு முறை மட்டுமே செயல்படும்.';
+  }
+
+  @override
+  String get circleConnectDisconnect => 'இந்தத் தொடர்புக்கு Amica எச்சரிக்கைகளை நிறுத்து';
+
+  @override
+  String circleInviteSms(String name, String code) {
+    return '$name உங்களை தனது Amica பாதுகாப்பு வட்டத்தில் சேர்த்துள்ளார். உங்களிடம் Amica இருந்தால், நீங்கள் → ஒருவருக்கான எச்சரிக்கைகளைப் பெறு என்பதற்குச் சென்று $code ஐ உள்ளிட்டு அவரது எச்சரிக்கைகளை உடனடியாகப் பெறுங்கள்.';
+  }
+
+  @override
+  String circleInviteSmsNoName(String code) {
+    return 'நீங்கள் ஒரு Amica பாதுகாப்பு வட்டத்தில் சேர்க்கப்பட்டுள்ளீர்கள். உங்களிடம் Amica இருந்தால், நீங்கள் → ஒருவருக்கான எச்சரிக்கைகளைப் பெறு என்பதற்குச் சென்று $code ஐ உள்ளிடுங்கள்.';
+  }
+
+  @override
+  String get circleLinkTitle => 'ஒருவருக்கான எச்சரிக்கைகளைப் பெறு';
+
+  @override
+  String get circleLinkRowSubtitle => 'நண்பர் SMS செய்த குறியீட்டை உள்ளிடு';
+
+  @override
+  String get circleLinkIntro => 'யாராவது உங்களைத் தங்கள் வட்டத்தில் சேர்க்கும்போது, Amica உங்களுக்கு 6 எழுத்துக் குறியீட்டை SMS செய்யும். அதை இங்கே உள்ளிடுங்கள், அவர்களின் SOS எச்சரிக்கைகளும் நேரலை பயணங்களும் ஒரே தட்டலில் பதிலளிக்கக்கூடிய அறிவிப்புகளாக இந்தத் தொலைபேசிக்கு வரும்.';
+
+  @override
+  String get circleLinkCodeLabel => 'SMS இல் உள்ள குறியீடு';
+
+  @override
+  String get circleLinkButton => 'இணை';
+
+  @override
+  String get circleLinkCodeInvalid => 'குறியீடுகளில் 6 எழுத்துகளும் எண்களும் உள்ளன.';
+
+  @override
+  String circleLinkLinked(String name) {
+    return 'இணைக்கப்பட்டது. இனி $name இன் எச்சரிக்கைகள் உங்களுக்கு வரும்.';
+  }
+
+  @override
+  String get circleLinkErrorNotFound => 'அந்தக் குறியீடு எந்த அழைப்புடனும் பொருந்தவில்லை. SMS ஐச் சரிபார்த்து மீண்டும் முயலவும்.';
+
+  @override
+  String get circleLinkErrorExpired => 'அந்தக் குறியீடு காலாவதியானது. புதியதைக் கேளுங்கள்.';
+
+  @override
+  String get circleLinkErrorUsed => 'அந்தக் குறியீடு ஏற்கனவே பயன்படுத்தப்பட்டது. புதியதைக் கேளுங்கள்.';
+
+  @override
+  String get circleLinkErrorOwn => 'அது உங்கள் சொந்த அழைப்பு — உங்கள் தொடர்பு தனது தொலைபேசியில் உள்ளிட வேண்டியது.';
+
+  @override
+  String get circleLinkGuardingTitle => 'நீங்கள் எச்சரிக்கைகள் பெறுவது';
+
+  @override
+  String get circleLinkGuardingEmpty => 'இதுவரை யாரும் இல்லை.';
+
+  @override
+  String get circleLinkGuardingSubtitle => 'SOS எச்சரிக்கைகளும் நேரலை பயணங்களும்';
+
+  @override
+  String get circleLinkLoadFailed => 'இந்தப் பட்டியலை ஏற்ற முடியவில்லை. இணைப்பைச் சரிபார்க்கவும்.';
+
+  @override
+  String get circleLinkStop => 'நிறுத்து';
+
+  @override
+  String circleLinkStopTitle(String name) {
+    return '$name இன் எச்சரிக்கைகளைப் பெறுவதை நிறுத்தவா?';
+  }
+
+  @override
+  String circleLinkStopBody(String name) {
+    return 'நீங்கள் அவரது வட்டத்தில் இருக்கும் வரை $name இன் SMS எச்சரிக்கைகள் இன்னும் வரும், ஆனால் Amica அறிவிப்புகள் வராது.';
+  }
+
+  @override
+  String get circleLinkStopConfirm => 'எச்சரிக்கைகளை நிறுத்து';
+
+  @override
+  String get guardianAlertAppBar => 'வட்ட எச்சரிக்கை';
+
+  @override
+  String get guardianAlertJustNow => 'இப்போது';
+
+  @override
+  String guardianAlertMinutesAgo(int minutes) {
+    return '$minutes நிமிடங்களுக்கு முன்';
+  }
+
+  @override
+  String guardianAlertHerLocation(String name) {
+    return '$name இன் இருப்பிடம்';
+  }
+
+  @override
+  String get guardianAlertWatchLive => 'அவரது பயணத்தை நேரலையில் பார்';
+
+  @override
+  String get guardianAlertOpenMaps => 'Google Maps இல் திற';
+
+  @override
+  String get guardianAlertLetHerKnow => 'உதவி வருகிறது என்று அவருக்குத் தெரியப்படுத்து';
+
+  @override
+  String guardianAlertCallHer(String name) {
+    return 'இப்போது $name ஐ அழை';
+  }
+
+  @override
+  String guardianAlertCallingSent(String name) {
+    return 'நீங்கள் அழைப்பது $name க்குத் தெரியும்';
+  }
+
+  @override
+  String get guardianAlertAlertedSent => 'நீங்கள் மற்றவர்களுக்குத் தெரிவித்தது அவருக்குத் தெரியும்';
+
+  @override
+  String guardianAlertRepliesNote(String name) {
+    return 'உங்கள் பதில்கள் உடனடியாக $name இன் திரையில் தோன்றும்.';
+  }
+
+  @override
+  String get guardianReplyFailed => 'உங்கள் பதிலை அனுப்ப முடியவில்லை. அவரை நேரடியாக அழையுங்கள்.';
+
+  @override
+  String get pushSomeone => 'உங்கள் வட்டத்தில் ஒருவர்';
+
+  @override
+  String get pushYourContact => 'உங்கள் தொடர்பு';
+
+  @override
+  String get pushChannelSosName => 'உங்கள் வட்டத்திலிருந்து SOS';
+
+  @override
+  String get pushChannelSosDescription => 'உங்களைத் தங்கள் வட்டத்தில் சேர்த்த ஒருவருக்கு உதவி தேவைப்படும்போது.';
+
+  @override
+  String get pushChannelUpdatesName => 'வட்டப் புதுப்பிப்புகள்';
+
+  @override
+  String get pushChannelUpdatesDescription => 'நேரலை பயணங்கள், பாதுகாப்பான வருகைகள் மற்றும் உங்கள் எச்சரிக்கைகளுக்கான பதில்கள்.';
+
+  @override
+  String pushSosTitle(String name) {
+    return '$name க்கு உதவி தேவை';
+  }
+
+  @override
+  String get pushSosBody => 'Amica இலிருந்து SOS. அவர் எங்கே இருக்கிறார் என்று பார்த்து பதிலளிக்கத் தட்டவும்.';
+
+  @override
+  String get pushSosBodyNoLocation => 'Amica இலிருந்து SOS. பதிலளிக்கத் தட்டவும்.';
+
+  @override
+  String get pushActionCallingNow => 'இப்போது அழைக்கிறேன்';
+
+  @override
+  String get pushActionAlertedOthers => 'மற்றவர்களுக்குத் தெரிவித்தேன்';
+
+  @override
+  String get pushActionWatchLive => 'நேரலையில் பார்';
+
+  @override
+  String pushJourneyStartedTitle(String name) {
+    return '$name தனது பயணத்தைப் பகிர்கிறார்';
+  }
+
+  @override
+  String pushJourneyStartedBody(String destination) {
+    return '$destination நோக்கிச் செல்கிறார். நேரலையில் பார்க்கத் தட்டவும்.';
+  }
+
+  @override
+  String get pushJourneyStartedBodyNoDest => 'நேரலையில் பார்க்கத் தட்டவும்.';
+
+  @override
+  String pushArrivedTitle(String name) {
+    return '$name பாதுகாப்பாகச் சென்றடைந்தார்';
+  }
+
+  @override
+  String pushArrivedBody(String destination) {
+    return '$destination நோக்கிய அவரது பயணம் முடிந்தது.';
+  }
+
+  @override
+  String get pushArrivedBodyNoDest => 'அவரது பயணம் முடிந்தது.';
+
+  @override
+  String pushResponseCallingTitle(String name) {
+    return '$name இப்போது உங்களை அழைக்கிறார்';
+  }
+
+  @override
+  String get pushResponseCallingBody => 'உங்கள் தொலைபேசியை அருகில் வைத்திருங்கள்.';
+
+  @override
+  String pushResponseAlertedTitle(String name) {
+    return '$name மற்றவர்களுக்குத் தெரிவித்தார்';
+  }
+
+  @override
+  String get pushResponseAlertedBody => 'உங்களுக்கு உதவி தேவை என்பது மேலும் பலருக்குத் தெரியும்.';
+
+  @override
+  String pushLinkedTitle(String name) {
+    return '$name Amica இல் இணைந்தார்';
+  }
+
+  @override
+  String get pushLinkedBody => 'இனி உங்கள் எச்சரிக்கைகள் SMS உடன் அறிவிப்புகளாகவும் அவருக்கு வரும்.';
+
+  @override
+  String get pushResponseSentTitle => 'பதில் அனுப்பப்பட்டது';
+
+  @override
+  String pushResponseSentAlertedBody(String name) {
+    return 'நீங்கள் மற்றவர்களுக்குத் தெரிவித்தது $name க்குத் தெரியும்.';
+  }
+
+  @override
+  String get pushResponseFailedTitle => 'பதில் அனுப்பப்படவில்லை';
+
+  @override
+  String get pushResponseFailedBody => 'Amica ஐத் திறக்கவும் அல்லது அவரை நேரடியாக அழைக்கவும்.';
+
+  @override
+  String sosActivePushedCount(int count) {
+    return 'உங்கள் வட்டத்தில் $count பேருக்கு Amica அறிவிப்பு சென்றது';
+  }
+
+  @override
   String get zzzArbEnd => 'do not translate; internal append anchor';
 }

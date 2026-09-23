@@ -3298,6 +3298,564 @@ abstract class AppLocalizations {
   /// **'Navigate in Google Maps'**
   String get journeyTimerOpenInMaps;
 
+  /// No description provided for @liveShareToggleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share live with my circle'**
+  String get liveShareToggleTitle;
+
+  /// No description provided for @liveShareToggleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your contacts get a link to watch this journey on a map — no app needed.'**
+  String get liveShareToggleSubtitle;
+
+  /// No description provided for @liveShareOnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing live with your circle'**
+  String get liveShareOnTitle;
+
+  /// No description provided for @liveShareOnSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your contacts can watch this journey on a map.'**
+  String get liveShareOnSubtitle;
+
+  /// No description provided for @liveShareOffTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Let your circle watch live'**
+  String get liveShareOffTitle;
+
+  /// No description provided for @liveShareOffSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a link that shows where you are until you arrive.'**
+  String get liveShareOffSubtitle;
+
+  /// No description provided for @liveShareSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending the live link…'**
+  String get liveShareSending;
+
+  /// No description provided for @liveShareSentSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent: {pushed} by Amica notification, {texted} by SMS.'**
+  String liveShareSentSummary(int pushed, int texted);
+
+  /// No description provided for @liveShareSomeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} could not be reached.'**
+  String liveShareSomeFailed(int count);
+
+  /// No description provided for @liveShareShareNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Share live link'**
+  String get liveShareShareNow;
+
+  /// No description provided for @liveShareSendAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Send the link again'**
+  String get liveShareSendAgain;
+
+  /// No description provided for @liveShareCopyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get liveShareCopyLink;
+
+  /// No description provided for @liveShareLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Live link copied.'**
+  String get liveShareLinkCopied;
+
+  /// No description provided for @liveShareCreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn't create the live link. Check your connection and try again.'**
+  String get liveShareCreateFailed;
+
+  /// No description provided for @liveShareContactsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Link ready, but your contacts couldn't be loaded to send it.'**
+  String get liveShareContactsFailed;
+
+  /// No description provided for @liveShareSmsWithName.
+  ///
+  /// In en, this message translates to:
+  /// **'Amica: {name} is on her way to {destination}. Watch her journey live: {url}'**
+  String liveShareSmsWithName(String name, String destination, String url);
+
+  /// No description provided for @liveShareSmsNoName.
+  ///
+  /// In en, this message translates to:
+  /// **'Amica: I'm on my way to {destination}. Watch my journey live: {url}'**
+  String liveShareSmsNoName(String destination, String url);
+
+  /// No description provided for @liveShareEmergencyLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Live: {url}'**
+  String liveShareEmergencyLine(String url);
+
+  /// No description provided for @liveShareTrackingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing your live location'**
+  String get liveShareTrackingTitle;
+
+  /// No description provided for @liveShareTrackingText.
+  ///
+  /// In en, this message translates to:
+  /// **'Your circle can follow this journey until you arrive.'**
+  String get liveShareTrackingText;
+
+  /// No description provided for @contactsConnectInAmica.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect in Amica for instant alerts'**
+  String get contactsConnectInAmica;
+
+  /// No description provided for @contactsLinkedInAmica.
+  ///
+  /// In en, this message translates to:
+  /// **'Gets instant alerts in Amica'**
+  String get contactsLinkedInAmica;
+
+  /// No description provided for @circleConnectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect {name} in Amica'**
+  String circleConnectTitle(String name);
+
+  /// No description provided for @circleConnectBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If {name} has Amica, your SOS alerts and live journeys can reach them as instant notifications — free, and faster than SMS. They can reply with one tap. We'll text them a code to enter in their app.'**
+  String circleConnectBody(String name);
+
+  /// No description provided for @circleConnectLinkedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is connected in Amica'**
+  String circleConnectLinkedTitle(String name);
+
+  /// No description provided for @circleConnectLinkedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} gets your SOS alerts and live journeys as instant notifications, as well as by SMS.'**
+  String circleConnectLinkedBody(String name);
+
+  /// No description provided for @circleConnectSendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Text {name} a code'**
+  String circleConnectSendCode(String name);
+
+  /// No description provided for @circleConnectCopyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy code'**
+  String get circleConnectCopyCode;
+
+  /// No description provided for @circleConnectTexted.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to {name}. They enter it in Amica under You → Get alerts for someone. It works once and expires in 7 days.'**
+  String circleConnectTexted(String name);
+
+  /// No description provided for @circleConnectTextFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The SMS couldn't be sent. Give {name} this code another way — it only works on their phone once.'**
+  String circleConnectTextFailed(String name);
+
+  /// No description provided for @circleConnectDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop Amica alerts to this contact'**
+  String get circleConnectDisconnect;
+
+  /// No description provided for @circleInviteSms.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} added you to her Amica safety circle. If you have Amica, go to You → Get alerts for someone and enter {code} to get her alerts instantly.'**
+  String circleInviteSms(String name, String code);
+
+  /// No description provided for @circleInviteSmsNoName.
+  ///
+  /// In en, this message translates to:
+  /// **'You've been added to an Amica safety circle. If you have Amica, go to You → Get alerts for someone and enter {code} to get alerts instantly.'**
+  String circleInviteSmsNoName(String code);
+
+  /// No description provided for @circleLinkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get alerts for someone'**
+  String get circleLinkTitle;
+
+  /// No description provided for @circleLinkRowSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a code a friend texted you'**
+  String get circleLinkRowSubtitle;
+
+  /// No description provided for @circleLinkIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'When someone adds you to their circle, Amica texts you a 6-character code. Enter it here and their SOS alerts and live journeys will reach this phone as notifications you can answer with one tap.'**
+  String get circleLinkIntro;
+
+  /// No description provided for @circleLinkCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Code from the SMS'**
+  String get circleLinkCodeLabel;
+
+  /// No description provided for @circleLinkButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get circleLinkButton;
+
+  /// No description provided for @circleLinkCodeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Codes have 6 letters and numbers.'**
+  String get circleLinkCodeInvalid;
+
+  /// No description provided for @circleLinkLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected. You'll now get {name}'s alerts.'**
+  String circleLinkLinked(String name);
+
+  /// No description provided for @circleLinkErrorNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'That code doesn't match any invite. Check the SMS and try again.'**
+  String get circleLinkErrorNotFound;
+
+  /// No description provided for @circleLinkErrorExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'That code has expired. Ask for a new one.'**
+  String get circleLinkErrorExpired;
+
+  /// No description provided for @circleLinkErrorUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'That code has already been used. Ask for a new one.'**
+  String get circleLinkErrorUsed;
+
+  /// No description provided for @circleLinkErrorOwn.
+  ///
+  /// In en, this message translates to:
+  /// **'That's your own invite — it's for your contact to enter on their phone.'**
+  String get circleLinkErrorOwn;
+
+  /// No description provided for @circleLinkGuardingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You get alerts for'**
+  String get circleLinkGuardingTitle;
+
+  /// No description provided for @circleLinkGuardingEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No one yet.'**
+  String get circleLinkGuardingEmpty;
+
+  /// No description provided for @circleLinkGuardingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS alerts and live journeys'**
+  String get circleLinkGuardingSubtitle;
+
+  /// No description provided for @circleLinkLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn't load this list. Check your connection.'**
+  String get circleLinkLoadFailed;
+
+  /// No description provided for @circleLinkStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get circleLinkStop;
+
+  /// No description provided for @circleLinkStopTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop getting {name}'s alerts?'**
+  String circleLinkStopTitle(String name);
+
+  /// No description provided for @circleLinkStopBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You'll still get {name}'s SMS alerts while you're in her circle, but not Amica notifications.'**
+  String circleLinkStopBody(String name);
+
+  /// No description provided for @circleLinkStopConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop alerts'**
+  String get circleLinkStopConfirm;
+
+  /// No description provided for @guardianAlertAppBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Circle alert'**
+  String get guardianAlertAppBar;
+
+  /// No description provided for @guardianAlertJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get guardianAlertJustNow;
+
+  /// No description provided for @guardianAlertMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min ago'**
+  String guardianAlertMinutesAgo(int minutes);
+
+  /// No description provided for @guardianAlertHerLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}'s location'**
+  String guardianAlertHerLocation(String name);
+
+  /// No description provided for @guardianAlertWatchLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch her journey live'**
+  String get guardianAlertWatchLive;
+
+  /// No description provided for @guardianAlertOpenMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Google Maps'**
+  String get guardianAlertOpenMaps;
+
+  /// No description provided for @guardianAlertLetHerKnow.
+  ///
+  /// In en, this message translates to:
+  /// **'Let her know help is coming'**
+  String get guardianAlertLetHerKnow;
+
+  /// No description provided for @guardianAlertCallHer.
+  ///
+  /// In en, this message translates to:
+  /// **'Call {name} now'**
+  String guardianAlertCallHer(String name);
+
+  /// No description provided for @guardianAlertCallingSent.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} knows you're calling'**
+  String guardianAlertCallingSent(String name);
+
+  /// No description provided for @guardianAlertAlertedSent.
+  ///
+  /// In en, this message translates to:
+  /// **'She knows you've alerted others'**
+  String get guardianAlertAlertedSent;
+
+  /// No description provided for @guardianAlertRepliesNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your replies appear on {name}'s screen straight away.'**
+  String guardianAlertRepliesNote(String name);
+
+  /// No description provided for @guardianReplyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn't send your reply. Call her directly.'**
+  String get guardianReplyFailed;
+
+  /// No description provided for @pushSomeone.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone in your circle'**
+  String get pushSomeone;
+
+  /// No description provided for @pushYourContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Your contact'**
+  String get pushYourContact;
+
+  /// No description provided for @pushChannelSosName.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS from your circle'**
+  String get pushChannelSosName;
+
+  /// No description provided for @pushChannelSosDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'When someone who added you to their circle needs help.'**
+  String get pushChannelSosDescription;
+
+  /// No description provided for @pushChannelUpdatesName.
+  ///
+  /// In en, this message translates to:
+  /// **'Circle updates'**
+  String get pushChannelUpdatesName;
+
+  /// No description provided for @pushChannelUpdatesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Live journeys, safe arrivals and replies to your alerts.'**
+  String get pushChannelUpdatesDescription;
+
+  /// No description provided for @pushSosTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} needs help'**
+  String pushSosTitle(String name);
+
+  /// No description provided for @pushSosBody.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS from Amica. Tap to see where she is and reply.'**
+  String get pushSosBody;
+
+  /// No description provided for @pushSosBodyNoLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS from Amica. Tap to reply.'**
+  String get pushSosBodyNoLocation;
+
+  /// No description provided for @pushActionCallingNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Calling now'**
+  String get pushActionCallingNow;
+
+  /// No description provided for @pushActionAlertedOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'I've alerted others'**
+  String get pushActionAlertedOthers;
+
+  /// No description provided for @pushActionWatchLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch live'**
+  String get pushActionWatchLive;
+
+  /// No description provided for @pushJourneyStartedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is sharing her journey'**
+  String pushJourneyStartedTitle(String name);
+
+  /// No description provided for @pushJourneyStartedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Heading to {destination}. Tap to watch live.'**
+  String pushJourneyStartedBody(String destination);
+
+  /// No description provided for @pushJourneyStartedBodyNoDest.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to watch live.'**
+  String get pushJourneyStartedBodyNoDest;
+
+  /// No description provided for @pushArrivedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} arrived safely'**
+  String pushArrivedTitle(String name);
+
+  /// No description provided for @pushArrivedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Her journey to {destination} has ended.'**
+  String pushArrivedBody(String destination);
+
+  /// No description provided for @pushArrivedBodyNoDest.
+  ///
+  /// In en, this message translates to:
+  /// **'Her journey has ended.'**
+  String get pushArrivedBodyNoDest;
+
+  /// No description provided for @pushResponseCallingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is calling you now'**
+  String pushResponseCallingTitle(String name);
+
+  /// No description provided for @pushResponseCallingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your phone close.'**
+  String get pushResponseCallingBody;
+
+  /// No description provided for @pushResponseAlertedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} has alerted others'**
+  String pushResponseAlertedTitle(String name);
+
+  /// No description provided for @pushResponseAlertedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'More people know you need help.'**
+  String get pushResponseAlertedBody;
+
+  /// No description provided for @pushLinkedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is connected in Amica'**
+  String pushLinkedTitle(String name);
+
+  /// No description provided for @pushLinkedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'They'll now get your alerts as notifications as well as texts.'**
+  String get pushLinkedBody;
+
+  /// No description provided for @pushResponseSentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply sent'**
+  String get pushResponseSentTitle;
+
+  /// No description provided for @pushResponseSentAlertedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} knows you've alerted others.'**
+  String pushResponseSentAlertedBody(String name);
+
+  /// No description provided for @pushResponseFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply not sent'**
+  String get pushResponseFailedTitle;
+
+  /// No description provided for @pushResponseFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Amica or call her directly.'**
+  String get pushResponseFailedBody;
+
+  /// No description provided for @sosActivePushedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amica notification delivered to {count} in your circle'**
+  String sosActivePushedCount(int count);
+
   /// No description provided for @zzzArbEnd.
   ///
   /// In en, this message translates to:

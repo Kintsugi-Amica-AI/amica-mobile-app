@@ -111,12 +111,29 @@ class EmergencyContactService {
       );
     }
 
-    await _firestore.collection(_collectionName).doc(contact.id).update({
+    final reference = _firestore.collection(_collectionName).doc(contact.id);
+
+    // A new number is a new person as far as alerts go: drop any Amica link
+    // made by whoever had the old number (they proved that number, not this).
+    var unlink = false;
+    try {
+      final current = (await reference.get()).data();
+      unlink = current != null &&
+          current['guardianUid'] != null &&
+          _digits(current['phone']) != _digits(contact.phone);
+    } catch (_) {/* Offline: keep the link rather than block the edit. */}
+
+    await reference.update({
       'name': contact.name.trim(),
       'phone': contact.phone.trim(),
       'relationship': contact.relationship.trim(),
       'priority': contact.priority,
       'isActive': contact.isActive,
+      if (unlink) ...{
+        'guardianUid': FieldValue.delete(),
+        'guardianName': FieldValue.delete(),
+        'guardianLinkedAt': FieldValue.delete(),
+      },
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
@@ -173,4 +190,7 @@ class EmergencyContactService {
     }
     return user;
   }
+
+  static String _digits(Object? phone) =>
+      phone is String ? phone.replaceAll(RegExp(r'[^0-9]'), '') : '';
 }

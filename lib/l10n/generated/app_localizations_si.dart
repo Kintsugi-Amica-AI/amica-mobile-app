@@ -1879,5 +1879,348 @@ class AppLocalizationsSi extends AppLocalizations {
   String get journeyTimerOpenInMaps => 'Google Maps හි මඟ පෙන්වන්න';
 
   @override
+  String get liveShareToggleTitle => 'මගේ කවය සමඟ සජීවීව බෙදාගන්න';
+
+  @override
+  String get liveShareToggleSubtitle => 'ඔබගේ සම්බන්ධතාවලට මෙම ගමන සිතියමක බැලීමට සබැඳියක් ලැබේ — යෙදුමක් අවශ්‍ය නැත.';
+
+  @override
+  String get liveShareOnTitle => 'ඔබගේ කවය සමඟ සජීවීව බෙදාගනිමින්';
+
+  @override
+  String get liveShareOnSubtitle => 'ඔබගේ සම්බන්ධතාවලට මෙම ගමන සිතියමක බැලිය හැක.';
+
+  @override
+  String get liveShareOffTitle => 'ඔබගේ කවයට සජීවීව බැලීමට ඉඩ දෙන්න';
+
+  @override
+  String get liveShareOffSubtitle => 'ඔබ ළඟා වන තුරු ඔබ සිටින තැන පෙන්වන සබැඳියක් යවන්න.';
+
+  @override
+  String get liveShareSending => 'සජීවී සබැඳිය යවමින්…';
+
+  @override
+  String liveShareSentSummary(int pushed, int texted) {
+    return 'යවා ඇත: Amica දැනුම්දීමෙන් $pushed, SMS මඟින් $texted.';
+  }
+
+  @override
+  String liveShareSomeFailed(int count) {
+    return '$count දෙනෙකුට යැවිය නොහැකි විය.';
+  }
+
+  @override
+  String get liveShareShareNow => 'සජීවී සබැඳිය බෙදාගන්න';
+
+  @override
+  String get liveShareSendAgain => 'සබැඳිය නැවත යවන්න';
+
+  @override
+  String get liveShareCopyLink => 'සබැඳිය පිටපත් කරන්න';
+
+  @override
+  String get liveShareLinkCopied => 'සජීවී සබැඳිය පිටපත් කළා.';
+
+  @override
+  String get liveShareCreateFailed => 'සජීවී සබැඳිය සෑදිය නොහැකි විය. ඔබගේ සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get liveShareContactsFailed => 'සබැඳිය සූදානම්, නමුත් එය යැවීමට ඔබගේ සම්බන්ධතා පූරණය කළ නොහැකි විය.';
+
+  @override
+  String liveShareSmsWithName(String name, String destination, String url) {
+    return 'Amica: $name $destination වෙත යමින් සිටී. ඇගේ ගමන සජීවීව බලන්න: $url';
+  }
+
+  @override
+  String liveShareSmsNoName(String destination, String url) {
+    return 'Amica: මම $destination වෙත යමින් සිටිමි. මගේ ගමන සජීවීව බලන්න: $url';
+  }
+
+  @override
+  String liveShareEmergencyLine(String url) {
+    return 'සජීවී: $url';
+  }
+
+  @override
+  String get liveShareTrackingTitle => 'ඔබගේ සජීවී ස්ථානය බෙදාගනිමින්';
+
+  @override
+  String get liveShareTrackingText => 'ඔබ ළඟා වන තුරු ඔබගේ කවයට මෙම ගමන අනුගමනය කළ හැක.';
+
+  @override
+  String get contactsConnectInAmica => 'ක්ෂණික ඇඟවීම් සඳහා Amica හි සම්බන්ධ කරන්න';
+
+  @override
+  String get contactsLinkedInAmica => 'Amica හි ක්ෂණික ඇඟවීම් ලැබේ';
+
+  @override
+  String circleConnectTitle(String name) {
+    return '$name Amica හි සම්බන්ධ කරන්න';
+  }
+
+  @override
+  String circleConnectBody(String name) {
+    return '$name ට Amica තිබේ නම්, ඔබගේ SOS ඇඟවීම් සහ සජීවී ගමන් ක්ෂණික දැනුම්දීම් ලෙස ඔවුන්ට ලැබිය හැක — නොමිලේ, SMS වලට වඩා වේගවත්ව. ඔවුන්ට එක් තට්ටුවකින් පිළිතුරු දිය හැක. ඔවුන්ගේ යෙදුමේ ඇතුළත් කිරීමට අපි ඔවුන්ට කේතයක් SMS කරන්නෙමු.';
+  }
+
+  @override
+  String circleConnectLinkedTitle(String name) {
+    return '$name Amica හි සම්බන්ධයි';
+  }
+
+  @override
+  String circleConnectLinkedBody(String name) {
+    return '$name ට ඔබගේ SOS ඇඟවීම් සහ සජීවී ගමන් SMS මෙන්ම ක්ෂණික දැනුම්දීම් ලෙසද ලැබේ.';
+  }
+
+  @override
+  String circleConnectSendCode(String name) {
+    return '$name ට කේතයක් SMS කරන්න';
+  }
+
+  @override
+  String get circleConnectCopyCode => 'කේතය පිටපත් කරන්න';
+
+  @override
+  String circleConnectTexted(String name) {
+    return '$name වෙත යැව්වා. ඔවුන් එය Amica හි ඔබ → යමෙකු සඳහා ඇඟවීම් ලබාගන්න යටතේ ඇතුළත් කරයි. එය එක් වරක් පමණක් ක්‍රියා කරන අතර දින 7කින් කල් ඉකුත් වේ.';
+  }
+
+  @override
+  String circleConnectTextFailed(String name) {
+    return 'SMS යැවිය නොහැකි විය. මෙම කේතය වෙනත් ආකාරයකින් $name ට දෙන්න — එය එක් වරක් පමණක් ක්‍රියා කරයි.';
+  }
+
+  @override
+  String get circleConnectDisconnect => 'මෙම සම්බන්ධතාවට Amica ඇඟවීම් නවත්වන්න';
+
+  @override
+  String circleInviteSms(String name, String code) {
+    return '$name ඔබව ඇගේ Amica ආරක්ෂක කවයට එක් කළා. ඔබට Amica තිබේ නම්, ඔබ → යමෙකු සඳහා ඇඟවීම් ලබාගන්න වෙත ගොස් ඇගේ ඇඟවීම් ක්ෂණිකව ලබා ගැනීමට $code ඇතුළත් කරන්න.';
+  }
+
+  @override
+  String circleInviteSmsNoName(String code) {
+    return 'ඔබව Amica ආරක්ෂක කවයකට එක් කර ඇත. ඔබට Amica තිබේ නම්, ඔබ → යමෙකු සඳහා ඇඟවීම් ලබාගන්න වෙත ගොස් ඇඟවීම් ක්ෂණිකව ලබා ගැනීමට $code ඇතුළත් කරන්න.';
+  }
+
+  @override
+  String get circleLinkTitle => 'යමෙකු සඳහා ඇඟවීම් ලබාගන්න';
+
+  @override
+  String get circleLinkRowSubtitle => 'මිතුරෙකු ඔබට SMS කළ කේතයක් ඇතුළත් කරන්න';
+
+  @override
+  String get circleLinkIntro => 'යමෙකු ඔබව ඔවුන්ගේ කවයට එක් කළ විට, Amica ඔබට අක්ෂර 6ක කේතයක් SMS කරයි. එය මෙහි ඇතුළත් කරන්න, එවිට ඔවුන්ගේ SOS ඇඟවීම් සහ සජීවී ගමන් එක් තට්ටුවකින් පිළිතුරු දිය හැකි දැනුම්දීම් ලෙස මෙම දුරකථනයට ලැබේ.';
+
+  @override
+  String get circleLinkCodeLabel => 'SMS හි ඇති කේතය';
+
+  @override
+  String get circleLinkButton => 'සම්බන්ධ කරන්න';
+
+  @override
+  String get circleLinkCodeInvalid => 'කේතවල අකුරු සහ අංක 6ක් ඇත.';
+
+  @override
+  String circleLinkLinked(String name) {
+    return 'සම්බන්ධ විය. ඔබට දැන් $name ගේ ඇඟවීම් ලැබේ.';
+  }
+
+  @override
+  String get circleLinkErrorNotFound => 'එම කේතය කිසිදු ආරාධනාවකට නොගැළපේ. SMS පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get circleLinkErrorExpired => 'එම කේතය කල් ඉකුත් වී ඇත. අලුත් එකක් ඉල්ලන්න.';
+
+  @override
+  String get circleLinkErrorUsed => 'එම කේතය දැනටමත් භාවිත කර ඇත. අලුත් එකක් ඉල්ලන්න.';
+
+  @override
+  String get circleLinkErrorOwn => 'එය ඔබගේම ආරාධනාවයි — එය ඔබගේ සම්බන්ධතාව ඔවුන්ගේ දුරකථනයේ ඇතුළත් කළ යුතුය.';
+
+  @override
+  String get circleLinkGuardingTitle => 'ඔබට ඇඟවීම් ලැබෙන්නේ';
+
+  @override
+  String get circleLinkGuardingEmpty => 'තවම කිසිවෙක් නැත.';
+
+  @override
+  String get circleLinkGuardingSubtitle => 'SOS ඇඟවීම් සහ සජීවී ගමන්';
+
+  @override
+  String get circleLinkLoadFailed => 'මෙම ලැයිස්තුව පූරණය කළ නොහැකි විය. ඔබගේ සම්බන්ධතාවය පරීක්ෂා කරන්න.';
+
+  @override
+  String get circleLinkStop => 'නවත්වන්න';
+
+  @override
+  String circleLinkStopTitle(String name) {
+    return '$name ගේ ඇඟවීම් ලැබීම නවත්වන්නද?';
+  }
+
+  @override
+  String circleLinkStopBody(String name) {
+    return 'ඔබ ඇගේ කවයේ සිටින තාක් $name ගේ SMS ඇඟවීම් තවමත් ලැබේ, නමුත් Amica දැනුම්දීම් නොලැබේ.';
+  }
+
+  @override
+  String get circleLinkStopConfirm => 'ඇඟවීම් නවත්වන්න';
+
+  @override
+  String get guardianAlertAppBar => 'කව ඇඟවීම';
+
+  @override
+  String get guardianAlertJustNow => 'දැන්';
+
+  @override
+  String guardianAlertMinutesAgo(int minutes) {
+    return 'මිනිත්තු $minutesකට පෙර';
+  }
+
+  @override
+  String guardianAlertHerLocation(String name) {
+    return '$name ගේ ස්ථානය';
+  }
+
+  @override
+  String get guardianAlertWatchLive => 'ඇගේ ගමන සජීවීව බලන්න';
+
+  @override
+  String get guardianAlertOpenMaps => 'Google Maps හි විවෘත කරන්න';
+
+  @override
+  String get guardianAlertLetHerKnow => 'උදව් එන බව ඇයට දන්වන්න';
+
+  @override
+  String guardianAlertCallHer(String name) {
+    return 'දැන් $name ට කතා කරන්න';
+  }
+
+  @override
+  String guardianAlertCallingSent(String name) {
+    return 'ඔබ කතා කරන බව $name දනී';
+  }
+
+  @override
+  String get guardianAlertAlertedSent => 'ඔබ අන් අයට දැනුම් දුන් බව ඇය දනී';
+
+  @override
+  String guardianAlertRepliesNote(String name) {
+    return 'ඔබගේ පිළිතුරු වහාම $name ගේ තිරයේ දිස් වේ.';
+  }
+
+  @override
+  String get guardianReplyFailed => 'ඔබගේ පිළිතුර යැවිය නොහැකි විය. ඇයට කෙලින්ම කතා කරන්න.';
+
+  @override
+  String get pushSomeone => 'ඔබගේ කවයේ කෙනෙක්';
+
+  @override
+  String get pushYourContact => 'ඔබගේ සම්බන්ධතාව';
+
+  @override
+  String get pushChannelSosName => 'ඔබගේ කවයෙන් SOS';
+
+  @override
+  String get pushChannelSosDescription => 'ඔබව ඔවුන්ගේ කවයට එක් කළ අයෙකුට උදව් අවශ්‍ය වූ විට.';
+
+  @override
+  String get pushChannelUpdatesName => 'කව යාවත්කාලීන';
+
+  @override
+  String get pushChannelUpdatesDescription => 'සජීවී ගමන්, ආරක්ෂිතව ළඟාවීම් සහ ඔබගේ ඇඟවීම්වලට පිළිතුරු.';
+
+  @override
+  String pushSosTitle(String name) {
+    return '$name ට උදව් අවශ්‍යයි';
+  }
+
+  @override
+  String get pushSosBody => 'Amica වෙතින් SOS. ඇය සිටින තැන බලා පිළිතුරු දීමට තට්ටු කරන්න.';
+
+  @override
+  String get pushSosBodyNoLocation => 'Amica වෙතින් SOS. පිළිතුරු දීමට තට්ටු කරන්න.';
+
+  @override
+  String get pushActionCallingNow => 'දැන් කතා කරනවා';
+
+  @override
+  String get pushActionAlertedOthers => 'මම අන් අයට දැනුම් දුන්නා';
+
+  @override
+  String get pushActionWatchLive => 'සජීවීව බලන්න';
+
+  @override
+  String pushJourneyStartedTitle(String name) {
+    return '$name ඇගේ ගමන බෙදාගනී';
+  }
+
+  @override
+  String pushJourneyStartedBody(String destination) {
+    return '$destination වෙත යමින්. සජීවීව බැලීමට තට්ටු කරන්න.';
+  }
+
+  @override
+  String get pushJourneyStartedBodyNoDest => 'සජීවීව බැලීමට තට්ටු කරන්න.';
+
+  @override
+  String pushArrivedTitle(String name) {
+    return '$name ආරක්ෂිතව ළඟා විය';
+  }
+
+  @override
+  String pushArrivedBody(String destination) {
+    return '$destination වෙත ඇගේ ගමන අවසන් විය.';
+  }
+
+  @override
+  String get pushArrivedBodyNoDest => 'ඇගේ ගමන අවසන් විය.';
+
+  @override
+  String pushResponseCallingTitle(String name) {
+    return '$name දැන් ඔබට කතා කරයි';
+  }
+
+  @override
+  String get pushResponseCallingBody => 'ඔබගේ දුරකථනය ළඟින් තබාගන්න.';
+
+  @override
+  String pushResponseAlertedTitle(String name) {
+    return '$name අන් අයට දැනුම් දුන්නා';
+  }
+
+  @override
+  String get pushResponseAlertedBody => 'ඔබට උදව් අවශ්‍ය බව තවත් අය දනී.';
+
+  @override
+  String pushLinkedTitle(String name) {
+    return '$name Amica හි සම්බන්ධ විය';
+  }
+
+  @override
+  String get pushLinkedBody => 'ඔවුන්ට දැන් ඔබගේ ඇඟවීම් SMS මෙන්ම දැනුම්දීම් ලෙසද ලැබේ.';
+
+  @override
+  String get pushResponseSentTitle => 'පිළිතුර යැව්වා';
+
+  @override
+  String pushResponseSentAlertedBody(String name) {
+    return 'ඔබ අන් අයට දැනුම් දුන් බව $name දනී.';
+  }
+
+  @override
+  String get pushResponseFailedTitle => 'පිළිතුර නොයැවිණි';
+
+  @override
+  String get pushResponseFailedBody => 'Amica විවෘත කරන්න හෝ ඇයට කෙලින්ම කතා කරන්න.';
+
+  @override
+  String sosActivePushedCount(int count) {
+    return 'ඔබගේ කවයේ $count දෙනෙකුට Amica දැනුම්දීම ලැබුණා';
+  }
+
+  @override
   String get zzzArbEnd => 'do not translate; internal append anchor';
 }

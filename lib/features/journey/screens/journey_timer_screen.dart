@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -23,6 +24,7 @@ import '../../sos/services/sos_service.dart';
 import '../models/journey.dart';
 import '../models/location_data_model.dart';
 import '../services/journey_service.dart';
+import '../services/journey_share_service.dart';
 import '../widgets/journey_visuals.dart';
 import '../widgets/transit_trip_card.dart';
 import 'safety_check_screen.dart';
@@ -96,6 +98,10 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
   /// The deadline the native monitor was last started with. Pausing and
   /// resuming move the deadline, so the monitor is restarted when it changes.
   DateTime? _nativeSafetyMonitorCheckAt;
+
+  /// The live link baked into the native monitor's SMS text; it is restarted
+  /// when the link appears so missed-check texts include it.
+  String? _nativeSafetyMonitorShareUrl;
   bool _isPausing = false;
   int _journeyListenRetries = 0;
   static const int _maxJourneyListenRetries = 5;
@@ -155,6 +161,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
           _isLoadingJourney = false;
         });
         unawaited(_startNativeSafetyMonitorIfNeeded(journey));
+        _keepLiveShareRunning(journey);
         _updateRemainingAndSafetyState();
       },
       onError: (Object error) {
@@ -358,6 +365,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
           alertId: alertId,
           triggerType: timerTriggered ? 'timer' : 'manual',
           location: location,
+          liveUrl: journey.liveShareUrl,
         ),
       );
     } on SosServiceException catch (error) {
@@ -458,7 +466,8 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
 
     if (_nativeSafetyMonitorStarting ||
         (_nativeSafetyMonitorJourneyId == journey.id &&
-            _nativeSafetyMonitorCheckAt == journey.estimatedEndTime)) {
+            _nativeSafetyMonitorCheckAt == journey.estimatedEndTime &&
+            _nativeSafetyMonitorShareUrl == journey.liveShareUrl)) {
       return;
     }
 
@@ -491,6 +500,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
       _nativeSafetyMonitorStarted = true;
       _nativeSafetyMonitorJourneyId = journey.id;
       _nativeSafetyMonitorCheckAt = journey.estimatedEndTime;
+      _nativeSafetyMonitorShareUrl = journey.liveShareUrl;
     } catch (_) {
       _nativeSafetyMonitorStarted = false;
       _nativeSafetyMonitorJourneyId = null;
@@ -504,6 +514,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     _nativeSafetyMonitorStarting = false;
     _nativeSafetyMonitorJourneyId = null;
     _nativeSafetyMonitorCheckAt = null;
+    _nativeSafetyMonitorShareUrl = null;
 
     try {
       await widget.emergencyActionService.stopJourneySafetyMonitor();
@@ -655,9 +666,12 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
         : '';
     final destinationText =
         _loc.journeyTimerEmergencyDestinationLine(journey.destinationName);
+    final liveUrl = journey.liveShareUrl;
+    final liveText =
+        liveUrl == null ? '' : ' ${_loc.liveShareEmergencyLine(liveUrl)}';
 
     return '${_loc.journeyTimerEmergencyAlertIntro} '
-        '$vehicleText$destinationText $locationText';
+        '$vehicleText$destinationText $locationText$liveText';
   }
 
   void _showEscalationSnack(String message) {
@@ -680,6 +694,136 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
       default:
         return status.toUpperCase();
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Watch-my-journey-live link
+  // ---------------------------------------------------------------------------
+
+  bool _isSharing = false;
+
+  /// After a restart (or on a second phone screen) the link may exist while
+  /// nothing is sending her location. Keep the two together.
+  void _keepLiveShareRunning(Journey? journey) {
+    if (journey == null ||
+        journey.liveShareUrl == null ||
+        (journey.status != 'active' && journey.status != 'sos')) {
+      return;
+    }
+    unawaited(JourneyShareService.instance.resumeTracking(journey.id, _loc));
+  }
+
+  Future<void> _shareLive(Journey journey) async {
+    if (_isSharing) return;
+    setState(() => _isSharing = true);
+    try {
+      final outcome = await JourneyShareService.instance.shareWithCircle(
+        journeyId: journey.id,
+        destinationName: journey.destinationName,
+        loc: _loc,
+      );
+      if (outcome.error != null) {
+        _showEscalationSnack(outcome.error!);
+      }
+    } finally {
+      if (mounted) setState(() => _isSharing = false);
+    }
+  }
+
+  Future<void> _copyLiveLink(String url) async {
+    await Clipboard.setData(ClipboardData(text: url));
+    _showEscalationSnack(_loc.liveShareLinkCopied);
+  }
+
+  Widget _buildShareCard(Journey journey) {
+    final c = Theme.of(context).amica;
+    final textTheme = Theme.of(context).textTheme;
+    final url = journey.liveShareUrl;
+
+    return ValueListenableBuilder<JourneyShareOutcome?>(
+      valueListenable: JourneyShareService.instance.outcome,
+      builder: (context, outcome, _) {
+        final mine = outcome?.journeyId == journey.id ? outcome : null;
+        final sending = _isSharing || (mine?.sending ?? false);
+        final String subtitle;
+        if (sending) {
+          subtitle = _loc.liveShareSending;
+        } else if (url == null) {
+          subtitle = mine?.error ?? _loc.liveShareOffSubtitle;
+        } else if (mine != null && mine.error == null) {
+          subtitle = _loc.liveShareSentSummary(mine.pushed, mine.texted) +
+              (mine.failed > 0 ? ' ${_loc.liveShareSomeFailed(mine.failed)}' : '');
+        } else {
+          subtitle = _loc.liveShareOnSubtitle;
+        }
+
+        return AmicaCard(
+          padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+          borderColor: url != null ? c.sage.withValues(alpha: 0.45) : null,
+          child: Row(
+            children: [
+              GradientIconBadge(
+                icon: url != null
+                    ? Icons.podcasts_rounded
+                    : Icons.share_location_rounded,
+                size: 38,
+                soft: true,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      url != null
+                          ? _loc.liveShareOnTitle
+                          : _loc.liveShareOffTitle,
+                      style: textTheme.titleSmall,
+                    ),
+                    Text(
+                      subtitle,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: mine?.error != null ? c.terracottaDeep : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (sending)
+                const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              else ...[
+                if (url != null)
+                  IconButton(
+                    tooltip: _loc.liveShareCopyLink,
+                    color: c.accentInk,
+                    icon: const Icon(Icons.link_rounded),
+                    onPressed: () => _copyLiveLink(url),
+                  ),
+                IconButton(
+                  tooltip: url != null
+                      ? _loc.liveShareSendAgain
+                      : _loc.liveShareShareNow,
+                  color: c.accentInk,
+                  icon: Icon(
+                    url != null ? Icons.refresh_rounded : Icons.send_rounded,
+                  ),
+                  onPressed: journey.isActive || journey.status == 'sos'
+                      ? () => _shareLive(journey)
+                      : null,
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -1086,6 +1230,8 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
                 ],
               ),
             ),
+            const SizedBox(height: 12),
+            _buildShareCard(journey),
             const SizedBox(height: 20),
             PrimaryButton(
               label:

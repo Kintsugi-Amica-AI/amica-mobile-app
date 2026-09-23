@@ -1865,5 +1865,348 @@ class AppLocalizationsEn extends AppLocalizations {
   String get journeyTimerOpenInMaps => 'Navigate in Google Maps';
 
   @override
+  String get liveShareToggleTitle => 'Share live with my circle';
+
+  @override
+  String get liveShareToggleSubtitle => 'Your contacts get a link to watch this journey on a map — no app needed.';
+
+  @override
+  String get liveShareOnTitle => 'Sharing live with your circle';
+
+  @override
+  String get liveShareOnSubtitle => 'Your contacts can watch this journey on a map.';
+
+  @override
+  String get liveShareOffTitle => 'Let your circle watch live';
+
+  @override
+  String get liveShareOffSubtitle => 'Send a link that shows where you are until you arrive.';
+
+  @override
+  String get liveShareSending => 'Sending the live link…';
+
+  @override
+  String liveShareSentSummary(int pushed, int texted) {
+    return 'Sent: $pushed by Amica notification, $texted by SMS.';
+  }
+
+  @override
+  String liveShareSomeFailed(int count) {
+    return '$count could not be reached.';
+  }
+
+  @override
+  String get liveShareShareNow => 'Share live link';
+
+  @override
+  String get liveShareSendAgain => 'Send the link again';
+
+  @override
+  String get liveShareCopyLink => 'Copy link';
+
+  @override
+  String get liveShareLinkCopied => 'Live link copied.';
+
+  @override
+  String get liveShareCreateFailed => 'Couldn\'t create the live link. Check your connection and try again.';
+
+  @override
+  String get liveShareContactsFailed => 'Link ready, but your contacts couldn\'t be loaded to send it.';
+
+  @override
+  String liveShareSmsWithName(String name, String destination, String url) {
+    return 'Amica: $name is on her way to $destination. Watch her journey live: $url';
+  }
+
+  @override
+  String liveShareSmsNoName(String destination, String url) {
+    return 'Amica: I\'m on my way to $destination. Watch my journey live: $url';
+  }
+
+  @override
+  String liveShareEmergencyLine(String url) {
+    return 'Live: $url';
+  }
+
+  @override
+  String get liveShareTrackingTitle => 'Sharing your live location';
+
+  @override
+  String get liveShareTrackingText => 'Your circle can follow this journey until you arrive.';
+
+  @override
+  String get contactsConnectInAmica => 'Connect in Amica for instant alerts';
+
+  @override
+  String get contactsLinkedInAmica => 'Gets instant alerts in Amica';
+
+  @override
+  String circleConnectTitle(String name) {
+    return 'Connect $name in Amica';
+  }
+
+  @override
+  String circleConnectBody(String name) {
+    return 'If $name has Amica, your SOS alerts and live journeys can reach them as instant notifications — free, and faster than SMS. They can reply with one tap. We\'ll text them a code to enter in their app.';
+  }
+
+  @override
+  String circleConnectLinkedTitle(String name) {
+    return '$name is connected in Amica';
+  }
+
+  @override
+  String circleConnectLinkedBody(String name) {
+    return '$name gets your SOS alerts and live journeys as instant notifications, as well as by SMS.';
+  }
+
+  @override
+  String circleConnectSendCode(String name) {
+    return 'Text $name a code';
+  }
+
+  @override
+  String get circleConnectCopyCode => 'Copy code';
+
+  @override
+  String circleConnectTexted(String name) {
+    return 'Sent to $name. They enter it in Amica under You → Get alerts for someone. It works once and expires in 7 days.';
+  }
+
+  @override
+  String circleConnectTextFailed(String name) {
+    return 'The SMS couldn\'t be sent. Give $name this code another way — it only works on their phone once.';
+  }
+
+  @override
+  String get circleConnectDisconnect => 'Stop Amica alerts to this contact';
+
+  @override
+  String circleInviteSms(String name, String code) {
+    return '$name added you to her Amica safety circle. If you have Amica, go to You → Get alerts for someone and enter $code to get her alerts instantly.';
+  }
+
+  @override
+  String circleInviteSmsNoName(String code) {
+    return 'You\'ve been added to an Amica safety circle. If you have Amica, go to You → Get alerts for someone and enter $code to get alerts instantly.';
+  }
+
+  @override
+  String get circleLinkTitle => 'Get alerts for someone';
+
+  @override
+  String get circleLinkRowSubtitle => 'Enter a code a friend texted you';
+
+  @override
+  String get circleLinkIntro => 'When someone adds you to their circle, Amica texts you a 6-character code. Enter it here and their SOS alerts and live journeys will reach this phone as notifications you can answer with one tap.';
+
+  @override
+  String get circleLinkCodeLabel => 'Code from the SMS';
+
+  @override
+  String get circleLinkButton => 'Connect';
+
+  @override
+  String get circleLinkCodeInvalid => 'Codes have 6 letters and numbers.';
+
+  @override
+  String circleLinkLinked(String name) {
+    return 'Connected. You\'ll now get $name\'s alerts.';
+  }
+
+  @override
+  String get circleLinkErrorNotFound => 'That code doesn\'t match any invite. Check the SMS and try again.';
+
+  @override
+  String get circleLinkErrorExpired => 'That code has expired. Ask for a new one.';
+
+  @override
+  String get circleLinkErrorUsed => 'That code has already been used. Ask for a new one.';
+
+  @override
+  String get circleLinkErrorOwn => 'That\'s your own invite — it\'s for your contact to enter on their phone.';
+
+  @override
+  String get circleLinkGuardingTitle => 'You get alerts for';
+
+  @override
+  String get circleLinkGuardingEmpty => 'No one yet.';
+
+  @override
+  String get circleLinkGuardingSubtitle => 'SOS alerts and live journeys';
+
+  @override
+  String get circleLinkLoadFailed => 'Couldn\'t load this list. Check your connection.';
+
+  @override
+  String get circleLinkStop => 'Stop';
+
+  @override
+  String circleLinkStopTitle(String name) {
+    return 'Stop getting $name\'s alerts?';
+  }
+
+  @override
+  String circleLinkStopBody(String name) {
+    return 'You\'ll still get $name\'s SMS alerts while you\'re in her circle, but not Amica notifications.';
+  }
+
+  @override
+  String get circleLinkStopConfirm => 'Stop alerts';
+
+  @override
+  String get guardianAlertAppBar => 'Circle alert';
+
+  @override
+  String get guardianAlertJustNow => 'Just now';
+
+  @override
+  String guardianAlertMinutesAgo(int minutes) {
+    return '$minutes min ago';
+  }
+
+  @override
+  String guardianAlertHerLocation(String name) {
+    return '$name\'s location';
+  }
+
+  @override
+  String get guardianAlertWatchLive => 'Watch her journey live';
+
+  @override
+  String get guardianAlertOpenMaps => 'Open in Google Maps';
+
+  @override
+  String get guardianAlertLetHerKnow => 'Let her know help is coming';
+
+  @override
+  String guardianAlertCallHer(String name) {
+    return 'Call $name now';
+  }
+
+  @override
+  String guardianAlertCallingSent(String name) {
+    return '$name knows you\'re calling';
+  }
+
+  @override
+  String get guardianAlertAlertedSent => 'She knows you\'ve alerted others';
+
+  @override
+  String guardianAlertRepliesNote(String name) {
+    return 'Your replies appear on $name\'s screen straight away.';
+  }
+
+  @override
+  String get guardianReplyFailed => 'Couldn\'t send your reply. Call her directly.';
+
+  @override
+  String get pushSomeone => 'Someone in your circle';
+
+  @override
+  String get pushYourContact => 'Your contact';
+
+  @override
+  String get pushChannelSosName => 'SOS from your circle';
+
+  @override
+  String get pushChannelSosDescription => 'When someone who added you to their circle needs help.';
+
+  @override
+  String get pushChannelUpdatesName => 'Circle updates';
+
+  @override
+  String get pushChannelUpdatesDescription => 'Live journeys, safe arrivals and replies to your alerts.';
+
+  @override
+  String pushSosTitle(String name) {
+    return '$name needs help';
+  }
+
+  @override
+  String get pushSosBody => 'SOS from Amica. Tap to see where she is and reply.';
+
+  @override
+  String get pushSosBodyNoLocation => 'SOS from Amica. Tap to reply.';
+
+  @override
+  String get pushActionCallingNow => 'Calling now';
+
+  @override
+  String get pushActionAlertedOthers => 'I\'ve alerted others';
+
+  @override
+  String get pushActionWatchLive => 'Watch live';
+
+  @override
+  String pushJourneyStartedTitle(String name) {
+    return '$name is sharing her journey';
+  }
+
+  @override
+  String pushJourneyStartedBody(String destination) {
+    return 'Heading to $destination. Tap to watch live.';
+  }
+
+  @override
+  String get pushJourneyStartedBodyNoDest => 'Tap to watch live.';
+
+  @override
+  String pushArrivedTitle(String name) {
+    return '$name arrived safely';
+  }
+
+  @override
+  String pushArrivedBody(String destination) {
+    return 'Her journey to $destination has ended.';
+  }
+
+  @override
+  String get pushArrivedBodyNoDest => 'Her journey has ended.';
+
+  @override
+  String pushResponseCallingTitle(String name) {
+    return '$name is calling you now';
+  }
+
+  @override
+  String get pushResponseCallingBody => 'Keep your phone close.';
+
+  @override
+  String pushResponseAlertedTitle(String name) {
+    return '$name has alerted others';
+  }
+
+  @override
+  String get pushResponseAlertedBody => 'More people know you need help.';
+
+  @override
+  String pushLinkedTitle(String name) {
+    return '$name is connected in Amica';
+  }
+
+  @override
+  String get pushLinkedBody => 'They\'ll now get your alerts as notifications as well as texts.';
+
+  @override
+  String get pushResponseSentTitle => 'Reply sent';
+
+  @override
+  String pushResponseSentAlertedBody(String name) {
+    return '$name knows you\'ve alerted others.';
+  }
+
+  @override
+  String get pushResponseFailedTitle => 'Reply not sent';
+
+  @override
+  String get pushResponseFailedBody => 'Open Amica or call her directly.';
+
+  @override
+  String sosActivePushedCount(int count) {
+    return 'Amica notification delivered to $count in your circle';
+  }
+
+  @override
   String get zzzArbEnd => 'do not translate; internal append anchor';
 }

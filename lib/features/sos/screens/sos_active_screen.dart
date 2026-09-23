@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -24,7 +25,11 @@ class SosActiveArguments {
     this.message,
     this.status = 'active',
     this.notifyCircle = true,
+    this.liveUrl,
   });
+
+  /// The journey's watch-live link, when the SOS came from a shared journey.
+  final String? liveUrl;
 
   /// Text every active guardian from this screen as soon as it opens.
   final bool notifyCircle;
@@ -95,9 +100,11 @@ class _SosActiveScreenState extends State<SosActiveScreen> {
             args.location.longitude,
           );
     final name = FirebaseAuth.instance.currentUser?.displayName?.trim() ?? '';
-    return name.isEmpty
+    final base = name.isEmpty
         ? loc.sosSmsNoName(text, link)
         : loc.sosSmsWithName(name, text, link);
+    final liveUrl = args?.liveUrl;
+    return liveUrl == null ? base : '$base ${loc.liveShareEmergencyLine(liveUrl)}';
   }
 
   /// Texts every active guardian — or, with [only], just those — and keeps
@@ -235,6 +242,8 @@ class _SosActiveScreenState extends State<SosActiveScreen> {
                         onReload: () => _alertCircle(),
                         onOpenSmsApp: _openSmsApp,
                       ),
+                      if (args != null && args.alertId.isNotEmpty)
+                        _GuardianReplies(alertId: args.alertId),
                       const SizedBox(height: 22),
                       SectionLabel(loc.sosActiveWhatAmicaIsDoing),
                       const SizedBox(height: 10),
@@ -784,6 +793,109 @@ class _DoingRow extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Replies from guardians who have Amica ("Calling you now", "Alerted
+/// others"), live from the alert record, plus how many got the push.
+class _GuardianReplies extends StatelessWidget {
+  const _GuardianReplies({required this.alertId});
+
+  final String alertId;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Theme.of(context).amica;
+    final loc = AppLocalizations.of(context);
+
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('sos_alerts')
+          .doc(alertId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        final data = snapshot.data?.data();
+        if (data == null) return const SizedBox.shrink();
+
+        final push = data['push'];
+        final pushed = push is Map ? push['reachedContactIds'] : null;
+        final pushedCount = pushed is List ? pushed.length : 0;
+        final replies = <Map<String, dynamic>>[
+          if (data['guardianResponses'] is Map)
+            for (final value in (data['guardianResponses'] as Map).values)
+              if (value is Map) Map<String, dynamic>.from(value),
+        ]..sort((a, b) => '${b['at']}'.compareTo('${a['at']}'));
+
+        if (pushedCount == 0 && replies.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Padding(
+          padding: const EdgeInsets.only(top: 14),
+          child: AmicaCard(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            borderColor:
+                replies.isNotEmpty ? c.sage.withValues(alpha: 0.45) : null,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (pushedCount > 0)
+                  Row(
+                    children: [
+                      Icon(Icons.notifications_active_outlined,
+                          size: 17, color: c.accentInk),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          loc.sosActivePushedCount(pushedCount),
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: c.plum70,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                for (final reply in replies) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        reply['response'] == 'calling'
+                            ? Icons.phone_in_talk_rounded
+                            : Icons.campaign_rounded,
+                        size: 18,
+                        color: c.sage,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          reply['response'] == 'calling'
+                              ? loc.pushResponseCallingTitle(
+                                  '${reply['name'] ?? ''}'.isEmpty
+                                      ? loc.pushYourContact
+                                      : '${reply['name']}')
+                              : loc.pushResponseAlertedTitle(
+                                  '${reply['name'] ?? ''}'.isEmpty
+                                      ? loc.pushYourContact
+                                      : '${reply['name']}'),
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                            color: c.plum,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

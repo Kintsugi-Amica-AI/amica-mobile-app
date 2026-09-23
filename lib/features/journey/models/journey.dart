@@ -28,6 +28,7 @@ class Journey {
     this.pause = const {},
     this.route = const {},
     this.transitPlanData = const {},
+    this.liveShare = const {},
   });
 
   final String id;
@@ -64,6 +65,11 @@ class Journey {
   /// Bus/train trip plan (stops to get on / off, walks to and from them),
   /// saved when a bus or train journey started. Empty otherwise.
   final Map<String, dynamic> transitPlanData;
+
+  /// The "watch my journey live" link, written by the backend's
+  /// `startJourneyShare`: `token`, `url`, `createdAt`, and `pushedAt` once
+  /// the circle was told. Empty when the journey is not shared.
+  final Map<String, dynamic> liveShare;
   final int schemaVersion;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -89,6 +95,12 @@ class Journey {
   JourneyRoute? get suggestedRoute => JourneyRoute.fromMap(route);
 
   TransitPlan? get transitPlan => TransitPlan.fromMap(transitPlanData);
+
+  /// The watch-live link for this journey, or null if it is not shared.
+  String? get liveShareUrl {
+    final url = liveShare['url'];
+    return url is String && url.isNotEmpty ? url : null;
+  }
 
   /// Whether this ride is watching the distance to a drop-off point rather
   /// than counting down a safety timer.
@@ -186,6 +198,7 @@ class Journey {
       pause: _readMap(data['pause']),
       route: _readMap(data['route']),
       transitPlanData: _readMap(data['transitPlan']),
+      liveShare: _readMap(data['liveShare']),
       schemaVersion: _readInt(data['schemaVersion'], 1),
       createdAt: _readDateTime(data['createdAt']),
       updatedAt: _readDateTime(data['updatedAt']),

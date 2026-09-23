@@ -21,6 +21,7 @@ import '../widgets/journey_visuals.dart';
 import '../widgets/transit_trip_card.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../services/journey_service.dart';
+import '../services/journey_share_service.dart';
 
 class StartJourneyScreen extends StatefulWidget {
   const StartJourneyScreen({
@@ -85,6 +86,9 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
   bool _isLoadingLocation = false;
   bool _isResolvingDestination = false;
   bool _isStartingJourney = false;
+
+  /// "Share live with my circle": text/push a watch-live link on start.
+  bool _shareLive = true;
   bool _durationWasEdited = false;
   bool _isUpdatingDurationText = false;
   String? _destinationStatus;
@@ -98,6 +102,9 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
     if (widget.vehiclePlate != null) _journeyType = 'taxi';
     _destinationController.addListener(_onDestinationTextChanged);
     _durationController.addListener(_onDurationTextChanged);
+    JourneyShareService.instance.loadShareByDefault().then((value) {
+      if (mounted) setState(() => _shareLive = value);
+    });
     if (!widget.isTab) {
       // Pushed as its own screen: it is visible now, so locate straight away.
       WidgetsBinding.instance.addPostFrameCallback((_) => _autoLocate());
@@ -360,6 +367,16 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
             : null,
         transitPlan: _usesTransit ? _plan : null,
       );
+
+      if (_shareLive) {
+        // Runs on after this screen closes; the journey screen shows how it
+        // went (see JourneyShareService.outcome).
+        unawaited(JourneyShareService.instance.shareWithCircle(
+          journeyId: journeyId,
+          destinationName: _destinationController.text.trim(),
+          loc: loc,
+        ));
+      }
 
       if (!mounted) {
         return;
@@ -1020,6 +1037,32 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
             style: TextStyle(color: c.terracottaDeep),
           ),
         ],
+        const SizedBox(height: 16),
+        // Watch-live link for her circle.
+        AmicaCard(
+          padding: const EdgeInsets.fromLTRB(14, 6, 6, 6),
+          child: SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: _shareLive,
+            onChanged: _isBusy
+                ? null
+                : (value) {
+                    setState(() => _shareLive = value);
+                    unawaited(
+                      JourneyShareService.instance.saveShareByDefault(value),
+                    );
+                  },
+            secondary: Icon(Icons.podcasts_rounded, color: c.accentInk),
+            title: Text(
+              loc.liveShareToggleTitle,
+              style: textTheme.titleSmall,
+            ),
+            subtitle: Text(
+              loc.liveShareToggleSubtitle,
+              style: textTheme.bodySmall,
+            ),
+          ),
+        ),
         const SizedBox(height: 22),
         PrimaryButton(
           label: _isStartingJourney

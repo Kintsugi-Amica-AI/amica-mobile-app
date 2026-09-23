@@ -15,6 +15,9 @@ import 'features/auth/services/auth_service.dart';
 import 'features/auth/screens/forgot_password_screen.dart';
 import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/signup_screen.dart';
+import 'features/circle/models/guardian_alert.dart';
+import 'features/circle/screens/circle_link_screen.dart';
+import 'features/circle/screens/guardian_alert_screen.dart';
 import 'features/emergency_contacts/screens/add_emergency_contact_screen.dart';
 import 'features/emergency_contacts/screens/emergency_contacts_screen.dart';
 import 'features/fake_call/screens/fake_call_active_screen.dart';
@@ -30,6 +33,7 @@ import 'features/profile/screens/settings_screen.dart';
 import 'features/sos/screens/sos_active_screen.dart';
 import 'features/stop_alert/screens/stop_alert_active_screen.dart';
 import 'features/stop_alert/screens/stop_alert_setup_screen.dart';
+import 'services/push_notification_service.dart';
 
 class AmicaApp extends StatefulWidget {
   const AmicaApp({super.key});
@@ -49,6 +53,7 @@ class _AmicaAppState extends State<AmicaApp> {
   void initState() {
     super.initState();
     _fakeCallShortcutService.configure(navigatorKey: _navigatorKey);
+    PushNotificationService.instance.start(navigatorKey: _navigatorKey);
   }
 
   @override
@@ -160,6 +165,15 @@ class _AmicaAppState extends State<AmicaApp> {
         AppRoutes.plateResult: (_) => const PlateResultScreen(),
         AppRoutes.profile: (_) => const ProfileScreen(),
         AppRoutes.settings: (_) => SettingsScreen(),
+        AppRoutes.circleLink: (_) => const CircleLinkScreen(),
+        AppRoutes.guardianAlert: (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          return GuardianAlertScreen(
+            alert: args is GuardianAlert
+                ? args
+                : const GuardianAlert(type: 'sos'),
+          );
+        },
       },
     );
   }
