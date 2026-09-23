@@ -476,6 +476,7 @@
   "plateScanEnterTitle": "பலகை எண்ணை உள்ளிடவும்",
   "plateScanCheckButton": "சரிபார்",
   "plateScanInvalidPlate": "CAB-1234, WP KA-1234 அல்லது 65-1234 போன்ற எண்ணை உள்ளிடவும்.",
+  "plateScanEmptyPlate": "முதலில் வாகன எண்ணை உள்ளிடவும்.",
   "plateScanConfirmTitle": "வாகன எண்ணை உறுதிப்படுத்தவும்",
   "plateScanConfirmMessage": "படித்த எண்ணைச் சரிபார்த்து, தேவைப்பட்டால் திருத்தவும்.",
   "plateScanUnreadMessage": "எண் பலகையைத் தெளிவாகப் படிக்க முடியவில்லை. பலகையில் உள்ள எண்ணை உள்ளிடவும்.",
@@ -517,6 +518,8 @@
   "vehicleRatingSaving": "சேமிக்கிறது...",
   "vehicleRatingSubmitButton": "மதிப்பீட்டைச் சமர்ப்பிக்கவும்",
   "vehicleRatingSkipButton": "தவிர்",
+  "vehicleRatingCommentLabel": "கருத்தைச் சேர்க்கவும் (விருப்பத்திற்குரியது)",
+  "vehicleRatingCommentHint": "இந்தப் பயணம் அல்லது ஓட்டுநர் பற்றி மற்றவர்கள் தெரிந்துகொள்ள வேண்டியது ஏதாவது உள்ளதா?",
 
   "startJourneyFindingAddress": "பின் செய்யப்பட்டது. முகவரியைத் தேடுகிறது...",
   "startJourneyAddressNotFound": "பின் செய்யப்பட்டது. இங்கு முகவரி கிடைக்கவில்லை, இந்த இடத்திற்கு ஒரு பெயரைத் தட்டச்சு செய்யவும்.",

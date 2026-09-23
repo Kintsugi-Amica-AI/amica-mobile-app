@@ -476,6 +476,7 @@
   "plateScanEnterTitle": "තහඩු අංකය ඇතුළත් කරන්න",
   "plateScanCheckButton": "පරීක්ෂා කරන්න",
   "plateScanInvalidPlate": "CAB-1234, WP KA-1234 හෝ 65-1234 වැනි අංකයක් ඇතුළත් කරන්න.",
+  "plateScanEmptyPlate": "කරුණාකර පළමුව වාහන අංකය ඇතුළත් කරන්න.",
   "plateScanConfirmTitle": "වාහන අංකය තහවුරු කරන්න",
   "plateScanConfirmMessage": "කියවූ අංකය පරීක්ෂා කර අවශ්‍ය නම් නිවැරදි කරන්න.",
   "plateScanUnreadMessage": "අංක තහඩුව පැහැදිලිව කියවිය නොහැකි විය. තහඩුවේ ඇති අංකය ටයිප් කරන්න.",
@@ -517,6 +518,8 @@
   "vehicleRatingSaving": "සුරකිමින්...",
   "vehicleRatingSubmitButton": "ශ්‍රේණිගත කිරීම ඉදිරිපත් කරන්න",
   "vehicleRatingSkipButton": "මඟහරින්න",
+  "vehicleRatingCommentLabel": "අදහසක් එක් කරන්න (අත්‍යවශ්‍ය නොවේ)",
+  "vehicleRatingCommentHint": "මෙම ගමන හෝ රියදුරු ගැන අන් අය දැනගත යුතු යමක් තිබේද?",
 
   "startJourneyFindingAddress": "පින් කළා. ලිපිනය සොයමින්...",
   "startJourneyAddressNotFound": "පින් කළා. මෙහි ලිපිනයක් හමු නොවීය, මෙම ස්ථානයට නමක් ටයිප් කරන්න.",

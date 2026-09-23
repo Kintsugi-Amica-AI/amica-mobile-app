@@ -76,6 +76,10 @@ class VehicleRatingScreen extends StatefulWidget {
 }
 
 class _VehicleRatingScreenState extends State<VehicleRatingScreen> {
+  /// Longest ride comment the app accepts.
+  static const int maxCommentLength = 500;
+
+  final TextEditingController _comment = TextEditingController();
   int _stars = 0;
   bool _saving = false;
   String? _error;
@@ -87,6 +91,12 @@ class _VehicleRatingScreenState extends State<VehicleRatingScreen> {
     _loc = AppLocalizations.of(context);
   }
 
+  @override
+  void dispose() {
+    _comment.dispose();
+    super.dispose();
+  }
+
   Future<void> _save() async {
     setState(() {
       _saving = true;
@@ -94,7 +104,8 @@ class _VehicleRatingScreenState extends State<VehicleRatingScreen> {
     });
     try {
       await const VehicleJourneyService()
-          .submitRating(widget.journeyId, widget.plate, _stars);
+          .submitRating(widget.journeyId, widget.plate, _stars,
+              comment: _comment.text);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(_loc.vehicleRatingSubmitted)));
@@ -130,6 +141,22 @@ class _VehicleRatingScreenState extends State<VehicleRatingScreen> {
                             index < _stars ? Icons.star : Icons.star_border,
                             color: Colors.amber),
                       ))),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _comment,
+            enabled: !_saving,
+            minLines: 3,
+            maxLines: 6,
+            maxLength: maxCommentLength,
+            keyboardType: TextInputType.multiline,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              labelText: _loc.vehicleRatingCommentLabel,
+              hintText: _loc.vehicleRatingCommentHint,
+              alignLabelWithHint: true,
+              border: const OutlineInputBorder(),
+            ),
+          ),
           if (_error != null) Text(_error!),
           const SizedBox(height: 16),
           FilledButton(

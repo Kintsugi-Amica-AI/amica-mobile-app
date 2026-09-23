@@ -2938,6 +2938,12 @@ abstract class AppLocalizations {
   /// **'Enter a plate like CAB-1234, WP KA-1234 or 65-1234.'**
   String get plateScanInvalidPlate;
 
+  /// No description provided for @plateScanEmptyPlate.
+  ///
+  /// In en, this message translates to:
+  /// **'Type the plate number first.'**
+  String get plateScanEmptyPlate;
+
   /// No description provided for @plateScanConfirmTitle.
   ///
   /// In en, this message translates to:
@@ -3171,6 +3177,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Skip'**
   String get vehicleRatingSkipButton;
+
+  /// No description provided for @vehicleRatingCommentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a comment (optional)'**
+  String get vehicleRatingCommentLabel;
+
+  /// No description provided for @vehicleRatingCommentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Anything others should know about this ride or driver?'**
+  String get vehicleRatingCommentHint;
 
   /// No description provided for @startJourneyFindingAddress.
   ///

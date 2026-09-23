@@ -1664,6 +1664,9 @@ class AppLocalizationsSi extends AppLocalizations {
       'CAB-1234, WP KA-1234 හෝ 65-1234 වැනි අංකයක් ඇතුළත් කරන්න.';
 
   @override
+  String get plateScanEmptyPlate => 'කරුණාකර පළමුව වාහන අංකය ඇතුළත් කරන්න.';
+
+  @override
   String get plateScanConfirmTitle => 'වාහන අංකය තහවුරු කරන්න';
 
   @override
@@ -1796,6 +1799,13 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get vehicleRatingSkipButton => 'මඟහරින්න';
+
+  @override
+  String get vehicleRatingCommentLabel => 'අදහසක් එක් කරන්න (අත්‍යවශ්‍ය නොවේ)';
+
+  @override
+  String get vehicleRatingCommentHint =>
+      'මෙම ගමන හෝ රියදුරු ගැන අන් අය දැනගත යුතු යමක් තිබේද?';
 
   @override
   String get startJourneyFindingAddress => 'පින් කළා. ලිපිනය සොයමින්...';

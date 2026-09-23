@@ -22,6 +22,7 @@ import '../services/vehicle_inspector.dart';
 import '../services/vehicle_observation_service.dart';
 import '../widgets/vehicle_labels.dart';
 import '../widgets/vehicle_told_sheet.dart';
+import '../utils/vision_log.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
 class PlateScanScreen extends StatefulWidget {
@@ -286,6 +287,8 @@ class _PlateScanScreenState extends State<PlateScanScreen>
           // Camera photos are already upright, so rotations only waste time.
           read = await widget.plateScanService
               .readPlate(plateCropPath, tryRotations: false);
+          visionLog('OCR on plate-finder crop: '
+              '${read.found ? read.plate : 'no exact read (suggestion "${read.suggestion}")'}');
         }
       }
 
@@ -304,6 +307,8 @@ class _PlateScanScreenState extends State<PlateScanScreen>
               );
         final framed = await widget.plateScanService
             .readPlate(analyzedPath, tryRotations: false);
+        visionLog('OCR on scan-frame crop: '
+            '${framed.found ? framed.plate : 'no exact read (suggestion "${framed.suggestion}")'}');
         if (framed.found || read.suggestion.isEmpty) read = framed;
         if (!automatic && !read.found && analyzedPath != photo.path) {
           // The plate may sit partly outside the guide frame.
@@ -536,57 +541,31 @@ class _PlateScanScreenState extends State<PlateScanScreen>
   }
 
   /// Plate entry dialog. Returns the canonical plate, or null when the
-  /// officer cancels or types something that is not a registration.
+  /// officer cancels. Empty or unreadable input is handled inside the dialog
+  /// (it says why and stays open), so it only ever closes with a plate the
+  /// lookup can use.
   Future<String?> _promptForPlate({
     required String title,
     String? message,
     String initialText = '',
   }) async {
     _isPausedByRoute = true;
-    final controller = TextEditingController(text: initialText);
-    final text = await showDialog<String>(
+    // The dialog owns (and disposes) its TextEditingController. Disposing it
+    // here, as soon as showDialog returned, left the still-animating TextField
+    // holding a dead controller, which crashed with
+    // "'_dependents.isEmpty': is not true" when Check was tapped on an empty
+    // field.
+    final plate = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (message != null) ...[
-              Text(message),
-              const SizedBox(height: 12),
-            ],
-            TextField(
-              controller: controller,
-              autofocus: true,
-              textCapitalization: TextCapitalization.characters,
-              decoration: const InputDecoration(hintText: 'CAB-1234'),
-              onSubmitted: (value) => Navigator.pop(context, value),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(_loc.commonCancel)),
-          TextButton(
-              onPressed: () => Navigator.pop(context, controller.text),
-              child: Text(_loc.plateScanCheckButton)),
-        ],
+      builder: (_) => _PlateEntryDialog(
+        title: title,
+        message: message,
+        initialText: initialText,
+        canonicalPlate: widget.plateScanService.canonicalPlate,
       ),
     );
-    controller.dispose();
     _isPausedByRoute = false;
-    if (text == null || !mounted) return null;
-    final plate = widget.plateScanService.canonicalPlate(text);
-    if (plate.isEmpty) {
-      setState(() {
-        _state = _ScanState.scanning;
-        _statusMessage = _loc.plateScanAlignPrompt;
-        _errorMessage = _loc.plateScanInvalidPlate;
-      });
-      return null;
-    }
+    if (plate == null || plate.isEmpty || !mounted) return null;
     return plate;
   }
 
@@ -1092,4 +1071,97 @@ class _CornerPainter extends CustomPainter {
   @override
   bool shouldRepaint(_CornerPainter old) =>
       old.start != start || old.end != end;
+}
+
+/// Type-a-plate dialog. Keeps its own controller so the field is never left
+/// with a disposed one while the dialog animates out, and validates in place:
+/// Check stays disabled until something is typed, and an empty or unreadable
+/// plate shows the reason under the field instead of closing the dialog.
+class _PlateEntryDialog extends StatefulWidget {
+  const _PlateEntryDialog({
+    required this.title,
+    required this.canonicalPlate,
+    this.message,
+    this.initialText = '',
+  });
+
+  final String title;
+  final String? message;
+  final String initialText;
+
+  /// Returns the canonical plate for the typed text, or '' if it is not one.
+  final String Function(String text) canonicalPlate;
+
+  @override
+  State<_PlateEntryDialog> createState() => _PlateEntryDialogState();
+}
+
+class _PlateEntryDialogState extends State<_PlateEntryDialog> {
+  late final TextEditingController _controller =
+      TextEditingController(text: widget.initialText);
+  String? _error;
+
+  bool get _hasText => _controller.text.trim().isNotEmpty;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final loc = AppLocalizations.of(context);
+    final text = _controller.text.trim();
+    if (text.isEmpty) {
+      setState(() => _error = loc.plateScanEmptyPlate);
+      return;
+    }
+    final plate = widget.canonicalPlate(text);
+    if (plate.isEmpty) {
+      setState(() => _error = loc.plateScanInvalidPlate);
+      return;
+    }
+    Navigator.of(context).pop(plate);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(widget.title),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (widget.message != null) ...[
+            Text(widget.message!),
+            const SizedBox(height: 12),
+          ],
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            textCapitalization: TextCapitalization.characters,
+            textInputAction: TextInputAction.done,
+            decoration: InputDecoration(
+              hintText: 'CAB-1234',
+              errorText: _error,
+              errorMaxLines: 3,
+            ),
+            onChanged: (_) => setState(() => _error = null),
+            onSubmitted: (_) => _submit(),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(loc.commonCancel),
+        ),
+        TextButton(
+          onPressed: _hasText ? _submit : null,
+          child: Text(loc.plateScanCheckButton),
+        ),
+      ],
+    );
+  }
 }

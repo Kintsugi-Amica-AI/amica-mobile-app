@@ -1652,6 +1652,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter a plate like CAB-1234, WP KA-1234 or 65-1234.';
 
   @override
+  String get plateScanEmptyPlate => 'Type the plate number first.';
+
+  @override
   String get plateScanConfirmTitle => 'Confirm plate number';
 
   @override
@@ -1782,6 +1785,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vehicleRatingSkipButton => 'Skip';
+
+  @override
+  String get vehicleRatingCommentLabel => 'Add a comment (optional)';
+
+  @override
+  String get vehicleRatingCommentHint =>
+      'Anything others should know about this ride or driver?';
 
   @override
   String get startJourneyFindingAddress => 'Pinned. Finding the address...';

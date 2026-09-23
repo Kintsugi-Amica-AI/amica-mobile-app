@@ -562,6 +562,7 @@
   "plateScanEnterTitle": "Enter plate number",
   "plateScanCheckButton": "Check",
   "plateScanInvalidPlate": "Enter a plate like CAB-1234, WP KA-1234 or 65-1234.",
+  "plateScanEmptyPlate": "Type the plate number first.",
   "plateScanConfirmTitle": "Confirm plate number",
   "plateScanConfirmMessage": "Check the plate we read and correct it if needed.",
   "plateScanUnreadMessage": "Couldn't read the plate clearly. Type the number shown on the plate.",
@@ -606,6 +607,8 @@
   "vehicleRatingSaving": "Saving...",
   "vehicleRatingSubmitButton": "Submit rating",
   "vehicleRatingSkipButton": "Skip",
+  "vehicleRatingCommentLabel": "Add a comment (optional)",
+  "vehicleRatingCommentHint": "Anything others should know about this ride or driver?",
 
   "startJourneyFindingAddress": "Pinned. Finding the address...",
   "startJourneyAddressNotFound": "Pinned. No address found here, so type a name for this place.",

@@ -7,6 +7,7 @@ import 'package:image/image.dart' as img;
 import '../models/detection.dart';
 import '../models/vehicle_profile.dart';
 import '../utils/vehicle_colour.dart';
+import '../utils/vision_log.dart';
 import 'yolo_detector.dart';
 
 /// What the camera saw of the vehicle itself, next to its plate.
@@ -55,9 +56,14 @@ class VehicleInspector {
   /// Decodes [path], applies its EXIF rotation and caps the long side, so
   /// every later step works on one upright image. Null when unreadable.
   Future<img.Image?> loadUpright(String path) async {
+    final watch = Stopwatch()..start();
     try {
-      return await compute(_decodeUpright, path);
-    } catch (_) {
+      final image = await compute(_decodeUpright, path);
+      visionLog('photo decoded ${image?.width}x${image?.height} '
+          'in ${watch.elapsedMilliseconds}ms');
+      return image;
+    } catch (error) {
+      visionLog('photo decode failed ($error)');
       return null;
     }
   }
@@ -84,9 +90,11 @@ class VehicleInspector {
           best = plate;
         }
       }
+      visionLog('plate found at ${best.box} (score '
+          '${best.score.toStringAsFixed(2)})');
       return best.box;
     } catch (error) {
-      debugPrint('VehicleInspector: plate detection failed ($error)');
+      visionLog('plate detection failed ($error)');
       return null;
     }
   }
@@ -127,7 +135,7 @@ class VehicleInspector {
         vehicle = pickVehicle(found, image.width, image.height, plate: plate);
       }
     } catch (error) {
-      debugPrint('VehicleInspector: vehicle detection failed ($error)');
+      visionLog('vehicle detection failed ($error)');
     }
 
     final type = vehicle == null
@@ -142,6 +150,11 @@ class VehicleInspector {
       colour = VehicleColourClassifier.classify(image,
           plate: plate, vehicle: vehicle?.box);
     }
+    visionLog('inspection: vehicle '
+        '${vehicle == null ? 'none' : '${vehicle.label} ${vehicle.score.toStringAsFixed(2)} at ${vehicle.box}'}'
+        ', colour ${colour == null ? 'not read' : '${colour.colour?.id ?? 'unclear'} '
+            '(share ${colour.share.toStringAsFixed(2)}, lowLight ${colour.lowLight}, '
+            'cast ${colour.colourCast})'}');
     return VehicleInspection(
       plateBox: plate,
       vehicleBox: vehicle?.box,

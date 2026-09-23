@@ -6,6 +6,7 @@ import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
 
 import '../models/detection.dart';
+import '../utils/vision_log.dart';
 
 /// Runs an Ultralytics YOLO (v8 / v11) detector exported to TFLite, fully
 /// on the phone. Used twice: the COCO vehicle detector and the plate
@@ -54,15 +55,17 @@ class YoloDetector {
           input[3] != 3 ||
           output.length != 3 ||
           output[1] != labels.length + 4) {
-        debugPrint('YoloDetector: $modelAsset has unexpected shape '
-            '$input -> $output for ${labels.length} labels');
+        visionLog('$modelAsset has unexpected shape $input -> $output '
+            'for ${labels.length} labels - not used');
         interpreter.close();
         return null;
       }
+      visionLog('loaded $modelAsset: input $input, output $output, '
+          '${labels.length} labels');
       return YoloDetector._(
           interpreter, labels, input[1], output[1], output[2]);
     } catch (error) {
-      debugPrint('YoloDetector: $modelAsset not available ($error)');
+      visionLog('$modelAsset not available ($error)');
       return null;
     }
   }
@@ -73,11 +76,13 @@ class YoloDetector {
     double minScore = 0.35,
     Set<String>? onlyLabels,
   }) async {
+    final watch = Stopwatch()..start();
     final prepared = await compute(
         _letterbox, (image: image, size: inputSize));
+    final prepMs = watch.elapsedMilliseconds;
     final output = Float32List(_channels * _anchors);
     _interpreter.run(prepared.input.buffer.asUint8List(), output.buffer);
-    return decodeYoloOutput(
+    final found = decodeYoloOutput(
       output,
       channels: _channels,
       anchors: _anchors,
@@ -91,6 +96,12 @@ class YoloDetector {
       minScore: minScore,
       onlyLabels: onlyLabels,
     );
+    visionLog('${labels.length == 1 ? labels.first : '$_channels-channel'} '
+        'model on ${image.width}x${image.height}: prepare ${prepMs}ms, '
+        'total ${watch.elapsedMilliseconds}ms, '
+        '${found.take(3).map((d) => '${d.label} ${d.score.toStringAsFixed(2)}').join(', ')}'
+        '${found.isEmpty ? 'nothing above ${minScore.toStringAsFixed(2)}' : ''}');
+    return found;
   }
 }
 

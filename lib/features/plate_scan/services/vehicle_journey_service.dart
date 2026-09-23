@@ -43,10 +43,31 @@ class VehicleJourneyService {
         'Delivery depends on your SIM and network.';
   }
 
-  Future<void> submitRating(String journeyId, String plate, int stars) async {
+  /// Hard cap on a stored comment, in UTF-16 code units, matching the
+  /// Firestore rule. The rating screen already limits typing to 500
+  /// characters; Sinhala and Tamil letters can take several code units each,
+  /// hence the headroom.
+  static const int maxStoredCommentLength = 1000;
+
+  /// Saves her star rating for a finished ride, with an optional [comment].
+  /// A blank comment is simply left out.
+  Future<void> submitRating(
+    String journeyId,
+    String plate,
+    int stars, {
+    String? comment,
+  }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw StateError('Please log in first.');
     if (stars < 1 || stars > 5) throw ArgumentError('Choose 1 to 5 stars.');
+    var note = comment?.trim() ?? '';
+    if (note.length > maxStoredCommentLength) {
+      var cut = maxStoredCommentLength;
+      // Never split a surrogate pair (emoji) in half.
+      final last = note.codeUnitAt(cut - 1);
+      if (last >= 0xD800 && last <= 0xDBFF) cut--;
+      note = note.substring(0, cut).trimRight();
+    }
     final ref =
         FirebaseFirestore.instance.collection('vehicle_reviews').doc(journeyId);
     try {
@@ -71,6 +92,7 @@ class VehicleJourneyService {
           'userId': user.uid,
           'vehiclePlate': plate,
           'stars': stars,
+          if (note.isNotEmpty) 'comment': note,
           'createdAt': FieldValue.serverTimestamp(),
         });
       }).timeout(const Duration(seconds: 20));

@@ -1700,6 +1700,9 @@ class AppLocalizationsTa extends AppLocalizations {
       'CAB-1234, WP KA-1234 அல்லது 65-1234 போன்ற எண்ணை உள்ளிடவும்.';
 
   @override
+  String get plateScanEmptyPlate => 'முதலில் வாகன எண்ணை உள்ளிடவும்.';
+
+  @override
   String get plateScanConfirmTitle => 'வாகன எண்ணை உறுதிப்படுத்தவும்';
 
   @override
@@ -1833,6 +1836,14 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get vehicleRatingSkipButton => 'தவிர்';
+
+  @override
+  String get vehicleRatingCommentLabel =>
+      'கருத்தைச் சேர்க்கவும் (விருப்பத்திற்குரியது)';
+
+  @override
+  String get vehicleRatingCommentHint =>
+      'இந்தப் பயணம் அல்லது ஓட்டுநர் பற்றி மற்றவர்கள் தெரிந்துகொள்ள வேண்டியது ஏதாவது உள்ளதா?';
 
   @override
   String get startJourneyFindingAddress =>
