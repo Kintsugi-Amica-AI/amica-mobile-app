@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../services/journey_route_service.dart';
 import 'location_data_model.dart';
 
 class Journey {
@@ -23,6 +24,8 @@ class Journey {
     required this.createdAt,
     required this.updatedAt,
     this.actualEndTime,
+    this.pause = const {},
+    this.route = const {},
   });
 
   final String id;
@@ -44,11 +47,40 @@ class Journey {
   /// ordinary timer journeys leave it empty.
   final Map<String, dynamic> stopAlert;
   final Map<String, dynamic> metadata;
+
+  /// Set while the user has paused the countdown: `pausedAt`, `resumeAt` and
+  /// `remainingSeconds`. Empty when the timer is running.
+  ///
+  /// While paused, [estimatedEndTime] is already `resumeAt + remaining`, so
+  /// the native safety monitor and the backend still hold a real deadline if
+  /// the user never comes back to resume.
+  final Map<String, dynamic> pause;
+
+  /// Suggested route saved when the journey started (see [JourneyRoute]).
+  final Map<String, dynamic> route;
   final int schemaVersion;
   final DateTime createdAt;
   final DateTime updatedAt;
 
   bool get isActive => status == 'active';
+
+  /// When the current pause ends on its own, or null if never paused.
+  DateTime? get pauseResumeAt => _readNullableDateTime(pause['resumeAt']);
+
+  /// Countdown time that was left when the pause started.
+  Duration get pausedRemaining {
+    final seconds = pause['remainingSeconds'];
+    return Duration(seconds: seconds is num ? seconds.toInt() : 0);
+  }
+
+  /// Whether the countdown is paused at [now]. A pause whose `resumeAt` has
+  /// passed has ended by itself, even before anyone clears the field.
+  bool isPausedAt(DateTime now) {
+    final resumeAt = pauseResumeAt;
+    return isActive && resumeAt != null && now.isBefore(resumeAt);
+  }
+
+  JourneyRoute? get suggestedRoute => JourneyRoute.fromMap(route);
 
   /// Whether this ride is watching the distance to a drop-off point rather
   /// than counting down a safety timer.
@@ -143,6 +175,8 @@ class Journey {
       ),
       stopAlert: _readMap(data['stopAlert']),
       metadata: _readMap(data['metadata']),
+      pause: _readMap(data['pause']),
+      route: _readMap(data['route']),
       schemaVersion: _readInt(data['schemaVersion'], 1),
       createdAt: _readDateTime(data['createdAt']),
       updatedAt: _readDateTime(data['updatedAt']),
@@ -165,6 +199,8 @@ class Journey {
       'safetyCheck': safetyCheck,
       'stopAlert': stopAlert,
       'metadata': metadata,
+      'pause': pause.isEmpty ? null : pause,
+      'route': route.isEmpty ? null : route,
       'schemaVersion': schemaVersion,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),

@@ -73,7 +73,7 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loc = AppLocalizations.of(context)!;
+    _loc = AppLocalizations.of(context);
   }
 
   @override

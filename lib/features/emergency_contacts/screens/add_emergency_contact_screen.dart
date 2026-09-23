@@ -98,7 +98,7 @@ class _AddEmergencyContactScreenState extends State<AddEmergencyContactScreen> {
     } catch (_) {
       setState(
         () => _errorMessage =
-            AppLocalizations.of(context)!.addContactCouldNotSave,
+            AppLocalizations.of(context).addContactCouldNotSave,
       );
     } finally {
       if (mounted) {
@@ -119,7 +119,7 @@ class _AddEmergencyContactScreenState extends State<AddEmergencyContactScreen> {
         if (mounted) {
           setState(
             () => _errorMessage =
-                AppLocalizations.of(context)!.addContactPermissionRequired,
+                AppLocalizations.of(context).addContactPermissionRequired,
           );
         }
         return;
@@ -133,7 +133,7 @@ class _AddEmergencyContactScreenState extends State<AddEmergencyContactScreen> {
       if (contact.phones.isEmpty) {
         setState(
           () => _errorMessage =
-              AppLocalizations.of(context)!.addContactNoPhoneNumber,
+              AppLocalizations.of(context).addContactNoPhoneNumber,
         );
         return;
       }
@@ -146,7 +146,7 @@ class _AddEmergencyContactScreenState extends State<AddEmergencyContactScreen> {
       if (mounted) {
         setState(
           () => _errorMessage =
-              AppLocalizations.of(context)!.addContactCouldNotImport,
+              AppLocalizations.of(context).addContactCouldNotImport,
         );
       }
     } finally {
@@ -158,7 +158,7 @@ class _AddEmergencyContactScreenState extends State<AddEmergencyContactScreen> {
 
   String? _required(BuildContext context, String? value, String fieldName) {
     if (value == null || value.trim().isEmpty) {
-      return AppLocalizations.of(context)!.fieldRequired(fieldName);
+      return AppLocalizations.of(context).fieldRequired(fieldName);
     }
     return null;
   }
@@ -166,14 +166,14 @@ class _AddEmergencyContactScreenState extends State<AddEmergencyContactScreen> {
   String? _validatePriority(BuildContext context, String? value) {
     final priority = int.tryParse(value?.trim() ?? '');
     if (priority == null || priority < 1) {
-      return AppLocalizations.of(context)!.addContactPriorityInvalid;
+      return AppLocalizations.of(context).addContactPriorityInvalid;
     }
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(

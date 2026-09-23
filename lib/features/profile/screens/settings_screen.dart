@@ -93,7 +93,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return;
       }
       setState(() {
-        _errorMessage = AppLocalizations.of(context)!.settingsCouldNotLoad;
+        _errorMessage = AppLocalizations.of(context).settingsCouldNotLoad;
         _isLoading = false;
       });
     }
@@ -126,12 +126,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.settingsSaved)),
+        SnackBar(content: Text(AppLocalizations.of(context).settingsSaved)),
       );
     } on UserProfileException catch (error) {
       _showSaveError(error.message);
     } catch (_) {
-      _showSaveError(AppLocalizations.of(context)!.settingsCouldNotSave);
+      _showSaveError(AppLocalizations.of(context).settingsCouldNotSave);
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
@@ -151,7 +151,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     if (_isLoading) {
       return Scaffold(
         backgroundColor: Colors.transparent,

@@ -1419,5 +1419,86 @@ class AppLocalizationsSi extends AppLocalizations {
   String get vehicleRatingSkipButton => 'මඟහරින්න';
 
   @override
+  String get startJourneyFindingAddress => 'පින් කළා. ලිපිනය සොයමින්...';
+
+  @override
+  String get startJourneyAddressNotFound =>
+      'පින් කළා. මෙහි ලිපිනයක් හමු නොවීය, මෙම ස්ථානයට නමක් ටයිප් කරන්න.';
+
+  @override
+  String get startJourneyRouteLoading => 'මාර්ගයක් සොයමින්...';
+
+  @override
+  String startJourneyRouteSummary(String distance, int minutes) {
+    return 'යෝජිත මාර්ගය: $distance · මිනිත්තු $minutes පමණ';
+  }
+
+  @override
+  String get startJourneyRouteUnavailable =>
+      'මාර්ගයක් ලබා ගත නොහැකි විය. සෘජු රේඛා ඇස්තමේන්තුවක් භාවිත කරයි.';
+
+  @override
+  String get journeyTimerPause => 'විරාම කරන්න';
+
+  @override
+  String get journeyTimerResumeNow => 'නැවත අරඹන්න';
+
+  @override
+  String get journeyTimerPaused => 'විරාමයේ';
+
+  @override
+  String journeyTimerResumesIn(String time) {
+    return '$time කින් ස්වයංක්‍රීයව නැවත ඇරඹේ';
+  }
+
+  @override
+  String get journeyTimerPauseSheetTitle => 'ආරක්ෂක ටයිමරය විරාම කරන්න';
+
+  @override
+  String get journeyTimerPauseSheetBody =>
+      'විරාමයේ ඇති විට ගණන් කිරීම නතර වේ. විරාමය අවසන් වූ විට එය ස්වයංක්‍රීයව නැවත ඇරඹේ, නැතහොත් ඔබට ඕනෑම වේලාවක නැවත ඇරඹිය හැක.';
+
+  @override
+  String journeyTimerPauseMinutes(int minutes) {
+    return 'මිනිත්තු $minutes';
+  }
+
+  @override
+  String journeyTimerPauseConfirm(int minutes) {
+    return 'මිනිත්තු $minutes ක් විරාම කරන්න';
+  }
+
+  @override
+  String journeyTimerPausedFor(int minutes) {
+    return 'ටයිමරය මිනිත්තු $minutes ක් විරාම කළා';
+  }
+
+  @override
+  String get journeyTimerResumed => 'ටයිමරය නැවත ඇරඹුණා';
+
+  @override
+  String get journeyTimerPauseFailed =>
+      'ටයිමරය විරාම කළ නොහැකි විය. නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get journeyTimerResumeFailed =>
+      'ටයිමරය නැවත ඇරඹිය නොහැකි විය. නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get journeyTimerSuggestedRoute => 'යෝජිත මාර්ගය';
+
+  @override
+  String journeyTimerRouteInfo(String distance, int minutes) {
+    return '$distance · මිනිත්තු $minutes පමණ';
+  }
+
+  @override
+  String get journeyTimerNoRoute =>
+      'යෝජිත මාර්ගයක් නැත. රෝස පාට පින් එක දෙසට යන්න.';
+
+  @override
+  String get journeyTimerOpenInMaps => 'Google Maps හි මඟ පෙන්වන්න';
+
+  @override
   String get zzzArbEnd => 'do not translate; internal append anchor';
 }

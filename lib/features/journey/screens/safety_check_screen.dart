@@ -104,7 +104,7 @@ class _SafetyCheckScreenState extends State<SafetyCheckScreen>
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final destinationName =
         widget.arguments?.destinationName ?? loc.safetyCheckDefaultTrip;
 
@@ -215,7 +215,7 @@ class _SafetyCheckScreenState extends State<SafetyCheckScreen>
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                AppLocalizations.of(context)!.safetyCheckAnswerPrompt,
+                AppLocalizations.of(context).safetyCheckAnswerPrompt,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
@@ -244,8 +244,8 @@ class _SafetyCheckScreenState extends State<SafetyCheckScreen>
               const SizedBox(height: 10),
               Text(
                 hasEscalated
-                    ? AppLocalizations.of(context)!.safetyCheckContactAlerted
-                    : AppLocalizations.of(context)!.safetyCheckAutoAlertIn,
+                    ? AppLocalizations.of(context).safetyCheckContactAlerted
+                    : AppLocalizations.of(context).safetyCheckAutoAlertIn,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       letterSpacing: 1.2,
@@ -263,14 +263,14 @@ class _SafetyCheckScreenState extends State<SafetyCheckScreen>
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  AppLocalizations.of(context)!.safetyCheckEscalationExplain,
+                  AppLocalizations.of(context).safetyCheckEscalationExplain,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ] else ...[
                 const SizedBox(height: 6),
                 Text(
-                  AppLocalizations.of(context)!.safetyCheckAfterEscalationNote,
+                  AppLocalizations.of(context).safetyCheckAfterEscalationNote,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),

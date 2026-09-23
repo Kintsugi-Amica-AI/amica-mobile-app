@@ -30,14 +30,17 @@ class JourneysScreen extends StatelessWidget {
           return Scaffold(
             body: LoadingView(
               message:
-                  AppLocalizations.of(context)!.journeysScreenCheckingJourneys,
+                  AppLocalizations.of(context).journeysScreenCheckingJourneys,
             ),
           );
         }
 
         final active = snapshot.data;
         if (active != null) {
-          return JourneyTimerScreen(journeyId: active.id, isTab: true);
+          // Follows the active-journey query rather than the single document:
+          // the query already includes a journey the server has not
+          // confirmed yet, while a document listener on it would be denied.
+          return JourneyTimerScreen(key: ValueKey(active.id), isTab: true);
         }
         return const StartJourneyScreen(isTab: true);
       },

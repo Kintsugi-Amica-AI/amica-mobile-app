@@ -180,7 +180,7 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
     } catch (_) {
       if (!mounted) return;
       _showError(
-        AppLocalizations.of(context)!.fakeCallActiveCouldNotCompleteVoiceSos,
+        AppLocalizations.of(context).fakeCallActiveCouldNotCompleteVoiceSos,
       );
     }
   }
@@ -225,7 +225,7 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final callerName = widget.arguments?.callerName ??
         widget.fakeCallService.getDefaultCallerName();
     final callerNumber = widget.arguments?.callerNumber ??

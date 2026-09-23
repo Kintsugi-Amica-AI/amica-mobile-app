@@ -9,11 +9,16 @@ class AmicaMapView extends StatefulWidget {
     required this.longitude,
     super.key,
     this.height = 240,
+    this.borderRadius = 20,
     this.markerTitle = 'Current location',
     this.destinationLatitude,
     this.destinationLongitude,
     this.destinationTitle = 'Destination',
     this.showStartMarker = true,
+    this.routePoints = const [],
+    this.routeColor = const Color(0xFF22D3EE),
+    this.mapPadding = EdgeInsets.zero,
+    this.showMyLocation = false,
     this.onTap,
     this.onDestinationDragged,
     this.captureGestures = false,
@@ -21,12 +26,27 @@ class AmicaMapView extends StatefulWidget {
 
   final double latitude;
   final double longitude;
-  final double height;
+
+  /// Fixed height, or null to fill the space the parent gives it.
+  final double? height;
+  final double borderRadius;
   final String markerTitle;
   final double? destinationLatitude;
   final double? destinationLongitude;
   final String destinationTitle;
   final bool showStartMarker;
+
+  /// Suggested route drawn as a line between start and destination.
+  final List<LatLng> routePoints;
+  final Color routeColor;
+
+  /// Space covered by overlays (for example a bottom sheet), so markers,
+  /// the route and Google's own buttons are kept out from under them.
+  final EdgeInsets mapPadding;
+
+  /// Shows the live blue location dot and Google's re-centre button.
+  /// Needs location permission, which the journey flows already ask for.
+  final bool showMyLocation;
   final void Function(double latitude, double longitude)? onTap;
 
   /// When set, the destination marker becomes draggable and this is called
@@ -67,14 +87,25 @@ class _AmicaMapViewState extends State<AmicaMapView> {
   @override
   void didUpdateWidget(covariant AmicaMapView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.latitude != widget.latitude ||
+    final routeChanged = !listEquals(oldWidget.routePoints, widget.routePoints);
+    final markersChanged = oldWidget.latitude != widget.latitude ||
         oldWidget.longitude != widget.longitude ||
         oldWidget.destinationLatitude != widget.destinationLatitude ||
-        oldWidget.destinationLongitude != widget.destinationLongitude) {
-      final destination = _destinationPosition;
-      final pickedOnMap = destination != null &&
-          _userPickedDestination != null &&
-          _samePosition(destination, _userPickedDestination!);
+        oldWidget.destinationLongitude != widget.destinationLongitude;
+
+    final destination = _destinationPosition;
+    final pickedOnMap = destination != null &&
+        _userPickedDestination != null &&
+        _samePosition(destination, _userPickedDestination!);
+
+    // A fresh route is framed, unless it leads to a spot the user just picked
+    // by hand: then they are fine-tuning and the view must stay put.
+    if (routeChanged && widget.routePoints.length > 1 && !pickedOnMap) {
+      _moveCameraToMarkers();
+      return;
+    }
+
+    if (markersChanged) {
       final centerUnchangedOrPicked =
           (oldWidget.latitude == widget.latitude &&
                   oldWidget.longitude == widget.longitude) ||
@@ -127,6 +158,33 @@ class _AmicaMapViewState extends State<AmicaMapView> {
     };
   }
 
+  Set<Polyline> _polylines() {
+    if (widget.routePoints.length < 2) {
+      return const {};
+    }
+    return {
+      Polyline(
+        polylineId: const PolylineId('amica-route'),
+        points: widget.routePoints,
+        color: widget.routeColor,
+        width: 5,
+        startCap: Cap.roundCap,
+        endCap: Cap.roundCap,
+        jointType: JointType.round,
+      ),
+    };
+  }
+
+  /// Every point the camera should keep in view.
+  List<LatLng> _pointsToFit() {
+    final destination = _destinationPosition;
+    return [
+      if (widget.showStartMarker || destination == null) _centerPosition,
+      if (destination != null) destination,
+      ...widget.routePoints,
+    ];
+  }
+
   void _moveCameraToMarkers() {
     final controller = _controller;
     if (controller == null) {
@@ -138,88 +196,97 @@ class _AmicaMapViewState extends State<AmicaMapView> {
         return;
       }
 
-      final destination = _destinationPosition;
+      final points = _pointsToFit();
+      final fallbackTarget = _destinationPosition ?? _centerPosition;
       try {
-        if (!widget.showStartMarker ||
-            destination == null ||
-            _samePosition(destination, _centerPosition)) {
+        final bounds = _boundsOf(points);
+        if (bounds == null) {
           await controller.animateCamera(
-            CameraUpdate.newLatLngZoom(destination ?? _centerPosition, 15),
+            CameraUpdate.newLatLngZoom(fallbackTarget, 15),
           );
           return;
         }
-
         await controller.animateCamera(
-          CameraUpdate.newLatLngBounds(
-            LatLngBounds(
-              southwest: LatLng(
-                _smaller(_centerPosition.latitude, destination.latitude),
-                _smaller(_centerPosition.longitude, destination.longitude),
-              ),
-              northeast: LatLng(
-                _larger(_centerPosition.latitude, destination.latitude),
-                _larger(_centerPosition.longitude, destination.longitude),
-              ),
-            ),
-            64,
-          ),
+          CameraUpdate.newLatLngBounds(bounds, 64),
         );
       } catch (_) {
         await controller.animateCamera(
-          CameraUpdate.newLatLngZoom(destination ?? _centerPosition, 15),
+          CameraUpdate.newLatLngZoom(fallbackTarget, 15),
         );
       }
     });
   }
 
+  /// Bounds around [points], or null when they are all the same spot.
+  LatLngBounds? _boundsOf(List<LatLng> points) {
+    if (points.isEmpty) {
+      return null;
+    }
+    var south = points.first.latitude;
+    var north = points.first.latitude;
+    var west = points.first.longitude;
+    var east = points.first.longitude;
+    for (final point in points.skip(1)) {
+      south = point.latitude < south ? point.latitude : south;
+      north = point.latitude > north ? point.latitude : north;
+      west = point.longitude < west ? point.longitude : west;
+      east = point.longitude > east ? point.longitude : east;
+    }
+    if (south == north && west == east) {
+      return null;
+    }
+    return LatLngBounds(
+      southwest: LatLng(south, west),
+      northeast: LatLng(north, east),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: SizedBox(
-        height: widget.height,
-        width: double.infinity,
-        child: GoogleMap(
-          initialCameraPosition: CameraPosition(
-            target: _destinationPosition ?? _centerPosition,
-            zoom: 15,
-          ),
-          style: _nightMapStyle,
-          markers: _markers(),
-          onMapCreated: (controller) {
-            _controller = controller;
-            _moveCameraToMarkers();
-          },
-          gestureRecognizers: widget.captureGestures
-              ? _eagerGestures
-              : const <Factory<OneSequenceGestureRecognizer>>{},
-          scrollGesturesEnabled: true,
-          zoomGesturesEnabled: true,
-          rotateGesturesEnabled: true,
-          tiltGesturesEnabled: false,
-          onTap: widget.onTap == null
-              ? null
-              : (position) => _handleUserPick(position, widget.onTap!),
-          myLocationButtonEnabled: false,
-          myLocationEnabled: false,
-          zoomControlsEnabled: true,
-          mapToolbarEnabled: false,
-        ),
+    final map = GoogleMap(
+      initialCameraPosition: CameraPosition(
+        target: _destinationPosition ?? _centerPosition,
+        zoom: 15,
       ),
+      style: _nightMapStyle,
+      markers: _markers(),
+      polylines: _polylines(),
+      padding: widget.mapPadding,
+      onMapCreated: (controller) {
+        _controller = controller;
+        _moveCameraToMarkers();
+      },
+      gestureRecognizers: widget.captureGestures
+          ? _eagerGestures
+          : const <Factory<OneSequenceGestureRecognizer>>{},
+      scrollGesturesEnabled: true,
+      zoomGesturesEnabled: true,
+      rotateGesturesEnabled: true,
+      tiltGesturesEnabled: false,
+      onTap: widget.onTap == null
+          ? null
+          : (position) => _handleUserPick(position, widget.onTap!),
+      myLocationButtonEnabled: widget.showMyLocation,
+      myLocationEnabled: widget.showMyLocation,
+      zoomControlsEnabled: true,
+      mapToolbarEnabled: false,
+    );
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(widget.borderRadius),
+      child: widget.height == null
+          ? map
+          : SizedBox(
+              height: widget.height,
+              width: double.infinity,
+              child: map,
+            ),
     );
   }
 
   bool _samePosition(LatLng first, LatLng second) {
     return first.latitude == second.latitude &&
         first.longitude == second.longitude;
-  }
-
-  double _smaller(double first, double second) {
-    return first < second ? first : second;
-  }
-
-  double _larger(double first, double second) {
-    return first > second ? first : second;
   }
 }
 

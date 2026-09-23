@@ -35,7 +35,7 @@ class EmergencyContactsScreen extends StatelessWidget {
     BuildContext context,
     EmergencyContact contact,
   ) async {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -64,7 +64,7 @@ class EmergencyContactsScreen extends StatelessWidget {
       await service.deleteEmergencyContact(contact.id);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.contactsDeleted)),
+          SnackBar(content: Text(AppLocalizations.of(context).contactsDeleted)),
         );
       }
     } on EmergencyContactServiceException catch (error) {
@@ -78,7 +78,7 @@ class EmergencyContactsScreen extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context)!.contactsCouldNotDelete,
+              AppLocalizations.of(context).contactsCouldNotDelete,
             ),
           ),
         );
@@ -104,7 +104,7 @@ class EmergencyContactsScreen extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context)!.contactsCouldNotUpdate,
+              AppLocalizations.of(context).contactsCouldNotUpdate,
             ),
           ),
         );
@@ -115,7 +115,7 @@ class EmergencyContactsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: c.ivory,
@@ -227,7 +227,7 @@ class _EmergencyContactCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
     final theme = Theme.of(context);
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final relationshipText =
         contact.relationship.isEmpty ? null : contact.relationship;
 

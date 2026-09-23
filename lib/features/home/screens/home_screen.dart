@@ -65,7 +65,7 @@ class HomeScreen extends StatelessWidget {
 
                 return LayoutBuilder(
                   builder: (context, constraints) {
-                    final loc = AppLocalizations.of(context)!;
+                    final loc = AppLocalizations.of(context);
                     return SingleChildScrollView(
                       child: ConstrainedBox(
                         constraints:
@@ -117,7 +117,7 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
     final theme = Theme.of(context);
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final controller = AmicaThemeController.instance;
 
     return Padding(
@@ -201,7 +201,7 @@ class _Greeting extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
@@ -239,7 +239,7 @@ class _ProtectionStatus extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
     final theme = Theme.of(context);
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final ready = guardianCount > 0;
 
     return Padding(
@@ -302,7 +302,7 @@ class _SosHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -342,7 +342,7 @@ class _QuieterOptions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),

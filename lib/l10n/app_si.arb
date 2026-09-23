@@ -412,5 +412,27 @@
   "vehicleRatingSubmitButton": "ශ්‍රේණිගත කිරීම ඉදිරිපත් කරන්න",
   "vehicleRatingSkipButton": "මඟහරින්න",
 
+  "startJourneyFindingAddress": "පින් කළා. ලිපිනය සොයමින්...",
+  "startJourneyAddressNotFound": "පින් කළා. මෙහි ලිපිනයක් හමු නොවීය, මෙම ස්ථානයට නමක් ටයිප් කරන්න.",
+  "startJourneyRouteLoading": "මාර්ගයක් සොයමින්...",
+  "startJourneyRouteSummary": "යෝජිත මාර්ගය: {distance} · මිනිත්තු {minutes} පමණ",
+  "startJourneyRouteUnavailable": "මාර්ගයක් ලබා ගත නොහැකි විය. සෘජු රේඛා ඇස්තමේන්තුවක් භාවිත කරයි.",
+  "journeyTimerPause": "විරාම කරන්න",
+  "journeyTimerResumeNow": "නැවත අරඹන්න",
+  "journeyTimerPaused": "විරාමයේ",
+  "journeyTimerResumesIn": "{time} කින් ස්වයංක්‍රීයව නැවත ඇරඹේ",
+  "journeyTimerPauseSheetTitle": "ආරක්ෂක ටයිමරය විරාම කරන්න",
+  "journeyTimerPauseSheetBody": "විරාමයේ ඇති විට ගණන් කිරීම නතර වේ. විරාමය අවසන් වූ විට එය ස්වයංක්‍රීයව නැවත ඇරඹේ, නැතහොත් ඔබට ඕනෑම වේලාවක නැවත ඇරඹිය හැක.",
+  "journeyTimerPauseMinutes": "මිනිත්තු {minutes}",
+  "journeyTimerPauseConfirm": "මිනිත්තු {minutes} ක් විරාම කරන්න",
+  "journeyTimerPausedFor": "ටයිමරය මිනිත්තු {minutes} ක් විරාම කළා",
+  "journeyTimerResumed": "ටයිමරය නැවත ඇරඹුණා",
+  "journeyTimerPauseFailed": "ටයිමරය විරාම කළ නොහැකි විය. නැවත උත්සාහ කරන්න.",
+  "journeyTimerResumeFailed": "ටයිමරය නැවත ඇරඹිය නොහැකි විය. නැවත උත්සාහ කරන්න.",
+  "journeyTimerSuggestedRoute": "යෝජිත මාර්ගය",
+  "journeyTimerRouteInfo": "{distance} · මිනිත්තු {minutes} පමණ",
+  "journeyTimerNoRoute": "යෝජිත මාර්ගයක් නැත. රෝස පාට පින් එක දෙසට යන්න.",
+  "journeyTimerOpenInMaps": "Google Maps හි මඟ පෙන්වන්න",
+
   "zzzArbEnd": "do not translate; internal append anchor"
 }

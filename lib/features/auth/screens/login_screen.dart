@@ -62,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _errorMessage = error.message);
     } catch (_) {
       setState(
-        () => _errorMessage = AppLocalizations.of(context)!.loginFailed,
+        () => _errorMessage = AppLocalizations.of(context).loginFailed,
       );
     } finally {
       if (mounted) {
@@ -88,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _errorMessage = error.message);
     } catch (_) {
       setState(
-        () => _errorMessage = AppLocalizations.of(context)!.googleSignInFailed,
+        () => _errorMessage = AppLocalizations.of(context).googleSignInFailed,
       );
     } finally {
       if (mounted) {
@@ -101,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
     final theme = Theme.of(context);
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
 
     // No card around the form. On the old screen the fields sat inside a
     // translucent panel floating on a gradient, which made the first thing

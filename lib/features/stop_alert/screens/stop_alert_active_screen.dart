@@ -86,7 +86,7 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loc = AppLocalizations.of(context)!;
+    _loc = AppLocalizations.of(context);
   }
 
   @override

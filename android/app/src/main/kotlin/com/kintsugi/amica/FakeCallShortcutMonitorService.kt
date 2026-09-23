@@ -26,6 +26,7 @@ class FakeCallShortcutMonitorService : Service() {
     private var firstVolumeUpAtMillis = 0L
     private var volumeUpPressCount = 0
     private var lastVolumeUpEventAtMillis = 0L
+    private var volumesBeforeSequence = emptyMap<Int, Int>()
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -52,7 +53,6 @@ class FakeCallShortcutMonitorService : Service() {
         createNotificationChannel()
         startForegroundCompat(buildServiceNotification())
         audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
-        primeVolumeStreamsForShortcut()
         previousVolumes = readCurrentVolumes()
         registerVolumeObserver()
     }
@@ -106,7 +106,6 @@ class FakeCallShortcutMonitorService : Service() {
         if (increasedStreams.isEmpty()) {
             return
         }
-        restorePriorVolumes(increasedStreams, priorVolumes)
 
         val now = System.currentTimeMillis()
         if (abs(now - lastVolumeUpEventAtMillis) < duplicateEventWindowMillis) {
@@ -114,18 +113,28 @@ class FakeCallShortcutMonitorService : Service() {
         }
 
         lastVolumeUpEventAtMillis = now
+        if (isNewShortcutSequence(now)) {
+            // Remember the volumes from before this burst of presses so that a
+            // completed shortcut can undo its own volume changes. Ordinary,
+            // unhurried presses are left alone and change the volume normally.
+            volumesBeforeSequence = priorVolumes
+        }
+
         if (recordVolumeUpPress(now)) {
+            restoreVolumes(volumesBeforeSequence)
+            volumesBeforeSequence = emptyMap()
             openCallScreen()
         }
     }
 
-    private fun restorePriorVolumes(
-        streams: List<Int>,
-        priorVolumes: Map<Int, Int>,
-    ) {
+    private fun isNewShortcutSequence(now: Long): Boolean {
+        return firstVolumeUpAtMillis == 0L ||
+            now - firstVolumeUpAtMillis > volumeShortcutWindowMillis
+    }
+
+    private fun restoreVolumes(volumes: Map<Int, Int>) {
         val manager = audioManager ?: return
-        streams.forEach { stream ->
-            val priorVolume = priorVolumes[stream] ?: return@forEach
+        volumes.forEach { (stream, priorVolume) ->
             try {
                 manager.setStreamVolume(stream, priorVolume, 0)
             } catch (_: Exception) {
@@ -142,21 +151,6 @@ class FakeCallShortcutMonitorService : Service() {
                 manager.getStreamVolume(stream)
             } catch (_: Exception) {
                 0
-            }
-        }
-    }
-
-    private fun primeVolumeStreamsForShortcut() {
-        val manager = audioManager ?: return
-        monitoredStreams.forEach { stream ->
-            try {
-                val current = manager.getStreamVolume(stream)
-                val max = manager.getStreamMaxVolume(stream)
-                if (current >= max && current > 0) {
-                    manager.setStreamVolume(stream, current - 1, 0)
-                }
-            } catch (_: Exception) {
-                // Some device modes restrict changing ringer/system streams.
             }
         }
     }

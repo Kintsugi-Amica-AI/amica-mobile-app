@@ -4,12 +4,14 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart' as geocoding;
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../core/widgets/amica_background.dart';
 import '../../../core/widgets/amica_map_view.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
+import '../../../services/journey_route_service.dart';
 import '../../../services/location_service.dart';
 import '../models/location_data_model.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -20,6 +22,7 @@ class StartJourneyScreen extends StatefulWidget {
     super.key,
     this.locationService = const LocationService(),
     this.journeyService = const JourneyService(),
+    this.routeService = const JourneyRouteService(),
     this.vehiclePlate,
     this.boardingStatus,
     this.isTab = false,
@@ -27,6 +30,7 @@ class StartJourneyScreen extends StatefulWidget {
 
   final LocationService locationService;
   final JourneyService journeyService;
+  final JourneyRouteService routeService;
   final String? vehiclePlate;
   final String? boardingStatus;
 
@@ -44,6 +48,17 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
   final _durationController = TextEditingController(text: '20');
 
   Timer? _destinationSearchDebounce;
+  Timer? _routeDebounce;
+  JourneyRoute? _route;
+  int _routeToken = 0;
+  int _reverseGeocodeToken = 0;
+  bool _isLoadingRoute = false;
+  bool _routeUnavailable = false;
+
+  /// Set while the app itself writes the destination text (after a map pick),
+  /// so that write is not mistaken for the user typing a new place.
+  bool _isSettingDestinationText = false;
+  String _lastDestinationText = '';
   LocationDataModel? _currentLocation;
   LocationDataModel? _destinationLocation;
   int _destinationSearchToken = 0;
@@ -70,6 +85,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
   @override
   void dispose() {
     _destinationSearchDebounce?.cancel();
+    _routeDebounce?.cancel();
     _destinationController
       ..removeListener(_onDestinationTextChanged)
       ..dispose();
@@ -87,9 +103,24 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
 
   void _onDestinationTextChanged() {
     final destinationName = _destinationController.text.trim();
+    if (_isSettingDestinationText) {
+      _lastDestinationText = destinationName;
+      return;
+    }
+    // The controller also notifies on cursor and selection moves. Only a real
+    // edit should drop the pin, or tapping the field would lose it.
+    if (destinationName == _lastDestinationText) {
+      return;
+    }
+    _lastDestinationText = destinationName;
+    // Typing replaces any address lookup still running for an old pin.
+    _reverseGeocodeToken++;
 
     // A previous pin must never silently become a different destination.
     _destinationLocation = null;
+    if (mounted) {
+      setState(_clearRoute);
+    }
 
     _scheduleDestinationLookup(destinationName);
   }
@@ -123,7 +154,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
       return;
     }
 
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     setState(() {
       _isResolvingDestination = true;
       _destinationStatus = loc.startJourneyFindingOnMap;
@@ -153,6 +184,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
         _destinationStatus = loc.startJourneyDestinationFound;
       });
       _applySuggestedDuration();
+      _scheduleRouteLookup();
     } catch (_) {
       if (mounted && searchToken == _destinationSearchToken) {
         setState(() {
@@ -177,6 +209,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
       if (mounted) {
         setState(() => _currentLocation = location);
         _applySuggestedDuration();
+        _scheduleRouteLookup();
         _scheduleDestinationLookup(_destinationController.text.trim());
       }
     } on LocationServiceException catch (error) {
@@ -186,7 +219,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
     } catch (_) {
       if (mounted) {
         setState(() => _errorMessage =
-            AppLocalizations.of(context)!.startJourneyCouldNotGetLocation);
+            AppLocalizations.of(context).startJourneyCouldNotGetLocation);
       }
     } finally {
       if (mounted) {
@@ -200,7 +233,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
       return;
     }
 
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final startLocation = _currentLocation;
     if (startLocation == null) {
       setState(() => _errorMessage = loc.startJourneyGetLocationFirst);
@@ -226,9 +259,14 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
           address: _destinationController.text.trim(),
           updatedAt: DateTime.now(),
         ),
-        estimatedDurationMinutes: int.parse(_durationController.text.trim()),
+        estimatedDurationMinutes:
+            int.tryParse(_durationController.text.trim()) ??
+                _suggestedDurationMinutes,
         journeyType: _journeyType,
         vehiclePlate: widget.vehiclePlate,
+        route: _route?.mode == routeModeForJourneyType(_journeyType)
+            ? _route
+            : null,
       );
 
       if (!mounted) {
@@ -246,7 +284,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
     } catch (_) {
       if (mounted) {
         setState(() => _errorMessage =
-            AppLocalizations.of(context)!.startJourneyCouldNotStart);
+            AppLocalizations.of(context).startJourneyCouldNotStart);
       }
     } finally {
       if (mounted) {
@@ -265,16 +303,137 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
         address: _destinationController.text.trim(),
         updatedAt: DateTime.now(),
       );
-      _destinationStatus = AppLocalizations.of(context)!.startJourneyDestinationPinSelected;
+      _destinationStatus =
+          AppLocalizations.of(context).startJourneyFindingAddress;
       _isResolvingDestination = false;
       _errorMessage = null;
     });
     _applySuggestedDuration();
+    _scheduleRouteLookup();
+    unawaited(_fillAddressForPin(latitude, longitude));
+  }
+
+  /// Looks up a readable address for a pin dropped on the map and writes it
+  /// into the destination field.
+  Future<void> _fillAddressForPin(double latitude, double longitude) async {
+    final token = ++_reverseGeocodeToken;
+    String? address;
+    try {
+      final placemarks = await geocoding
+          .placemarkFromCoordinates(latitude, longitude)
+          .timeout(const Duration(seconds: 6));
+      if (placemarks.isNotEmpty) {
+        address = _formatPlacemark(placemarks.first);
+      }
+    } catch (_) {
+      address = null;
+    }
+
+    if (!mounted || token != _reverseGeocodeToken) {
+      return;
+    }
+    final destination = _destinationLocation;
+    if (destination == null ||
+        destination.latitude != latitude ||
+        destination.longitude != longitude) {
+      return;
+    }
+
+    final loc = AppLocalizations.of(context);
+    if (address == null || address.isEmpty) {
+      setState(() => _destinationStatus = loc.startJourneyAddressNotFound);
+      return;
+    }
+
+    _isSettingDestinationText = true;
+    _destinationController.value = TextEditingValue(
+      text: address,
+      selection: TextSelection.collapsed(offset: address.length),
+    );
+    _isSettingDestinationText = false;
+    setState(() {
+      _destinationLocation = destination.copyWith(address: address);
+      _destinationStatus = loc.startJourneyDestinationPinSelected;
+    });
+  }
+
+  /// "No. 12, Galle Road, Wellawatte, Colombo" from the most useful parts of
+  /// a placemark, without repeats (Android often gives the same text twice).
+  String _formatPlacemark(geocoding.Placemark placemark) {
+    final parts = <String>[];
+    void add(String? value) {
+      final text = value?.trim() ?? '';
+      if (text.isEmpty || parts.contains(text)) {
+        return;
+      }
+      // Skip bare plus-codes such as "7QJ2+XX", which mean nothing to people.
+      if (RegExp(r'^[23456789CFGHJMPQRVWX]{4,}\+[23456789CFGHJMPQRVWX]*$')
+          .hasMatch(text)) {
+        return;
+      }
+      parts.add(text);
+    }
+
+    add(placemark.name);
+    add(placemark.street);
+    add(placemark.subLocality);
+    add(placemark.locality);
+    if (parts.length < 2) {
+      add(placemark.subAdministrativeArea);
+    }
+    return parts.join(', ');
+  }
+
+  void _clearRoute() {
+    _routeDebounce?.cancel();
+    _routeToken++;
+    _route = null;
+    _isLoadingRoute = false;
+    _routeUnavailable = false;
+  }
+
+  /// Fetches the suggested route once both ends are known, debounced so that
+  /// dragging the pin around does not fire a request per move.
+  void _scheduleRouteLookup() {
+    _routeDebounce?.cancel();
+    final start = _currentLocation;
+    final destination = _destinationLocation;
+    if (start == null || destination == null) {
+      return;
+    }
+
+    final token = ++_routeToken;
+    final mode = routeModeForJourneyType(_journeyType);
+    setState(() {
+      _isLoadingRoute = true;
+      _routeUnavailable = false;
+    });
+    _routeDebounce = Timer(const Duration(milliseconds: 500), () async {
+      final route = await widget.routeService.fetchRoute(
+        originLatitude: start.latitude,
+        originLongitude: start.longitude,
+        destinationLatitude: destination.latitude,
+        destinationLongitude: destination.longitude,
+        mode: mode,
+      );
+      if (!mounted || token != _routeToken) {
+        return;
+      }
+      setState(() {
+        _route = route;
+        _isLoadingRoute = false;
+        _routeUnavailable = route == null;
+      });
+      _applySuggestedDuration();
+    });
   }
 
   void _onJourneyTypeChanged(String? value) {
     setState(() => _journeyType = value ?? 'walk');
     _applySuggestedDuration();
+    if (_route?.mode != routeModeForJourneyType(_journeyType)) {
+      _scheduleRouteLookup();
+    }
   }
 
   void _applySuggestedDuration({bool force = false}) {
@@ -304,6 +463,15 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
       return fallback;
     }
 
+    final buffer = _journeyType == 'walk' ? 1.15 : 1.35;
+    final route = _route;
+    if (route != null && route.mode == routeModeForJourneyType(_journeyType)) {
+      // Directions' own prediction along the real route, plus the same
+      // safety buffer, so the timer does not run out on an ordinary walk.
+      final minutes = (route.durationSeconds / 60 * buffer).ceil();
+      return math.max(5, minutes);
+    }
+
     final distanceKm = _distanceInKm(
       start.latitude,
       start.longitude,
@@ -321,7 +489,6 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
       'train' => 45.0,
       _ => 20.0,
     };
-    final buffer = _journeyType == 'walk' ? 1.15 : 1.35;
     final minutes = (distanceKm / speedKmh * 60 * buffer).ceil();
     return math.max(5, minutes);
   }
@@ -361,7 +528,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
 
   String? _required(BuildContext context, String? value, String fieldName) {
     if (value == null || value.trim().isEmpty) {
-      return AppLocalizations.of(context)!.fieldRequired(fieldName);
+      return AppLocalizations.of(context).fieldRequired(fieldName);
     }
     return null;
   }
@@ -369,14 +536,18 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
   String? _validateDuration(BuildContext context, String? value) {
     final duration = int.tryParse(value?.trim() ?? '');
     if (duration == null || duration <= 0) {
-      return AppLocalizations.of(context)!.startJourneyDurationInvalid;
+      return AppLocalizations.of(context).startJourneyDurationInvalid;
     }
     return null;
   }
 
+  static const double _sheetInitialSize = 0.46;
+  static const double _sheetMinSize = 0.18;
+  static const double _sheetMaxSize = 0.92;
+
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final currentLocation = _currentLocation;
     final destinationLocation = _destinationLocation;
     final mapCenter = currentLocation ??
@@ -390,6 +561,8 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
     final destinationTitle = _destinationController.text.trim().isEmpty
         ? loc.startJourneyDestinationLabel
         : _destinationController.text.trim();
+    final c = Theme.of(context).amica;
+    final topInset = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -401,140 +574,277 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
       ),
       extendBodyBehindAppBar: true,
       body: AmicaBackground(
-        child: SafeArea(
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-              children: [
-                if (widget.vehiclePlate != null) ...[
-                  Text(loc.startJourneyVehicleLabel(widget.vehiclePlate!),
-                      style: Theme.of(context).textTheme.titleLarge),
-                  if (widget.boardingStatus != null)
-                    Text(widget.boardingStatus!),
-                  const SizedBox(height: 16),
+        child: Form(
+          key: _formKey,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Stack(
+                children: [
+                  Positioned.fill(
+                    child: AmicaMapView(
+                      latitude: mapCenter.latitude,
+                      longitude: mapCenter.longitude,
+                      height: null,
+                      borderRadius: 0,
+                      markerTitle: loc.startJourneyMapStartMarker,
+                      showStartMarker: currentLocation != null,
+                      // The blue dot needs location permission, which is only
+                      // known to be granted once a location has been read.
+                      showMyLocation: currentLocation != null,
+                      destinationLatitude: destinationLocation?.latitude,
+                      destinationLongitude: destinationLocation?.longitude,
+                      destinationTitle: destinationTitle,
+                      routePoints: _route?.points ?? const [],
+                      mapPadding: EdgeInsets.only(
+                        top: topInset,
+                        bottom: constraints.maxHeight * _sheetInitialSize,
+                      ),
+                      onTap: _isStartingJourney ? null : _pinDestination,
+                      onDestinationDragged:
+                          _isStartingJourney ? null : _pinDestination,
+                    ),
+                  ),
+                  // Keeps the app bar title readable over any part of the map.
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: topInset + 24,
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              c.shell.withValues(alpha: 0.92),
+                              c.shell.withValues(alpha: 0),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  DraggableScrollableSheet(
+                    initialChildSize: _sheetInitialSize,
+                    minChildSize: _sheetMinSize,
+                    maxChildSize: _sheetMaxSize,
+                    snap: true,
+                    snapSizes: const [_sheetInitialSize],
+                    builder: (context, scrollController) =>
+                        _buildSheet(context, scrollController),
+                  ),
                 ],
-                GlassCard(
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSheet(BuildContext context, ScrollController scrollController) {
+    final loc = AppLocalizations.of(context);
+    final c = Theme.of(context).amica;
+    final textTheme = Theme.of(context).textTheme;
+    final currentLocation = _currentLocation;
+    final destinationLocation = _destinationLocation;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: c.shell,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border(top: BorderSide(color: c.lineSoft)),
+        boxShadow: c.shadow,
+      ),
+      child: SafeArea(
+        top: false,
+        child: ListView(
+          controller: scrollController,
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: c.line,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            if (widget.vehiclePlate != null) ...[
+              Text(loc.startJourneyVehicleLabel(widget.vehiclePlate!),
+                  style: textTheme.titleLarge),
+              if (widget.boardingStatus != null) Text(widget.boardingStatus!),
+              const SizedBox(height: 12),
+            ],
+            // Where the journey starts.
+            if (currentLocation == null)
+              PrimaryButton(
+                label: _isLoadingLocation
+                    ? loc.startJourneyGettingLocation
+                    : loc.startJourneyGetCurrentLocation,
+                icon: Icons.my_location_rounded,
+                onPressed: _isBusy ? null : _getCurrentLocation,
+              )
+            else
+              AmicaCard(
+                padding: const EdgeInsets.fromLTRB(16, 8, 4, 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.my_location_rounded, color: c.sage),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        loc.startJourneyCurrentLocationValue(
+                          currentLocation.latitude.toStringAsFixed(5),
+                          currentLocation.longitude.toStringAsFixed(5),
+                        ),
+                        style: textTheme.bodySmall,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: loc.startJourneyGetCurrentLocation,
+                      onPressed: _isBusy ? null : _getCurrentLocation,
+                      icon: _isLoadingLocation
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.refresh_rounded),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 16),
+            // Where it ends.
+            CustomTextField(
+              label: loc.startJourneyDestinationNameLabel,
+              controller: _destinationController,
+              prefixIcon: Icons.place_outlined,
+              validator: (value) =>
+                  _required(context, value, loc.startJourneyDestinationLabel),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _isResolvingDestination
+                  ? loc.startJourneyFindingOnMap
+                  : _destinationStatus ??
+                      (destinationLocation == null
+                          ? loc.startJourneyTapMapToPin
+                          : loc.startJourneyDestinationPinValue(
+                              destinationLocation.latitude.toStringAsFixed(5),
+                              destinationLocation.longitude.toStringAsFixed(5),
+                            )),
+              style: textTheme.bodySmall,
+            ),
+            if (_isLoadingRoute || _route != null || _routeUnavailable) ...[
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Icon(
+                    _journeyType == 'walk'
+                        ? Icons.directions_walk_rounded
+                        : Icons.directions_car_rounded,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      _isLoadingRoute
+                          ? loc.startJourneyRouteLoading
+                          : _route != null
+                              ? loc.startJourneyRouteSummary(
+                                  formatDistance(_route!.distanceMeters),
+                                  (_route!.durationSeconds / 60).ceil(),
+                                )
+                              : loc.startJourneyRouteUnavailable,
+                      style: textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 16),
+            // How, and for how long.
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      PrimaryButton(
-                        label: _isLoadingLocation
-                            ? loc.startJourneyGettingLocation
-                            : loc.startJourneyGetCurrentLocation,
-                        icon: Icons.my_location_rounded,
-                        onPressed: _isBusy ? null : _getCurrentLocation,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        currentLocation == null
-                            ? loc.startJourneyCurrentLocationNotSelected
-                            : loc.startJourneyCurrentLocationValue(
-                                currentLocation.latitude.toStringAsFixed(5),
-                                currentLocation.longitude.toStringAsFixed(5),
-                              ),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
+                  // Same label style as CustomTextField, so both fields line up.
+                  Text(
+                    loc.startJourneyTypeLabel,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: c.plum70,
+                    ),
+                  ),
+                  const SizedBox(height: 7),
+                  DropdownButtonFormField<String>(
+                    initialValue: _journeyType,
+                    isExpanded: true,
+                    items: [
+                      DropdownMenuItem(
+                          value: 'walk', child: Text(loc.startJourneyTypeWalk)),
+                      DropdownMenuItem(
+                          value: 'taxi', child: Text(loc.startJourneyTypeTaxi)),
+                      DropdownMenuItem(
+                          value: 'bus', child: Text(loc.startJourneyTypeBus)),
+                      DropdownMenuItem(
+                          value: 'train',
+                          child: Text(loc.startJourneyTypeTrain)),
+                      DropdownMenuItem(
+                          value: 'other',
+                          child: Text(loc.startJourneyTypeOther)),
+                    ],
+                    onChanged: _isBusy ? null : _onJourneyTypeChanged,
+                  ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                CustomTextField(
-                  label: loc.startJourneyDestinationNameLabel,
-                  controller: _destinationController,
-                  prefixIcon: Icons.place_outlined,
-                  validator: (value) => _required(
-                      context, value, loc.startJourneyDestinationLabel),
-                ),
-                if (_isResolvingDestination || _destinationStatus != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    _isResolvingDestination
-                        ? loc.startJourneyFindingOnMap
-                        : _destinationStatus!,
-                    style: Theme.of(context).textTheme.bodySmall,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: CustomTextField(
+                    label: loc.startJourneyDurationLabel,
+                    controller: _durationController,
+                    keyboardType: TextInputType.number,
+                    prefixIcon: Icons.hourglass_bottom_rounded,
+                    validator: (value) => _validateDuration(context, value),
                   ),
-                ],
-                const SizedBox(height: 16),
-                AmicaMapView(
-                  latitude: mapCenter.latitude,
-                  longitude: mapCenter.longitude,
-                  markerTitle: loc.startJourneyMapStartMarker,
-                  showStartMarker: currentLocation != null,
-                  destinationLatitude: destinationLocation?.latitude,
-                  destinationLongitude: destinationLocation?.longitude,
-                  destinationTitle: destinationTitle,
-                  height: 320,
-                  captureGestures: true,
-                  onTap: _isStartingJourney ? null : _pinDestination,
-                  onDestinationDragged:
-                      _isStartingJourney ? null : _pinDestination,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  destinationLocation == null
-                      ? loc.startJourneyTapMapToPin
-                      : loc.startJourneyDestinationPinValue(
-                          destinationLocation.latitude.toStringAsFixed(5),
-                          destinationLocation.longitude.toStringAsFixed(5),
-                        ),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  initialValue: _journeyType,
-                  decoration:
-                      InputDecoration(labelText: loc.startJourneyTypeLabel),
-                  items: [
-                    DropdownMenuItem(
-                        value: 'walk', child: Text(loc.startJourneyTypeWalk)),
-                    DropdownMenuItem(
-                        value: 'taxi', child: Text(loc.startJourneyTypeTaxi)),
-                    DropdownMenuItem(
-                        value: 'bus', child: Text(loc.startJourneyTypeBus)),
-                    DropdownMenuItem(
-                        value: 'train', child: Text(loc.startJourneyTypeTrain)),
-                    DropdownMenuItem(
-                        value: 'other', child: Text(loc.startJourneyTypeOther)),
-                  ],
-                  onChanged: _isBusy ? null : _onJourneyTypeChanged,
-                ),
-                const SizedBox(height: 16),
-                CustomTextField(
-                  label: loc.startJourneyDurationLabel,
-                  controller: _durationController,
-                  keyboardType: TextInputType.number,
-                  prefixIcon: Icons.hourglass_bottom_rounded,
-                  validator: (value) => _validateDuration(context, value),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  loc.startJourneySuggestedDuration(_suggestedDurationMinutes),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                if (_errorMessage != null) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    _errorMessage!,
-                    style:
-                        TextStyle(color: Theme.of(context).colorScheme.error),
-                  ),
-                ],
-                const SizedBox(height: 24),
-                PrimaryButton(
-                  label: _isStartingJourney
-                      ? loc.startJourneyStarting
-                      : widget.vehiclePlate == null
-                          ? loc.startJourneyStartButton
-                          : loc.startJourneyStartVehicleButton,
-                  icon: Icons.play_arrow_rounded,
-                  onPressed: (_isBusy || _isResolvingDestination)
-                      ? null
-                      : _startJourney,
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 8),
+            Text(
+              loc.startJourneySuggestedDuration(_suggestedDurationMinutes),
+              style: textTheme.bodySmall,
+            ),
+            if (_errorMessage != null) ...[
+              const SizedBox(height: 16),
+              Text(
+                _errorMessage!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
+            const SizedBox(height: 20),
+            PrimaryButton(
+              label: _isStartingJourney
+                  ? loc.startJourneyStarting
+                  : widget.vehiclePlate == null
+                      ? loc.startJourneyStartButton
+                      : loc.startJourneyStartVehicleButton,
+              icon: Icons.play_arrow_rounded,
+              onPressed:
+                  (_isBusy || _isResolvingDestination) ? null : _startJourney,
+            ),
+          ],
         ),
       ),
     );

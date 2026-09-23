@@ -2536,6 +2536,132 @@ abstract class AppLocalizations {
   /// **'Skip'**
   String get vehicleRatingSkipButton;
 
+  /// No description provided for @startJourneyFindingAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned. Finding the address...'**
+  String get startJourneyFindingAddress;
+
+  /// No description provided for @startJourneyAddressNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned. No address found here, so type a name for this place.'**
+  String get startJourneyAddressNotFound;
+
+  /// No description provided for @startJourneyRouteLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Finding a route...'**
+  String get startJourneyRouteLoading;
+
+  /// No description provided for @startJourneyRouteSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested route: {distance} · about {minutes} min'**
+  String startJourneyRouteSummary(String distance, int minutes);
+
+  /// No description provided for @startJourneyRouteUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t get a route. Using a straight-line estimate.'**
+  String get startJourneyRouteUnavailable;
+
+  /// No description provided for @journeyTimerPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get journeyTimerPause;
+
+  /// No description provided for @journeyTimerResumeNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get journeyTimerResumeNow;
+
+  /// No description provided for @journeyTimerPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'PAUSED'**
+  String get journeyTimerPaused;
+
+  /// No description provided for @journeyTimerResumesIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Resumes automatically in {time}'**
+  String journeyTimerResumesIn(String time);
+
+  /// No description provided for @journeyTimerPauseSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause the safety timer'**
+  String get journeyTimerPauseSheetTitle;
+
+  /// No description provided for @journeyTimerPauseSheetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The countdown stops while paused. It starts again on its own when the pause ends, or you can resume it any time.'**
+  String get journeyTimerPauseSheetBody;
+
+  /// No description provided for @journeyTimerPauseMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String journeyTimerPauseMinutes(int minutes);
+
+  /// No description provided for @journeyTimerPauseConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause for {minutes} min'**
+  String journeyTimerPauseConfirm(int minutes);
+
+  /// No description provided for @journeyTimerPausedFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer paused for {minutes} min'**
+  String journeyTimerPausedFor(int minutes);
+
+  /// No description provided for @journeyTimerResumed.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer resumed'**
+  String get journeyTimerResumed;
+
+  /// No description provided for @journeyTimerPauseFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not pause the timer. Please try again.'**
+  String get journeyTimerPauseFailed;
+
+  /// No description provided for @journeyTimerResumeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not resume the timer. Please try again.'**
+  String get journeyTimerResumeFailed;
+
+  /// No description provided for @journeyTimerSuggestedRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested route'**
+  String get journeyTimerSuggestedRoute;
+
+  /// No description provided for @journeyTimerRouteInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'{distance} · about {minutes} min'**
+  String journeyTimerRouteInfo(String distance, int minutes);
+
+  /// No description provided for @journeyTimerNoRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'No suggested route. Head towards the pink pin.'**
+  String get journeyTimerNoRoute;
+
+  /// No description provided for @journeyTimerOpenInMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigate in Google Maps'**
+  String get journeyTimerOpenInMaps;
+
   /// No description provided for @zzzArbEnd.
   ///
   /// In en, this message translates to:

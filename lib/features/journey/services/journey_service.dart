@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../../services/journey_route_service.dart';
 import '../models/journey.dart';
 import '../models/location_data_model.dart';
 
@@ -32,6 +33,7 @@ class JourneyService {
     LocationDataModel? destinationLocation,
     String journeyType = 'walk',
     String? vehiclePlate,
+    JourneyRoute? route,
   }) async {
     final user = _currentUserOrThrow();
     final document = _firestore.collection(_collectionName).doc();
@@ -77,6 +79,10 @@ class JourneyService {
         'metadata': <String, dynamic>{
           if (vehiclePlate != null) 'vehiclePlate': vehiclePlate,
         },
+        // Saved so the journey screen can draw the suggested route without
+        // asking the backend again, even with a weak signal on the way.
+        'route': route?.toMap(),
+        'pause': null,
         'schemaVersion': 1,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -273,6 +279,51 @@ class JourneyService {
       'actualEndTime': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
       'safetyCheck.respondedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Pauses the countdown for [pauseFor].
+  ///
+  /// The deadline is moved to the end of the pause plus the time that was
+  /// left, rather than cleared. If the user never resumes, the timer starts
+  /// again on its own at `resumeAt` and every safety check still fires.
+  Future<void> pauseJourney(Journey journey, Duration pauseFor) async {
+    _currentUserOrThrow();
+    final now = DateTime.now();
+    final remaining = journey.isPausedAt(now)
+        ? journey.pausedRemaining
+        : journey.estimatedEndTime.difference(now);
+    if (remaining <= Duration.zero) {
+      throw const JourneyServiceException(
+        'The timer has already run out, so it cannot be paused.',
+      );
+    }
+
+    final resumeAt = now.add(pauseFor);
+    await _firestore.collection(_collectionName).doc(journey.id).update({
+      'pause': {
+        'pausedAt': Timestamp.fromDate(now),
+        'resumeAt': Timestamp.fromDate(resumeAt),
+        'remainingSeconds': remaining.inSeconds,
+      },
+      'estimatedEndTime': Timestamp.fromDate(resumeAt.add(remaining)),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Ends a pause early and restarts the countdown from where it stopped.
+  Future<void> resumeJourney(Journey journey) async {
+    _currentUserOrThrow();
+    final now = DateTime.now();
+    final remaining = journey.isPausedAt(now)
+        ? journey.pausedRemaining
+        : journey.estimatedEndTime.difference(now);
+    await _firestore.collection(_collectionName).doc(journey.id).update({
+      'pause': null,
+      'estimatedEndTime': Timestamp.fromDate(
+        now.add(remaining.isNegative ? Duration.zero : remaining),
+      ),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 

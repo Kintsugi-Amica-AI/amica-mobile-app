@@ -23,7 +23,7 @@ class _CompletedVehicleJourneysScreenState
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     return Scaffold(
         appBar: AppBar(title: Text(loc.vehicleRatingCompletedTitle)),
         body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -84,7 +84,7 @@ class _VehicleRatingScreenState extends State<VehicleRatingScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loc = AppLocalizations.of(context)!;
+    _loc = AppLocalizations.of(context);
   }
 
   Future<void> _save() async {

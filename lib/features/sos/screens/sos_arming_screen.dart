@@ -104,7 +104,7 @@ class _SosArmingScreenState extends State<SosArmingScreen> {
       _fail(error.message);
     } catch (_) {
       if (!mounted) return;
-      _fail(AppLocalizations.of(context)!.sosArmingSendFailed);
+      _fail(AppLocalizations.of(context).sosArmingSendFailed);
     }
   }
 
@@ -141,7 +141,7 @@ class _SosArmingScreenState extends State<SosArmingScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
 
     // Back-gesture must cancel, never silently send.
     return PopScope(

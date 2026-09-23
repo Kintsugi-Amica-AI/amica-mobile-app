@@ -25,7 +25,7 @@ class _PlateResultScreenState extends State<PlateResultScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loc = AppLocalizations.of(context)!;
+    _loc = AppLocalizations.of(context);
   }
 
   Future<void> _board(VehicleStatus vehicle) async {

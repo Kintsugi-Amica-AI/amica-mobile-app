@@ -1453,5 +1453,87 @@ class AppLocalizationsTa extends AppLocalizations {
   String get vehicleRatingSkipButton => 'தவிர்';
 
   @override
+  String get startJourneyFindingAddress =>
+      'பின் செய்யப்பட்டது. முகவரியைத் தேடுகிறது...';
+
+  @override
+  String get startJourneyAddressNotFound =>
+      'பின் செய்யப்பட்டது. இங்கு முகவரி கிடைக்கவில்லை, இந்த இடத்திற்கு ஒரு பெயரைத் தட்டச்சு செய்யவும்.';
+
+  @override
+  String get startJourneyRouteLoading => 'வழியைத் தேடுகிறது...';
+
+  @override
+  String startJourneyRouteSummary(String distance, int minutes) {
+    return 'பரிந்துரைக்கப்பட்ட வழி: $distance · சுமார் $minutes நிமிடம்';
+  }
+
+  @override
+  String get startJourneyRouteUnavailable =>
+      'வழியைப் பெற முடியவில்லை. நேர்கோட்டு மதிப்பீடு பயன்படுத்தப்படுகிறது.';
+
+  @override
+  String get journeyTimerPause => 'இடைநிறுத்து';
+
+  @override
+  String get journeyTimerResumeNow => 'தொடரவும்';
+
+  @override
+  String get journeyTimerPaused => 'இடைநிறுத்தப்பட்டது';
+
+  @override
+  String journeyTimerResumesIn(String time) {
+    return '$time இல் தானாகவே தொடரும்';
+  }
+
+  @override
+  String get journeyTimerPauseSheetTitle => 'பாதுகாப்பு டைமரை இடைநிறுத்து';
+
+  @override
+  String get journeyTimerPauseSheetBody =>
+      'இடைநிறுத்தத்தின் போது கவுண்ட்டவுன் நிற்கும். இடைநிறுத்தம் முடிந்ததும் அது தானாகவே மீண்டும் தொடங்கும், அல்லது எந்த நேரத்திலும் நீங்கள் தொடரலாம்.';
+
+  @override
+  String journeyTimerPauseMinutes(int minutes) {
+    return '$minutes நிமிடம்';
+  }
+
+  @override
+  String journeyTimerPauseConfirm(int minutes) {
+    return '$minutes நிமிடம் இடைநிறுத்து';
+  }
+
+  @override
+  String journeyTimerPausedFor(int minutes) {
+    return 'டைமர் $minutes நிமிடம் இடைநிறுத்தப்பட்டது';
+  }
+
+  @override
+  String get journeyTimerResumed => 'டைமர் தொடர்கிறது';
+
+  @override
+  String get journeyTimerPauseFailed =>
+      'டைமரை இடைநிறுத்த முடியவில்லை. மீண்டும் முயற்சிக்கவும்.';
+
+  @override
+  String get journeyTimerResumeFailed =>
+      'டைமரைத் தொடர முடியவில்லை. மீண்டும் முயற்சிக்கவும்.';
+
+  @override
+  String get journeyTimerSuggestedRoute => 'பரிந்துரைக்கப்பட்ட வழி';
+
+  @override
+  String journeyTimerRouteInfo(String distance, int minutes) {
+    return '$distance · சுமார் $minutes நிமிடம்';
+  }
+
+  @override
+  String get journeyTimerNoRoute =>
+      'பரிந்துரைக்கப்பட்ட வழி இல்லை. இளஞ்சிவப்பு பின்னை நோக்கிச் செல்லவும்.';
+
+  @override
+  String get journeyTimerOpenInMaps => 'Google Maps இல் வழிசெலுத்து';
+
+  @override
   String get zzzArbEnd => 'do not translate; internal append anchor';
 }

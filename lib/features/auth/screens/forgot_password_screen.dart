@@ -53,13 +53,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       }
 
       setState(() {
-        _successMessage = AppLocalizations.of(context)!.forgotPasswordSuccess;
+        _successMessage = AppLocalizations.of(context).forgotPasswordSuccess;
       });
     } on AuthServiceException catch (error) {
       setState(() => _errorMessage = error.message);
     } catch (_) {
       setState(
-        () => _errorMessage = AppLocalizations.of(context)!.forgotPasswordFailed,
+        () => _errorMessage = AppLocalizations.of(context).forgotPasswordFailed,
       );
     } finally {
       if (mounted) {
@@ -70,7 +70,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(loc.forgotPasswordAppBarTitle)),

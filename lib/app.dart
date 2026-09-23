@@ -93,7 +93,7 @@ class _AmicaAppState extends State<AmicaApp> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Scaffold(
               body: LoadingView(
-                message: AppLocalizations.of(context)!.checkingLoginStatus,
+                message: AppLocalizations.of(context).checkingLoginStatus,
               ),
             );
           }

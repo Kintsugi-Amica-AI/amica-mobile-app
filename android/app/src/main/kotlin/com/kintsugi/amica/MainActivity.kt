@@ -86,8 +86,9 @@ class MainActivity : FlutterActivity() {
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (
-            (event.keyCode == KeyEvent.KEYCODE_VOLUME_UP ||
-                event.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) &&
+            // Only volume-up is the shortcut; volume-down must always reach the
+            // system so the user can lower the volume normally.
+            event.keyCode == KeyEvent.KEYCODE_VOLUME_UP &&
             event.action == KeyEvent.ACTION_DOWN &&
             event.repeatCount == 0
         ) {

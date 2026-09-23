@@ -412,5 +412,27 @@
   "vehicleRatingSubmitButton": "மதிப்பீட்டைச் சமர்ப்பிக்கவும்",
   "vehicleRatingSkipButton": "தவிர்",
 
+  "startJourneyFindingAddress": "பின் செய்யப்பட்டது. முகவரியைத் தேடுகிறது...",
+  "startJourneyAddressNotFound": "பின் செய்யப்பட்டது. இங்கு முகவரி கிடைக்கவில்லை, இந்த இடத்திற்கு ஒரு பெயரைத் தட்டச்சு செய்யவும்.",
+  "startJourneyRouteLoading": "வழியைத் தேடுகிறது...",
+  "startJourneyRouteSummary": "பரிந்துரைக்கப்பட்ட வழி: {distance} · சுமார் {minutes} நிமிடம்",
+  "startJourneyRouteUnavailable": "வழியைப் பெற முடியவில்லை. நேர்கோட்டு மதிப்பீடு பயன்படுத்தப்படுகிறது.",
+  "journeyTimerPause": "இடைநிறுத்து",
+  "journeyTimerResumeNow": "தொடரவும்",
+  "journeyTimerPaused": "இடைநிறுத்தப்பட்டது",
+  "journeyTimerResumesIn": "{time} இல் தானாகவே தொடரும்",
+  "journeyTimerPauseSheetTitle": "பாதுகாப்பு டைமரை இடைநிறுத்து",
+  "journeyTimerPauseSheetBody": "இடைநிறுத்தத்தின் போது கவுண்ட்டவுன் நிற்கும். இடைநிறுத்தம் முடிந்ததும் அது தானாகவே மீண்டும் தொடங்கும், அல்லது எந்த நேரத்திலும் நீங்கள் தொடரலாம்.",
+  "journeyTimerPauseMinutes": "{minutes} நிமிடம்",
+  "journeyTimerPauseConfirm": "{minutes} நிமிடம் இடைநிறுத்து",
+  "journeyTimerPausedFor": "டைமர் {minutes} நிமிடம் இடைநிறுத்தப்பட்டது",
+  "journeyTimerResumed": "டைமர் தொடர்கிறது",
+  "journeyTimerPauseFailed": "டைமரை இடைநிறுத்த முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
+  "journeyTimerResumeFailed": "டைமரைத் தொடர முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
+  "journeyTimerSuggestedRoute": "பரிந்துரைக்கப்பட்ட வழி",
+  "journeyTimerRouteInfo": "{distance} · சுமார் {minutes} நிமிடம்",
+  "journeyTimerNoRoute": "பரிந்துரைக்கப்பட்ட வழி இல்லை. இளஞ்சிவப்பு பின்னை நோக்கிச் செல்லவும்.",
+  "journeyTimerOpenInMaps": "Google Maps இல் வழிசெலுத்து",
+
   "zzzArbEnd": "do not translate; internal append anchor"
 }

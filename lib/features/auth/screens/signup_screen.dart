@@ -73,7 +73,7 @@ class _SignupScreenState extends State<SignupScreen> {
       setState(() => _errorMessage = error.message);
     } catch (_) {
       setState(
-        () => _errorMessage = AppLocalizations.of(context)!.signupFailed,
+        () => _errorMessage = AppLocalizations.of(context).signupFailed,
       );
     } finally {
       if (mounted) {
@@ -99,7 +99,7 @@ class _SignupScreenState extends State<SignupScreen> {
       setState(() => _errorMessage = error.message);
     } catch (_) {
       setState(
-        () => _errorMessage = AppLocalizations.of(context)!.googleSignInFailed,
+        () => _errorMessage = AppLocalizations.of(context).googleSignInFailed,
       );
     } finally {
       if (mounted) {
@@ -110,14 +110,14 @@ class _SignupScreenState extends State<SignupScreen> {
 
   String? _required(String? value, String fieldName) {
     if (value == null || value.trim().isEmpty) {
-      return AppLocalizations.of(context)!.fieldRequired(fieldName);
+      return AppLocalizations.of(context).fieldRequired(fieldName);
     }
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(loc.signupAppBarTitle)),

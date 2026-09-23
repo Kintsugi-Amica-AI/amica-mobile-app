@@ -57,7 +57,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loc = AppLocalizations.of(context)!;
+    _loc = AppLocalizations.of(context);
     if (!_didInitCamera) {
       _didInitCamera = true;
       _statusMessage = _loc.plateScanStartingCamera;

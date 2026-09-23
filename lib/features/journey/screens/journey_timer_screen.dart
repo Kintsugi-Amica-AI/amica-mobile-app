@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
@@ -11,6 +13,7 @@ import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/loading_view.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../services/emergency_action_service.dart';
+import '../../../services/journey_route_service.dart';
 import '../../../services/location_service.dart';
 import '../../emergency_contacts/models/emergency_contact.dart';
 import '../../emergency_contacts/services/emergency_contact_service.dart';
@@ -34,6 +37,7 @@ class JourneyTimerScreen extends StatefulWidget {
     this.sosService = const SosService(),
     this.emergencyContactService = const EmergencyContactService(),
     this.emergencyActionService = const EmergencyActionService(),
+    this.routeService = const JourneyRouteService(),
   });
 
   final String? journeyId;
@@ -45,6 +49,7 @@ class JourneyTimerScreen extends StatefulWidget {
   final SosService sosService;
   final EmergencyContactService emergencyContactService;
   final EmergencyActionService emergencyActionService;
+  final JourneyRouteService routeService;
 
   @override
   State<JourneyTimerScreen> createState() => _JourneyTimerScreenState();
@@ -64,6 +69,10 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
   final ValueNotifier<Duration> _remainingNotifier =
       ValueNotifier<Duration>(Duration.zero);
 
+  /// Time left in the current pause, or null while the timer is running.
+  final ValueNotifier<Duration?> _pauseLeftNotifier =
+      ValueNotifier<Duration?>(null);
+
   StreamSubscription<Journey?>? _journeySubscription;
   Timer? _countdownTimer;
   Timer? _safetyMessageTimer;
@@ -80,6 +89,16 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
   bool _messageEscalationHandled = false;
   bool _callEscalationHandled = false;
   String? _nativeSafetyMonitorJourneyId;
+
+  /// The deadline the native monitor was last started with. Pausing and
+  /// resuming move the deadline, so the monitor is restarted when it changes.
+  DateTime? _nativeSafetyMonitorCheckAt;
+  bool _isPausing = false;
+  int _journeyListenRetries = 0;
+  static const int _maxJourneyListenRetries = 5;
+  bool _wasPaused = false;
+  JourneyRoute? _fallbackRoute;
+  bool _fallbackRouteRequested = false;
   bool _incidentRecorded = false;
   bool _incidentSyncing = false;
   late AppLocalizations _loc;
@@ -98,7 +117,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loc = AppLocalizations.of(context)!;
+    _loc = AppLocalizations.of(context);
   }
 
   @override
@@ -116,6 +135,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     _countdownTimer?.cancel();
     _cancelSafetyEscalations();
     _remainingNotifier.dispose();
+    _pauseLeftNotifier.dispose();
     super.dispose();
   }
 
@@ -125,6 +145,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
         if (!mounted) {
           return;
         }
+        _journeyListenRetries = 0;
         setState(() {
           _journey = journey;
           _journeyError = null;
@@ -135,6 +156,21 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
       },
       onError: (Object error) {
         if (!mounted) {
+          return;
+        }
+        // A brand-new journey can be denied for a moment, until the server
+        // has the document. Firestore closes the listener on that error, so
+        // listen again a few times before showing it.
+        if (error is FirebaseException &&
+            error.code == 'permission-denied' &&
+            _journeyListenRetries < _maxJourneyListenRetries) {
+          _journeyListenRetries++;
+          _journeySubscription?.cancel();
+          Future<void>.delayed(const Duration(seconds: 1), () {
+            if (mounted) {
+              _listenToJourney();
+            }
+          });
           return;
         }
         setState(() {
@@ -154,6 +190,9 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
   }
 
   Duration _remaining(Journey journey) {
+    if (journey.isPausedAt(DateTime.now())) {
+      return journey.pausedRemaining;
+    }
     final remaining = journey.estimatedEndTime.difference(DateTime.now());
     return remaining.isNegative ? Duration.zero : remaining;
   }
@@ -168,6 +207,19 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     }
     if (journey == null || !journey.isActive) {
       return;
+    }
+
+    final now = DateTime.now();
+    final isPaused = journey.isPausedAt(now);
+    final resumeAt = journey.pauseResumeAt;
+    _pauseLeftNotifier.value =
+        isPaused && resumeAt != null ? resumeAt.difference(now) : null;
+    if (isPaused != _wasPaused) {
+      // A pause just started or ran out on its own: swap Pause/Resume.
+      _wasPaused = isPaused;
+      if (mounted) {
+        setState(() {});
+      }
     }
 
     final remaining = _remaining(journey);
@@ -402,7 +454,8 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     }
 
     if (_nativeSafetyMonitorStarting ||
-        _nativeSafetyMonitorJourneyId == journey.id) {
+        (_nativeSafetyMonitorJourneyId == journey.id &&
+            _nativeSafetyMonitorCheckAt == journey.estimatedEndTime)) {
       return;
     }
 
@@ -434,6 +487,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
 
       _nativeSafetyMonitorStarted = true;
       _nativeSafetyMonitorJourneyId = journey.id;
+      _nativeSafetyMonitorCheckAt = journey.estimatedEndTime;
     } catch (_) {
       _nativeSafetyMonitorStarted = false;
       _nativeSafetyMonitorJourneyId = null;
@@ -446,6 +500,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     _nativeSafetyMonitorStarted = false;
     _nativeSafetyMonitorStarting = false;
     _nativeSafetyMonitorJourneyId = null;
+    _nativeSafetyMonitorCheckAt = null;
 
     try {
       await widget.emergencyActionService.stopJourneySafetyMonitor();
@@ -624,6 +679,117 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Pause / resume
+  // ---------------------------------------------------------------------------
+
+  static const List<int> _pauseChoicesMinutes = [5, 10, 15, 20, 30, 45, 60];
+  static const int _defaultPauseMinutes = 15;
+
+  Future<void> _pauseJourney(Journey journey) async {
+    final minutes = await showModalBottomSheet<int>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => _PauseDurationSheet(
+        choicesMinutes: _pauseChoicesMinutes,
+        initialMinutes: _defaultPauseMinutes,
+      ),
+    );
+    if (minutes == null || !mounted) {
+      return;
+    }
+
+    setState(() => _isPausing = true);
+    try {
+      await widget.journeyService
+          .pauseJourney(journey, Duration(minutes: minutes));
+      _showEscalationSnack(_loc.journeyTimerPausedFor(minutes));
+    } on JourneyServiceException catch (error) {
+      _showEscalationSnack(error.message);
+    } catch (_) {
+      _showEscalationSnack(_loc.journeyTimerPauseFailed);
+    } finally {
+      if (mounted) {
+        setState(() => _isPausing = false);
+      }
+    }
+  }
+
+  Future<void> _resumeJourney(Journey journey) async {
+    setState(() => _isPausing = true);
+    try {
+      await widget.journeyService.resumeJourney(journey);
+      _showEscalationSnack(_loc.journeyTimerResumed);
+    } catch (_) {
+      _showEscalationSnack(_loc.journeyTimerResumeFailed);
+    } finally {
+      if (mounted) {
+        setState(() => _isPausing = false);
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Route
+  // ---------------------------------------------------------------------------
+
+  /// The route saved with the journey, or one fetched here for journeys
+  /// started before routes were saved (or when the fetch failed at start).
+  JourneyRoute? _routeFor(Journey journey) {
+    final saved = journey.suggestedRoute;
+    if (saved != null) {
+      return saved;
+    }
+    if (!_fallbackRouteRequested) {
+      _fallbackRouteRequested = true;
+      unawaited(_fetchFallbackRoute(journey));
+    }
+    return _fallbackRoute;
+  }
+
+  Future<void> _fetchFallbackRoute(Journey journey) async {
+    final origin = journey.currentLocation ?? journey.startLocation;
+    final destination = journey.destinationLocation;
+    if (origin == null || destination == null) {
+      return;
+    }
+    final route = await widget.routeService.fetchRoute(
+      originLatitude: origin.latitude,
+      originLongitude: origin.longitude,
+      destinationLatitude: destination.latitude,
+      destinationLongitude: destination.longitude,
+      mode: routeModeForJourneyType(journey.journeyType),
+    );
+    if (mounted && route != null) {
+      setState(() => _fallbackRoute = route);
+    }
+  }
+
+  Future<void> _openInGoogleMaps(Journey journey) async {
+    final destination = journey.destinationLocation;
+    if (destination == null) {
+      return;
+    }
+    final uri = Uri.https('www.google.com', '/maps/dir/', {
+      'api': '1',
+      'destination': '${destination.latitude},${destination.longitude}',
+      'travelmode': journey.journeyType == 'walk' ? 'walking' : 'driving',
+    });
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      // No maps app or browser: nothing useful to do beyond staying here.
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Layout
+  // ---------------------------------------------------------------------------
+
+  static const double _sheetInitialSize = 0.42;
+  static const double _sheetMinSize = 0.2;
+  static const double _sheetMaxSize = 0.9;
+
   @override
   Widget build(BuildContext context) {
     final journey = _journey;
@@ -635,120 +801,388 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
         title: Text(_loc.journeyTimerTitle),
       ),
       extendBodyBehindAppBar: true,
-      body:
-          AmicaBackground(child: SafeArea(child: _buildBody(context, journey))),
+      body: AmicaBackground(child: _buildBody(context, journey)),
     );
   }
 
   Widget _buildBody(BuildContext context, Journey? journey) {
     if (_isLoadingJourney) {
-      return LoadingView(message: _loc.journeyTimerLoading);
+      return SafeArea(child: LoadingView(message: _loc.journeyTimerLoading));
     }
 
     final error = _journeyError;
     if (error != null) {
-      return Center(
-          child: Text(_loc.journeyTimerLoadError(error.toString())));
+      return SafeArea(
+        child: Center(
+            child: Text(_loc.journeyTimerLoadError(error.toString()))),
+      );
     }
 
     if (journey == null) {
-      return Center(child: Text(_loc.journeyTimerNoActiveJourney));
+      return SafeArea(
+        child: Center(child: Text(_loc.journeyTimerNoActiveJourney)),
+      );
     }
 
     final mapLocation = journey.currentLocation ?? journey.startLocation;
     final destinationLocation = journey.destinationLocation;
-    final statusColor = switch (journey.status) {
-      'sos' => Theme.of(context).amica.terracotta,
-      'safe' => Theme.of(context).amica.sage,
-      _ => Theme.of(context).amica.sage,
-    };
+    final route = _routeFor(journey);
+    final c = Theme.of(context).amica;
+    final topInset = MediaQuery.of(context).padding.top + kToolbarHeight;
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-      children: [
-        Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bottomInset = constraints.maxHeight * _sheetInitialSize;
+        return Stack(
           children: [
-            Expanded(
-              child: Text(
-                journey.destinationName,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
+            Positioned.fill(
+              child: mapLocation == null
+                  ? const SizedBox.shrink()
+                  : AmicaMapView(
+                      latitude: mapLocation.latitude,
+                      longitude: mapLocation.longitude,
+                      height: null,
+                      borderRadius: 0,
+                      markerTitle: _loc.journeyTimerMapMarkerTitle,
+                      destinationLatitude: destinationLocation?.latitude,
+                      destinationLongitude: destinationLocation?.longitude,
+                      destinationTitle: journey.destinationName,
+                      routePoints: route?.points ?? const [],
+                      showMyLocation: true,
+                      mapPadding: EdgeInsets.only(
+                        top: topInset,
+                        bottom: bottomInset,
+                      ),
+                    ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: statusColor.withValues(alpha: 0.16),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: statusColor.withValues(alpha: 0.5)),
-              ),
-              child: Text(
-                _statusLabel(journey.status),
-                style: TextStyle(
-                  color: statusColor,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                  letterSpacing: 0.6,
+            // Keeps the app bar title readable over any part of the map.
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: topInset + 24,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        c.shell.withValues(alpha: 0.92),
+                        c.shell.withValues(alpha: 0),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
+            DraggableScrollableSheet(
+              initialChildSize: _sheetInitialSize,
+              minChildSize: _sheetMinSize,
+              maxChildSize: _sheetMaxSize,
+              snap: true,
+              snapSizes: const [_sheetInitialSize],
+              builder: (context, scrollController) => _buildSheet(
+                context,
+                journey,
+                route,
+                scrollController,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSheet(
+    BuildContext context,
+    Journey journey,
+    JourneyRoute? route,
+    ScrollController scrollController,
+  ) {
+    final c = Theme.of(context).amica;
+    final textTheme = Theme.of(context).textTheme;
+    final isPaused = journey.isPausedAt(DateTime.now());
+    final statusColor = switch (journey.status) {
+      'sos' => c.terracotta,
+      _ when isPaused => c.gold,
+      _ => c.sage,
+    };
+    final statusText =
+        isPaused ? _loc.journeyTimerPaused : _statusLabel(journey.status);
+    final vehiclePlate = journey.metadata['vehiclePlate'];
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: c.shell,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border(top: BorderSide(color: c.lineSoft)),
+        boxShadow: c.shadow,
+      ),
+      child: SafeArea(
+        top: false,
+        child: ListView(
+          controller: scrollController,
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: c.line,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            // Destination + status.
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        journey.destinationName,
+                        style: textTheme.titleLarge,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (vehiclePlate is String)
+                        Text(
+                          _loc.startJourneyVehicleLabel(vehiclePlate),
+                          style: textTheme.bodySmall,
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                _StatusChip(label: statusText, color: statusColor),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Countdown with pause / resume beside it.
+            AmicaCard(
+              borderColor: isPaused ? c.gold : null,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _loc.journeyTimerTimeRemaining,
+                          style: textTheme.bodySmall
+                              ?.copyWith(letterSpacing: 1.4),
+                        ),
+                        const SizedBox(height: 4),
+                        ValueListenableBuilder<Duration>(
+                          valueListenable: _remainingNotifier,
+                          builder: (context, remaining, _) => Text(
+                            DateTimeUtils.formatDuration(remaining),
+                            style: textTheme.displaySmall?.copyWith(
+                              fontSize: 40,
+                              height: 1.05,
+                              color: isPaused ? c.plum45 : null,
+                            ),
+                          ),
+                        ),
+                        ValueListenableBuilder<Duration?>(
+                          valueListenable: _pauseLeftNotifier,
+                          builder: (context, pauseLeft, _) {
+                            if (pauseLeft == null) {
+                              return Text(
+                                _loc.journeyTimerEstimatedDuration(
+                                    journey.estimatedDurationMinutes),
+                                style: textTheme.bodySmall,
+                              );
+                            }
+                            return Text(
+                              _loc.journeyTimerResumesIn(
+                                DateTimeUtils.formatDuration(pauseLeft),
+                              ),
+                              style: textTheme.bodySmall
+                                  ?.copyWith(color: c.gold),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  _buildPauseButton(journey, isPaused),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Suggested route.
+            AmicaCard(
+              padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+              child: Row(
+                children: [
+                  Icon(
+                    journey.journeyType == 'walk'
+                        ? Icons.directions_walk_rounded
+                        : Icons.directions_car_rounded,
+                    color: c.plum70,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(_loc.journeyTimerSuggestedRoute,
+                            style: textTheme.titleSmall),
+                        Text(
+                          route == null
+                              ? _loc.journeyTimerNoRoute
+                              : _loc.journeyTimerRouteInfo(
+                                  formatDistance(route.distanceMeters),
+                                  (route.durationSeconds / 60).ceil(),
+                                ),
+                          style: textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: _loc.journeyTimerOpenInMaps,
+                    icon: const Icon(Icons.navigation_rounded),
+                    onPressed: journey.destinationLocation == null
+                        ? null
+                        : () => _openInGoogleMaps(journey),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            PrimaryButton(
+              label:
+                  _isSaving ? _loc.journeyTimerSaving : _loc.safetyCheckImSafe,
+              icon: Icons.check_circle_rounded,
+              onPressed: _isSaving ? null : () => _markSafe(journey),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _isSaving ? null : () => _sendSos(journey),
+              icon: const Icon(Icons.sos_rounded),
+              label: Text(_loc.journeyTimerTriggerTestSos),
+            ),
           ],
         ),
-        const SizedBox(height: 4),
-        Text(_loc.journeyTimerEstimatedDuration(
-            journey.estimatedDurationMinutes)),
-        if (journey.metadata['vehiclePlate'] is String)
-          Text(_loc
-              .startJourneyVehicleLabel(journey.metadata['vehiclePlate'] as String)),
-        const SizedBox(height: 20),
-        GlassCard(
-          child: Column(
-            children: [
-              Text(
-                _loc.journeyTimerTimeRemaining,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      letterSpacing: 1.4,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              ValueListenableBuilder<Duration>(
-                valueListenable: _remainingNotifier,
-                builder: (context, remaining, _) {
-                  return Text(
-                    DateTimeUtils.formatDuration(remaining),
-                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                          fontSize: 44,
-                          height: 1.05,
-                        ),
-                  );
-                },
-              ),
-            ],
-          ),
+      ),
+    );
+  }
+
+  /// The app theme sizes buttons with `Size.fromHeight(54)`, i.e. infinite
+  /// width, which breaks layout inside a Row. Buttons beside the timer need
+  /// a finite size.
+  static const Size _compactButtonSize = Size(112, 48);
+
+  Widget _buildPauseButton(Journey journey, bool isPaused) {
+    final busy = _isPausing || _isSaving || !journey.isActive;
+    if (isPaused) {
+      return FilledButton.icon(
+        style: FilledButton.styleFrom(minimumSize: _compactButtonSize),
+        onPressed: busy ? null : () => _resumeJourney(journey),
+        icon: const Icon(Icons.play_arrow_rounded),
+        label: Text(_loc.journeyTimerResumeNow),
+      );
+    }
+    return OutlinedButton.icon(
+      style: OutlinedButton.styleFrom(minimumSize: _compactButtonSize),
+      onPressed: busy || _remainingNotifier.value == Duration.zero
+          ? null
+          : () => _pauseJourney(journey),
+      icon: const Icon(Icons.pause_rounded),
+      label: Text(_loc.journeyTimerPause),
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
+          letterSpacing: 0.6,
         ),
-        if (mapLocation != null) ...[
-          const SizedBox(height: 20),
-          AmicaMapView(
-            latitude: mapLocation.latitude,
-            longitude: mapLocation.longitude,
-            markerTitle: _loc.journeyTimerMapMarkerTitle,
-            destinationLatitude: destinationLocation?.latitude,
-            destinationLongitude: destinationLocation?.longitude,
-            destinationTitle: journey.destinationName,
-          ),
-        ],
-        const SizedBox(height: 24),
-        PrimaryButton(
-          label: _isSaving ? _loc.journeyTimerSaving : _loc.safetyCheckImSafe,
-          icon: Icons.check_circle_rounded,
-          onPressed: _isSaving ? null : () => _markSafe(journey),
+      ),
+    );
+  }
+}
+
+/// Lets the user choose how long to pause the safety timer for.
+class _PauseDurationSheet extends StatefulWidget {
+  const _PauseDurationSheet({
+    required this.choicesMinutes,
+    required this.initialMinutes,
+  });
+
+  final List<int> choicesMinutes;
+  final int initialMinutes;
+
+  @override
+  State<_PauseDurationSheet> createState() => _PauseDurationSheetState();
+}
+
+class _PauseDurationSheetState extends State<_PauseDurationSheet> {
+  late int _minutes = widget.initialMinutes;
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+    final textTheme = Theme.of(context).textTheme;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(loc.journeyTimerPauseSheetTitle, style: textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Text(loc.journeyTimerPauseSheetBody, style: textTheme.bodyMedium),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final minutes in widget.choicesMinutes)
+                  ChoiceChip(
+                    label: Text(loc.journeyTimerPauseMinutes(minutes)),
+                    selected: minutes == _minutes,
+                    onSelected: (_) => setState(() => _minutes = minutes),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            PrimaryButton(
+              label: loc.journeyTimerPauseConfirm(_minutes),
+              icon: Icons.pause_rounded,
+              onPressed: () => Navigator.pop(context, _minutes),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-        OutlinedButton.icon(
-          onPressed: _isSaving ? null : () => _sendSos(journey),
-          icon: const Icon(Icons.sos_rounded),
-          label: Text(_loc.journeyTimerTriggerTestSos),
-        ),
-      ],
+      ),
     );
   }
 }

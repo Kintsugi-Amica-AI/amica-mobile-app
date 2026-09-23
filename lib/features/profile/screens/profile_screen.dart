@@ -36,7 +36,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: c.ivory,
@@ -121,7 +121,7 @@ class _Identity extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
     final theme = Theme.of(context);
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final name = user?.name.trim() ?? '';
 
     return Row(
@@ -172,7 +172,7 @@ class _SetupChecklist extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
 
     final items = <({String label, bool done})>[
       (
@@ -258,7 +258,7 @@ class _DiscreetModeRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = AmicaThemeController.instance;
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
 
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: controller,
@@ -288,7 +288,7 @@ class _LogoutButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
 
     return SizedBox(
       height: 50,
@@ -306,7 +306,7 @@ class _LogoutButton extends StatelessWidget {
   }
 
   Future<void> _confirm(BuildContext context) async {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(

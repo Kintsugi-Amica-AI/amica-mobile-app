@@ -164,7 +164,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
       setState(() => _scheduledRemaining = _selectedDelay);
       _startCountdown();
       if (!mounted) return;
-      final loc = AppLocalizations.of(context)!;
+      final loc = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -179,7 +179,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
       _showError(error.message);
     } catch (_) {
       if (!mounted) return;
-      _showError(AppLocalizations.of(context)!.fakeCallCouldNotSchedule);
+      _showError(AppLocalizations.of(context).fakeCallCouldNotSchedule);
     } finally {
       if (mounted) {
         setState(() => _isBusy = false);
@@ -201,14 +201,14 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content:
-              Text(AppLocalizations.of(context)!.fakeCallScheduleCancelled),
+              Text(AppLocalizations.of(context).fakeCallScheduleCancelled),
         ),
       );
     } on EmergencyActionException catch (error) {
       _showError(error.message);
     } catch (_) {
       if (!mounted) return;
-      _showError(AppLocalizations.of(context)!.fakeCallCouldNotCancel);
+      _showError(AppLocalizations.of(context).fakeCallCouldNotCancel);
     } finally {
       if (mounted) {
         setState(() => _isBusy = false);
@@ -230,7 +230,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
     if (_isLoading) {
       return Scaffold(
         body: LoadingView(
-          message: AppLocalizations.of(context)!.fakeCallPreparingCall,
+          message: AppLocalizations.of(context).fakeCallPreparingCall,
         ),
       );
     }
@@ -243,7 +243,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
   // ---------------------------------------------------------------------
 
   Widget _buildScheduler(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(loc.fakeCallAppBarTitle)),
@@ -344,7 +344,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
             ),
           ),
           IconButton(
-            tooltip: AppLocalizations.of(context)!.fakeCallEditCallerTooltip,
+            tooltip: AppLocalizations.of(context).fakeCallEditCallerTooltip,
             onPressed: () async {
               await Navigator.pushNamed(context, AppRoutes.settings);
               await _load();
@@ -362,7 +362,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppLocalizations.of(context)!.fakeCallMeIn,
+            AppLocalizations.of(context).fakeCallMeIn,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 12),
@@ -399,7 +399,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
           ),
           const SizedBox(height: 10),
           Text(
-            AppLocalizations.of(context)!.fakeCallCallingIn,
+            AppLocalizations.of(context).fakeCallCallingIn,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   letterSpacing: 1.4,
                 ),
@@ -414,7 +414,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            AppLocalizations.of(context)!.fakeCallKeepNotificationVisible,
+            AppLocalizations.of(context).fakeCallKeepNotificationVisible,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall,
           ),
@@ -437,7 +437,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
             children: [
               const SizedBox(height: 24),
               Text(
-                AppLocalizations.of(context)!.fakeCallIncoming,
+                AppLocalizations.of(context).fakeCallIncoming,
                 style: const TextStyle(color: Colors.white70, fontSize: 16),
               ),
               const Spacer(),
@@ -470,7 +470,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                AppLocalizations.of(context)!.fakeCallMobile,
+                AppLocalizations.of(context).fakeCallMobile,
                 style: const TextStyle(color: Colors.white54),
               ),
               const Spacer(),
@@ -478,13 +478,13 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _CallActionButton(
-                    label: AppLocalizations.of(context)!.fakeCallDecline,
+                    label: AppLocalizations.of(context).fakeCallDecline,
                     icon: Icons.call_end,
                     color: Colors.red,
                     onPressed: () => Navigator.pop(context),
                   ),
                   _CallActionButton(
-                    label: AppLocalizations.of(context)!.fakeCallAccept,
+                    label: AppLocalizations.of(context).fakeCallAccept,
                     icon: Icons.call,
                     color: Colors.green,
                     onPressed: _ringNow,

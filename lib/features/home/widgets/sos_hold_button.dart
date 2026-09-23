@@ -114,7 +114,7 @@ class _SosHoldButtonState extends State<SosHoldButton>
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
     final theme = Theme.of(context);
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final holding = _hold.value > 0 && !_fired;
 
     return Semantics(

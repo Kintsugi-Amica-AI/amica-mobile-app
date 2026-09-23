@@ -89,7 +89,7 @@ class _SosActiveScreenState extends State<SosActiveScreen> {
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
     final theme = Theme.of(context);
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final args = widget.arguments;
 
     return Scaffold(
@@ -191,7 +191,7 @@ class _SosActiveScreenState extends State<SosActiveScreen> {
 
   Future<void> _standDown(BuildContext context) async {
     final c = Theme.of(context).amica;
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -248,7 +248,7 @@ class _LiveStrip extends StatelessWidget {
                 ),
                 const SizedBox(width: 9),
                 Text(
-                  AppLocalizations.of(context)!.sosActiveLive,
+                  AppLocalizations.of(context).sosActiveLive,
                   style: TextStyle(
                     color: AppColors.onTerracotta,
                     fontSize: 13.5,
@@ -292,7 +292,7 @@ class _LocationBlock extends StatelessWidget {
             child: AmicaMapView(
               latitude: location.latitude,
               longitude: location.longitude,
-              markerTitle: AppLocalizations.of(context)!.sosActiveYourLocation,
+              markerTitle: AppLocalizations.of(context).sosActiveYourLocation,
             ),
           ),
           Positioned(
@@ -333,7 +333,7 @@ class _LocationBlock extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          AppLocalizations.of(context)!.sosActiveUpdatingEvery10s,
+                          AppLocalizations.of(context).sosActiveUpdatingEvery10s,
                           style: TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w500,
@@ -361,7 +361,7 @@ class _CircleReached extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
 
     return StreamBuilder<List<EmergencyContact>>(
       stream: service.watchEmergencyContacts(),
@@ -479,8 +479,8 @@ class _DoingRow extends StatelessWidget {
             ),
             Text(
               on
-                  ? AppLocalizations.of(context)!.sosActiveOn
-                  : AppLocalizations.of(context)!.sosActiveOff,
+                  ? AppLocalizations.of(context).sosActiveOn
+                  : AppLocalizations.of(context).sosActiveOff,
               style: TextStyle(
                 fontSize: 9,
                 fontWeight: FontWeight.w600,

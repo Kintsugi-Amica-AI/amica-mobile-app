@@ -1405,5 +1405,86 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleRatingSkipButton => 'Skip';
 
   @override
+  String get startJourneyFindingAddress => 'Pinned. Finding the address...';
+
+  @override
+  String get startJourneyAddressNotFound =>
+      'Pinned. No address found here, so type a name for this place.';
+
+  @override
+  String get startJourneyRouteLoading => 'Finding a route...';
+
+  @override
+  String startJourneyRouteSummary(String distance, int minutes) {
+    return 'Suggested route: $distance · about $minutes min';
+  }
+
+  @override
+  String get startJourneyRouteUnavailable =>
+      'Couldn\'t get a route. Using a straight-line estimate.';
+
+  @override
+  String get journeyTimerPause => 'Pause';
+
+  @override
+  String get journeyTimerResumeNow => 'Resume';
+
+  @override
+  String get journeyTimerPaused => 'PAUSED';
+
+  @override
+  String journeyTimerResumesIn(String time) {
+    return 'Resumes automatically in $time';
+  }
+
+  @override
+  String get journeyTimerPauseSheetTitle => 'Pause the safety timer';
+
+  @override
+  String get journeyTimerPauseSheetBody =>
+      'The countdown stops while paused. It starts again on its own when the pause ends, or you can resume it any time.';
+
+  @override
+  String journeyTimerPauseMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String journeyTimerPauseConfirm(int minutes) {
+    return 'Pause for $minutes min';
+  }
+
+  @override
+  String journeyTimerPausedFor(int minutes) {
+    return 'Timer paused for $minutes min';
+  }
+
+  @override
+  String get journeyTimerResumed => 'Timer resumed';
+
+  @override
+  String get journeyTimerPauseFailed =>
+      'Could not pause the timer. Please try again.';
+
+  @override
+  String get journeyTimerResumeFailed =>
+      'Could not resume the timer. Please try again.';
+
+  @override
+  String get journeyTimerSuggestedRoute => 'Suggested route';
+
+  @override
+  String journeyTimerRouteInfo(String distance, int minutes) {
+    return '$distance · about $minutes min';
+  }
+
+  @override
+  String get journeyTimerNoRoute =>
+      'No suggested route. Head towards the pink pin.';
+
+  @override
+  String get journeyTimerOpenInMaps => 'Navigate in Google Maps';
+
+  @override
   String get zzzArbEnd => 'do not translate; internal append anchor';
 }
