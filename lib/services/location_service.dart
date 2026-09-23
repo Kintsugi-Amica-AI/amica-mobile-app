@@ -54,6 +54,30 @@ class LocationService {
     );
   }
 
+  /// The phone's last known fix, instantly and without prompting — or null
+  /// if there is none yet or location permission has not been granted.
+  /// Good for putting the map in the right place while the precise fix
+  /// from [getCurrentLocationData] is still on its way.
+  Future<LocationDataModel?> getLastKnownLocationData() async {
+    try {
+      final permission = await Geolocator.checkPermission();
+      if (permission != LocationPermission.always &&
+          permission != LocationPermission.whileInUse) {
+        return null;
+      }
+      final position = await Geolocator.getLastKnownPosition();
+      if (position == null) return null;
+      return LocationDataModel(
+        latitude: position.latitude,
+        longitude: position.longitude,
+        address: '',
+        updatedAt: position.timestamp,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Live position updates for a screen that tracks movement, such as the bus
   /// stop alert.
   ///

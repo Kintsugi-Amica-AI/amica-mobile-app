@@ -461,7 +461,8 @@ class AppLocalizationsSi extends AppLocalizations {
   String get phoneVerifyTitle => 'ඔබේ දුරකථන අංකය තහවුරු කරන්න';
 
   @override
-  String get phoneVerifySubtitle => 'මෙම අංකය ඔබේ බව තහවුරු කිරීමට අපි ඔබට ඉලක්කම් 6ක කේතයක් SMS කරන්නෙමු.';
+  String get phoneVerifySubtitle =>
+      'මෙම අංකය ඔබේ බව තහවුරු කිරීමට අපි ඔබට ඉලක්කම් 6ක කේතයක් SMS කරන්නෙමු.';
 
   @override
   String get phoneSendCode => 'කේතය යවන්න';
@@ -498,28 +499,51 @@ class AppLocalizationsSi extends AppLocalizations {
   String get phoneNotVerified => 'තවම තහවුරු කර නැත';
 
   @override
-  String get phoneInvalidNumber => 'වලංගු දුරකථන අංකයක් ඇතුළත් කරන්න, උදා: +94 77 123 4567';
+  String get phoneInvalidNumber =>
+      'වලංගු දුරකථන අංකයක් ඇතුළත් කරන්න, උදා: +94 77 123 4567';
 
   @override
-  String get phoneErrInvalidCode => 'එම කේතය නිවැරදි නැත. SMS පණිවිඩය පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
+  String get phoneErrInvalidCode =>
+      'එම කේතය නිවැරදි නැත. SMS පණිවිඩය පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
 
   @override
   String get phoneErrExpired => 'මෙම කේතය කල් ඉකුත් වී ඇත. නව කේතයක් යවන්න.';
 
   @override
-  String get phoneErrTooMany => 'උත්සාහයන් වැඩියි. ටික වේලාවක් රැඳී නැවත උත්සාහ කරන්න.';
+  String get phoneErrTooMany =>
+      'උත්සාහයන් වැඩියි. ටික වේලාවක් රැඳී නැවත උත්සාහ කරන්න.';
 
   @override
-  String get phoneErrInUse => 'මෙම අංකය දැනටමත් වෙනත් Amica ගිණුමකට සම්බන්ධ කර ඇත.';
+  String get phoneErrInUse =>
+      'මෙම අංකය දැනටමත් වෙනත් Amica ගිණුමකට සම්බන්ධ කර ඇත.';
 
   @override
-  String get phoneErrNotEnabled => 'මෙම යෙදුම සඳහා දුරකථන තහවුරු කිරීම තවම සක්‍රිය කර නැත.';
+  String get phoneErrNotEnabled =>
+      'මෙම යෙදුම සඳහා දුරකථන තහවුරු කිරීම තවම සක්‍රිය කර නැත.';
 
   @override
-  String get phoneErrAppNotAuthorized => 'මෙම යෙදුම් ගොනුව දුරකථන තහවුරු කිරීම සඳහා තවම ලියාපදිංචි කර නැත.';
+  String get phoneErrAppNotAuthorized =>
+      'මෙම යෙදුම් ගොනුව දුරකථන තහවුරු කිරීම සඳහා තවම ලියාපදිංචි කර නැත.';
 
   @override
-  String get phoneErrGeneric => 'ඔබේ අංකය තහවුරු කළ නොහැකි විය. සම්බන්ධතාව පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
+  String get phoneErrGeneric =>
+      'ඔබේ අංකය තහවුරු කළ නොහැකි විය. සම්බන්ධතාව පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get phoneAddTitle => 'ඔබේ දුරකථන අංකය එක් කරන්න';
+
+  @override
+  String get phoneAddSubtitle =>
+      'ඔබ දිනපතා භාවිත කරන අංකය සුරකින්න. SMS මගින් තහවුරු කිරීම ඉක්මනින් පැමිණේ.';
+
+  @override
+  String get phoneSaved => 'දුරකථන අංකය සුරකින ලදී';
+
+  @override
+  String get profilePhoneAdded => 'දුරකථන අංකය එක් කර ඇත';
+
+  @override
+  String get profileAddPhone => 'ඔබේ දුරකථන අංකය එක් කරන්න';
 
   @override
   String get profileVerifyAction => 'තහවුරු කරන්න';
@@ -536,7 +560,92 @@ class AppLocalizationsSi extends AppLocalizations {
   String get profileLoadFailedTitle => 'ඔබේ පැතිකඩ පූරණය කළ නොහැකි විය';
 
   @override
-  String get profileLoadFailedBody => 'ඔබේ විස්තර ආරක්ෂිතයි. සම්බන්ධතාව පරීක්ෂා කරන්න — නැවත සබැඳි වූ විට මෙම පිටුව ස්වයංක්‍රීයව යාවත්කාලීන වේ.';
+  String get profileLoadFailedBody =>
+      'ඔබේ විස්තර ආරක්ෂිතයි. සම්බන්ධතාව පරීක්ෂා කරන්න — නැවත සබැඳි වූ විට මෙම පිටුව ස්වයංක්‍රීයව යාවත්කාලීන වේ.';
+
+  @override
+  String get tripTitleBus => 'ඔබේ බස් ගමන';
+
+  @override
+  String get tripTitleTrain => 'ඔබේ දුම්රිය ගමන';
+
+  @override
+  String get tripPlanning => 'ඔබ අසල නැවතුම් සොයමින්…';
+
+  @override
+  String get tripTooClose =>
+      'මෙය ඇවිද යා හැකි තරම් ළඟයි — බස් හෝ දුම්රිය අවශ්‍ය නැත.';
+
+  @override
+  String get tripNoStops =>
+      'අසල නැවතුම් හෝ දුම්රිය ස්ථාන හමු නොවීය. Amica ඒ වෙනුවට මාර්ග ගමන් මග භාවිත කරයි.';
+
+  @override
+  String get tripOffline =>
+      'දැන් ගමන සැලසුම් කළ නොහැකි විය. Amica ඒ වෙනුවට මාර්ග ගමන් මග භාවිත කරයි.';
+
+  @override
+  String tripWalkToStop(String distance, String stop) {
+    return '$stop දක්වා $distance ඇවිදින්න';
+  }
+
+  @override
+  String tripGetOnAt(String stop) {
+    return '$stop හිදී නගින්න';
+  }
+
+  @override
+  String tripGetOffAt(String stop) {
+    return '$stop හිදී බසින්න';
+  }
+
+  @override
+  String tripWalkToDestination(String distance) {
+    return 'ඔබේ ගමනාන්තය දක්වා $distance ඇවිදින්න';
+  }
+
+  @override
+  String tripRideSummary(String distance, int minutes) {
+    return 'ගමන $distance · මිනිත්තු $minutes පමණ';
+  }
+
+  @override
+  String tripMinutes(int minutes) {
+    return 'මි. $minutes';
+  }
+
+  @override
+  String tripBusLine(String line) {
+    return 'බස් අංක $line';
+  }
+
+  @override
+  String tripTrainLine(String line) {
+    return 'දුම්රිය: $line';
+  }
+
+  @override
+  String get tripEstimated =>
+      'ආසන්නතම නැවතුම් අනුව ඇස්තමේන්තු කර ඇත — කොන්දොස්තරගෙන් මාර්ගය තහවුරු කරගන්න.';
+
+  @override
+  String get tripChooseBoard => 'නගින ස්ථානය';
+
+  @override
+  String get tripChooseAlight => 'බසින ස්ථානය';
+
+  @override
+  String tripStopAway(String distance) {
+    return '$distance දුරින්';
+  }
+
+  @override
+  String get stopAlertWhereGoing => 'ඔබ යන්නේ කොහේද?';
+
+  @override
+  String stopAlertWakeBefore(String stop) {
+    return 'ඔබ බැසිය යුතු $stop නැවතුමට පෙර Amica ඔබට දැනුම් දෙයි.';
+  }
 
   @override
   String get profileLogOut => 'පිටවන්න';

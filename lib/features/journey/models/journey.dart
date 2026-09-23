@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../services/journey_route_service.dart';
+import '../../../services/transit_plan_service.dart';
 import 'location_data_model.dart';
 
 class Journey {
@@ -26,6 +27,7 @@ class Journey {
     this.actualEndTime,
     this.pause = const {},
     this.route = const {},
+    this.transitPlanData = const {},
   });
 
   final String id;
@@ -58,6 +60,10 @@ class Journey {
 
   /// Suggested route saved when the journey started (see [JourneyRoute]).
   final Map<String, dynamic> route;
+
+  /// Bus/train trip plan (stops to get on / off, walks to and from them),
+  /// saved when a bus or train journey started. Empty otherwise.
+  final Map<String, dynamic> transitPlanData;
   final int schemaVersion;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -81,6 +87,8 @@ class Journey {
   }
 
   JourneyRoute? get suggestedRoute => JourneyRoute.fromMap(route);
+
+  TransitPlan? get transitPlan => TransitPlan.fromMap(transitPlanData);
 
   /// Whether this ride is watching the distance to a drop-off point rather
   /// than counting down a safety timer.
@@ -177,6 +185,7 @@ class Journey {
       metadata: _readMap(data['metadata']),
       pause: _readMap(data['pause']),
       route: _readMap(data['route']),
+      transitPlanData: _readMap(data['transitPlan']),
       schemaVersion: _readInt(data['schemaVersion'], 1),
       createdAt: _readDateTime(data['createdAt']),
       updatedAt: _readDateTime(data['updatedAt']),
@@ -201,6 +210,7 @@ class Journey {
       'metadata': metadata,
       'pause': pause.isEmpty ? null : pause,
       'route': route.isEmpty ? null : route,
+      'transitPlan': transitPlanData.isEmpty ? null : transitPlanData,
       'schemaVersion': schemaVersion,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),

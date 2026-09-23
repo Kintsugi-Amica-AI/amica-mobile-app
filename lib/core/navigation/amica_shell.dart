@@ -30,6 +30,21 @@ class AmicaShell extends StatefulWidget {
 class _AmicaShellState extends State<AmicaShell> {
   late int _index = widget.initialIndex;
 
+  /// Mirrors [_index] so a tab can react when it is actually shown — the
+  /// IndexedStack builds every tab up front.
+  late final ValueNotifier<int> _currentTab = ValueNotifier(_index);
+
+  void _select(int i) {
+    setState(() => _index = i);
+    _currentTab.value = i;
+  }
+
+  @override
+  void dispose() {
+    _currentTab.dispose();
+    super.dispose();
+  }
+
   /// [IndexedStack] rather than swapping children, so a half-filled journey
   /// form or a scrolled contact list survives a trip to another tab.
   static const List<Widget> _tabs = [
@@ -47,7 +62,8 @@ class _AmicaShellState extends State<AmicaShell> {
 
     return Scaffold(
       body: AmicaShellScope(
-        selectTab: (i) => setState(() => _index = i),
+        selectTab: _select,
+        currentTab: _currentTab,
         child: IndexedStack(index: _index, children: _tabs),
       ),
       // A floating pill rather than an edge-to-edge bar, as in the
@@ -79,7 +95,7 @@ class _AmicaShellState extends State<AmicaShell> {
               child: NavigationBar(
                 backgroundColor: Colors.transparent,
                 selectedIndex: _index,
-                onDestinationSelected: (i) => setState(() => _index = i),
+                onDestinationSelected: _select,
                 destinations: [
                   NavigationDestination(
                     icon: const Icon(Icons.home_outlined),
@@ -117,6 +133,7 @@ class _AmicaShellState extends State<AmicaShell> {
 class AmicaShellScope extends InheritedWidget {
   const AmicaShellScope({
     required this.selectTab,
+    required this.currentTab,
     required super.child,
     super.key,
   });
@@ -127,6 +144,9 @@ class AmicaShellScope extends InheritedWidget {
   static const int youTab = 3;
 
   final void Function(int index) selectTab;
+
+  /// The tab on screen right now.
+  final ValueListenable<int> currentTab;
 
   static AmicaShellScope? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<AmicaShellScope>();

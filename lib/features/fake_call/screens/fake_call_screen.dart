@@ -6,11 +6,13 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../core/utils/date_time_utils.dart';
 import '../../../core/widgets/amica_background.dart';
+import '../../../core/widgets/amica_primitives.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/loading_view.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../services/emergency_action_service.dart';
 import '../../auth/services/user_profile_service.dart';
+import '../../journey/widgets/journey_visuals.dart';
 import '../services/fake_call_service.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import 'fake_call_active_screen.dart';
@@ -253,12 +255,45 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
             children: [
+              const SizedBox(height: 8),
+              // Hero: a soft gradient phone badge on a lavender halo.
+              Center(
+                child: Container(
+                  width: 112,
+                  height: 112,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Theme.of(context).amica.accentSoft,
+                  ),
+                  child: Container(
+                    width: 76,
+                    height: 76,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: Theme.of(context).amica.accentGradient,
+                      boxShadow: Theme.of(context).amica.accentGlow,
+                    ),
+                    child: const Icon(
+                      Icons.phone_in_talk_rounded,
+                      color: AppColors.onAccent,
+                      size: 34,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               Text(
                 loc.fakeCallHeroTitle,
+                textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 6),
-              Text(loc.fakeCallHeroSubtitle),
+              Text(
+                loc.fakeCallHeroSubtitle,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
               const SizedBox(height: 22),
               _buildCallerCard(context),
               const SizedBox(height: 20),
@@ -274,10 +309,11 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
                   onPressed: _isBusy ? null : _ringNow,
                 ),
                 const SizedBox(height: 12),
-                OutlinedButton.icon(
+                PrimaryButton(
+                  tone: AmicaButtonTone.quiet,
+                  label: loc.fakeCallCancelScheduled,
+                  icon: Icons.cancel_outlined,
                   onPressed: _isBusy ? null : _cancelSchedule,
-                  icon: const Icon(Icons.cancel_outlined),
-                  label: Text(loc.fakeCallCancelScheduled),
                 ),
               ] else ...[
                 PrimaryButton(
@@ -291,10 +327,11 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
                   onPressed: _isBusy ? null : _scheduleCall,
                 ),
                 const SizedBox(height: 12),
-                OutlinedButton.icon(
+                PrimaryButton(
+                  tone: AmicaButtonTone.quiet,
+                  label: loc.fakeCallRingNow,
+                  icon: Icons.phone_in_talk_outlined,
                   onPressed: _isBusy ? null : _ringNow,
-                  icon: const Icon(Icons.phone_in_talk_outlined),
-                  label: Text(loc.fakeCallRingNow),
                 ),
               ],
               const SizedBox(height: 20),
@@ -314,16 +351,19 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
     return GlassCard(
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 26,
-            backgroundColor: Theme.of(context).amica.shell,
-            child: Text(
-              _callerName.isEmpty ? 'A' : _callerName[0].toUpperCase(),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
+          Container(
+            padding: const EdgeInsets.all(2.5),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: Theme.of(context).amica.accentGradient,
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Theme.of(context).amica.card,
               ),
+              child: AmicaAvatar(initial: _callerName, size: 48),
             ),
           ),
           const SizedBox(width: 14),
@@ -349,6 +389,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
               await Navigator.pushNamed(context, AppRoutes.settings);
               await _load();
             },
+            color: Theme.of(context).amica.accentInk,
             icon: const Icon(Icons.edit_outlined),
           ),
         ],
@@ -361,20 +402,36 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            AppLocalizations.of(context).fakeCallMeIn,
-            style: Theme.of(context).textTheme.titleMedium,
+          Row(
+            children: [
+              const GradientIconBadge(
+                icon: Icons.schedule_rounded,
+                size: 34,
+                soft: true,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                AppLocalizations.of(context).fakeCallMeIn,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: 8,
+            runSpacing: 8,
             children: FakeCallService.scheduleDelayOptions.map((delay) {
               final isSelected = delay == _selectedDelay;
               return ChoiceChip(
                 selected: isSelected,
+                showCheckmark: false,
                 label: Text(
                   widget.fakeCallService.formatScheduleDelay(delay),
+                  style: TextStyle(
+                    color: isSelected
+                        ? AppColors.onAccent
+                        : Theme.of(context).amica.accentInk,
+                  ),
                 ),
                 onSelected: _isBusy
                     ? null
@@ -392,11 +449,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
       borderColor: Theme.of(context).amica.gold,
       child: Column(
         children: [
-          Icon(
-            Icons.phone_forwarded_rounded,
-            color: Theme.of(context).amica.gold,
-            size: 26,
-          ),
+          const GradientIconBadge(icon: Icons.phone_forwarded_rounded),
           const SizedBox(height: 10),
           Text(
             AppLocalizations.of(context).fakeCallCallingIn,

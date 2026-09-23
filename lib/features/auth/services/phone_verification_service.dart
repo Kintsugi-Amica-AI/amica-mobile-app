@@ -163,6 +163,32 @@ class PhoneVerificationService {
     }
   }
 
+  /// Saves the number on the profile without an SMS check, marked
+  /// `phoneVerified: false`. Used while `FeatureFlags.phoneSmsVerification`
+  /// is off; the Firestore rules accept it because it claims no
+  /// verification.
+  Future<void> saveUnverified(String phoneE164) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw const PhoneVerificationException(
+        PhoneVerificationError.notSignedIn,
+      );
+    }
+    try {
+      await _firestore.collection('users').doc(user.uid).set({
+        'phone': phoneE164,
+        'phoneVerified': false,
+        'phoneVerifiedAt': FieldValue.delete(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } on FirebaseException catch (error) {
+      throw PhoneVerificationException(
+        PhoneVerificationError.saveFailed,
+        error.code,
+      );
+    }
+  }
+
   static PhoneVerificationException _map(FirebaseAuthException error) {
     final kind = switch (error.code) {
       'invalid-phone-number' => PhoneVerificationError.invalidNumber,

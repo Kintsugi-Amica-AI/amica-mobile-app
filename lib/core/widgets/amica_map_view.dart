@@ -37,6 +37,9 @@ class AmicaMapView extends StatefulWidget {
     this.onDestinationDragged,
     this.captureGestures = false,
     this.showControls = true,
+    this.routeLegs = const [],
+    this.transitStops = const [],
+    this.onTransitStopTap,
   });
 
   final double latitude;
@@ -77,6 +80,15 @@ class AmicaMapView extends StatefulWidget {
   /// Shows the frosted zoom / recentre / fit-route buttons.
   final bool showControls;
 
+  /// A multi-part trip (walk → bus/train → walk). Walks are drawn dotted,
+  /// rides solid. Used instead of [routePoints] for bus and train trips.
+  final List<MapRouteLeg> routeLegs;
+
+  /// Bus stops / stations: the chosen get-on and get-off stops, plus nearby
+  /// alternatives the rider can tap to choose instead.
+  final List<MapTransitStop> transitStops;
+  final void Function(MapTransitStop stop)? onTransitStopTap;
+
   @override
   State<AmicaMapView> createState() => _AmicaMapViewState();
 }
@@ -86,6 +98,9 @@ class _AmicaMapViewState extends State<AmicaMapView> {
 
   BitmapDescriptor? _startIcon;
   BitmapDescriptor? _destinationIcon;
+
+  /// [chosen bus, candidate bus, chosen train, candidate train]
+  List<BitmapDescriptor>? _stopIcons;
   String? _iconsKey;
 
   /// The last destination the user picked directly on the map (tap or drag).
@@ -124,11 +139,20 @@ class _AmicaMapViewState extends State<AmicaMapView> {
       final icons = await Future.wait([
         _AmicaMarkerPainter.you(c, dpr),
         _AmicaMarkerPainter.destination(c, dpr),
+        _AmicaMarkerPainter.stop(c, dpr,
+            icon: Icons.directions_bus_rounded, chosen: true),
+        _AmicaMarkerPainter.stop(c, dpr,
+            icon: Icons.directions_bus_rounded, chosen: false),
+        _AmicaMarkerPainter.stop(c, dpr,
+            icon: Icons.train_rounded, chosen: true),
+        _AmicaMarkerPainter.stop(c, dpr,
+            icon: Icons.train_rounded, chosen: false),
       ]);
       if (!mounted || _iconsKey != key) return;
       setState(() {
         _startIcon = icons[0];
         _destinationIcon = icons[1];
+        _stopIcons = icons.sublist(2);
       });
     } catch (_) {
       // Keep Google's default pins if drawing fails for any reason.
@@ -138,7 +162,10 @@ class _AmicaMapViewState extends State<AmicaMapView> {
   @override
   void didUpdateWidget(covariant AmicaMapView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final routeChanged = !listEquals(oldWidget.routePoints, widget.routePoints);
+    final routeChanged =
+        !listEquals(oldWidget.routePoints, widget.routePoints) ||
+            _legsSignature(oldWidget.routeLegs) !=
+                _legsSignature(widget.routeLegs);
     final markersChanged = oldWidget.latitude != widget.latitude ||
         oldWidget.longitude != widget.longitude ||
         oldWidget.destinationLatitude != widget.destinationLatitude ||
@@ -151,7 +178,9 @@ class _AmicaMapViewState extends State<AmicaMapView> {
 
     // A fresh route is framed, unless it leads to a spot the user just picked
     // by hand: then they are fine-tuning and the view must stay put.
-    if (routeChanged && widget.routePoints.length > 1 && !pickedOnMap) {
+    final hasRoute =
+        widget.routePoints.length > 1 || widget.routeLegs.isNotEmpty;
+    if (routeChanged && hasRoute && !pickedOnMap) {
       _moveCameraToMarkers();
       return;
     }
@@ -215,10 +244,83 @@ class _AmicaMapViewState extends State<AmicaMapView> {
               ),
           anchor: const Offset(0.5, 1),
         ),
+      for (final stop in widget.transitStops)
+        Marker(
+          markerId: MarkerId('amica-stop-${stop.role.name}-${stop.id}'),
+          position: stop.position,
+          infoWindow: InfoWindow(title: stop.name),
+          icon: _stopIconFor(stop),
+          anchor: const Offset(0.5, 0.5),
+          onTap: widget.onTransitStopTap == null
+              ? null
+              : () => widget.onTransitStopTap!(stop),
+        ),
     };
   }
 
+  BitmapDescriptor _stopIconFor(MapTransitStop stop) {
+    final icons = _stopIcons;
+    if (icons == null) {
+      return BitmapDescriptor.defaultMarkerWithHue(
+        stop.role == MapStopRole.candidate
+            ? BitmapDescriptor.hueAzure
+            : BitmapDescriptor.hueViolet,
+      );
+    }
+    final chosen = stop.role != MapStopRole.candidate;
+    return icons[(stop.train ? 2 : 0) + (chosen ? 0 : 1)];
+  }
+
+  static String _legsSignature(List<MapRouteLeg> legs) {
+    if (legs.isEmpty) return '';
+    final first = legs.first.points;
+    final last = legs.last.points;
+    return '${legs.length}:${first.isEmpty ? '' : first.first}:'
+        '${last.isEmpty ? '' : last.last}:'
+        '${legs.fold<int>(0, (n, l) => n + l.points.length)}';
+  }
+
   Set<Polyline> _polylines(AmicaColors c) {
+    if (widget.routeLegs.isNotEmpty) {
+      return {
+        for (var i = 0; i < widget.routeLegs.length; i++)
+          if (widget.routeLegs[i].points.length > 1) ...[
+            if (widget.routeLegs[i].walking)
+              // Walks: dotted, so "you walk this bit" reads at a glance.
+              Polyline(
+                polylineId: PolylineId('amica-leg-$i'),
+                points: widget.routeLegs[i].points,
+                color: c.accentInk,
+                width: 5,
+                zIndex: 2,
+                patterns: [PatternItem.dot, PatternItem.gap(10)],
+                jointType: JointType.round,
+              )
+            else ...[
+              Polyline(
+                polylineId: PolylineId('amica-leg-$i-casing'),
+                points: widget.routeLegs[i].points,
+                color: c.card.withValues(alpha: 0.95),
+                width: 10,
+                zIndex: 0,
+                startCap: Cap.roundCap,
+                endCap: Cap.roundCap,
+                jointType: JointType.round,
+              ),
+              Polyline(
+                polylineId: PolylineId('amica-leg-$i'),
+                points: widget.routeLegs[i].points,
+                color: widget.routeColor ?? c.accent,
+                width: 6,
+                zIndex: 1,
+                startCap: Cap.roundCap,
+                endCap: Cap.roundCap,
+                jointType: JointType.round,
+              ),
+            ],
+          ],
+      };
+    }
     if (widget.routePoints.length < 2) {
       return const {};
     }
@@ -264,6 +366,9 @@ class _AmicaMapViewState extends State<AmicaMapView> {
       if (widget.showStartMarker || destination == null) _centerPosition,
       if (destination != null) destination,
       ...widget.routePoints,
+      for (final leg in widget.routeLegs) ...leg.points,
+      for (final stop in widget.transitStops)
+        if (stop.role != MapStopRole.candidate) stop.position,
     ];
   }
 
@@ -424,6 +529,35 @@ class _AmicaMapViewState extends State<AmicaMapView> {
   }
 }
 
+/// One drawn part of a multi-part trip.
+class MapRouteLeg {
+  const MapRouteLeg({required this.points, this.walking = false});
+
+  final List<LatLng> points;
+
+  /// Walks are drawn dotted; rides solid.
+  final bool walking;
+}
+
+enum MapStopRole { board, alight, candidate }
+
+/// A bus stop / station marker.
+class MapTransitStop {
+  const MapTransitStop({
+    required this.id,
+    required this.name,
+    required this.position,
+    required this.role,
+    this.train = false,
+  });
+
+  final String id;
+  final String name;
+  final LatLng position;
+  final MapStopRole role;
+  final bool train;
+}
+
 /// A frosted-glass round map button.
 class _MapButton extends StatelessWidget {
   const _MapButton({
@@ -523,6 +657,71 @@ class _AmicaMarkerPainter {
             [c.accent, c.accentEnd],
           ),
       );
+    });
+  }
+
+  /// A bus stop / station: the chosen ones are gradient discs with a white
+  /// icon; alternatives are smaller white discs with an accent ring.
+  static Future<BitmapDescriptor> stop(
+    AmicaColors c,
+    double dpr, {
+    required IconData icon,
+    required bool chosen,
+  }) {
+    final size = chosen ? const Size(40, 40) : const Size(30, 30);
+    final center = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 3;
+    return _render(size, dpr, (canvas) {
+      canvas.drawCircle(
+        center.translate(0, 1.2),
+        r,
+        Paint()
+          ..color = Colors.black.withValues(alpha: 0.2)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+      );
+      if (chosen) {
+        canvas.drawCircle(
+          center,
+          r,
+          Paint()
+            ..shader = ui.Gradient.linear(
+              center.translate(-r, -r),
+              center.translate(r, r),
+              [c.accent, c.accentEnd],
+            ),
+        );
+        canvas.drawCircle(
+          center,
+          r,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2.5
+            ..color = Colors.white,
+        );
+      } else {
+        canvas.drawCircle(center, r, Paint()..color = Colors.white);
+        canvas.drawCircle(
+          center,
+          r,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2
+            ..color = c.accent,
+        );
+      }
+      final glyph = TextPainter(
+        text: TextSpan(
+          text: String.fromCharCode(icon.codePoint),
+          style: TextStyle(
+            fontSize: chosen ? 19 : 14,
+            fontFamily: icon.fontFamily,
+            package: icon.fontPackage,
+            color: chosen ? Colors.white : c.accent,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      glyph.paint(canvas, center - Offset(glyph.width / 2, glyph.height / 2));
     });
   }
 

@@ -877,7 +877,7 @@ abstract class AppLocalizations {
   /// No description provided for @phoneVerifySubtitle.
   ///
   /// In en, this message translates to:
-  /// **'We'll text you a 6-digit code to confirm this number is yours.'**
+  /// **'We\'ll text you a 6-digit code to confirm this number is yours.'**
   String get phoneVerifySubtitle;
 
   /// No description provided for @phoneSendCode.
@@ -949,7 +949,7 @@ abstract class AppLocalizations {
   /// No description provided for @phoneErrInvalidCode.
   ///
   /// In en, this message translates to:
-  /// **'That code isn't right. Check the SMS and try again.'**
+  /// **'That code isn\'t right. Check the SMS and try again.'**
   String get phoneErrInvalidCode;
 
   /// No description provided for @phoneErrExpired.
@@ -973,20 +973,50 @@ abstract class AppLocalizations {
   /// No description provided for @phoneErrNotEnabled.
   ///
   /// In en, this message translates to:
-  /// **'Phone verification isn't turned on for this app yet.'**
+  /// **'Phone verification isn\'t turned on for this app yet.'**
   String get phoneErrNotEnabled;
 
   /// No description provided for @phoneErrAppNotAuthorized.
   ///
   /// In en, this message translates to:
-  /// **'This app build isn't registered for phone verification yet.'**
+  /// **'This app build isn\'t registered for phone verification yet.'**
   String get phoneErrAppNotAuthorized;
 
   /// No description provided for @phoneErrGeneric.
   ///
   /// In en, this message translates to:
-  /// **'Couldn't verify your number. Check your connection and try again.'**
+  /// **'Couldn\'t verify your number. Check your connection and try again.'**
   String get phoneErrGeneric;
+
+  /// No description provided for @phoneAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your phone number'**
+  String get phoneAddTitle;
+
+  /// No description provided for @phoneAddSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save the number you use every day. SMS verification is coming soon.'**
+  String get phoneAddSubtitle;
+
+  /// No description provided for @phoneSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number saved'**
+  String get phoneSaved;
+
+  /// No description provided for @profilePhoneAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number added'**
+  String get profilePhoneAdded;
+
+  /// No description provided for @profileAddPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your phone number'**
+  String get profileAddPhone;
 
   /// No description provided for @profileVerifyAction.
   ///
@@ -1003,20 +1033,140 @@ abstract class AppLocalizations {
   /// No description provided for @profileSaveFailedWithCode.
   ///
   /// In en, this message translates to:
-  /// **'Couldn't save your profile ({code}). Check your connection and try again.'**
+  /// **'Couldn\'t save your profile ({code}). Check your connection and try again.'**
   String profileSaveFailedWithCode(String code);
 
   /// No description provided for @profileLoadFailedTitle.
   ///
   /// In en, this message translates to:
-  /// **'Couldn't load your profile'**
+  /// **'Couldn\'t load your profile'**
   String get profileLoadFailedTitle;
 
   /// No description provided for @profileLoadFailedBody.
   ///
   /// In en, this message translates to:
-  /// **'Your details are safe. Check your connection — this page updates by itself once you're back online.'**
+  /// **'Your details are safe. Check your connection — this page updates by itself once you\'re back online.'**
   String get profileLoadFailedBody;
+
+  /// No description provided for @tripTitleBus.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bus trip'**
+  String get tripTitleBus;
+
+  /// No description provided for @tripTitleTrain.
+  ///
+  /// In en, this message translates to:
+  /// **'Your train trip'**
+  String get tripTitleTrain;
+
+  /// No description provided for @tripPlanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Finding stops near you…'**
+  String get tripPlanning;
+
+  /// No description provided for @tripTooClose.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s close enough to walk — no bus or train needed.'**
+  String get tripTooClose;
+
+  /// No description provided for @tripNoStops.
+  ///
+  /// In en, this message translates to:
+  /// **'No stops or stations found nearby. Amica will use the road route instead.'**
+  String get tripNoStops;
+
+  /// No description provided for @tripOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t plan the trip right now. Amica will use the road route instead.'**
+  String get tripOffline;
+
+  /// No description provided for @tripWalkToStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk {distance} to {stop}'**
+  String tripWalkToStop(String distance, String stop);
+
+  /// No description provided for @tripGetOnAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Get on at {stop}'**
+  String tripGetOnAt(String stop);
+
+  /// No description provided for @tripGetOffAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Get off at {stop}'**
+  String tripGetOffAt(String stop);
+
+  /// No description provided for @tripWalkToDestination.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk {distance} to your destination'**
+  String tripWalkToDestination(String distance);
+
+  /// No description provided for @tripRideSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride {distance} · about {minutes} min'**
+  String tripRideSummary(String distance, int minutes);
+
+  /// No description provided for @tripMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String tripMinutes(int minutes);
+
+  /// No description provided for @tripBusLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Bus {line}'**
+  String tripBusLine(String line);
+
+  /// No description provided for @tripTrainLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Train: {line}'**
+  String tripTrainLine(String line);
+
+  /// No description provided for @tripEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated from the nearest stops — check the route with the conductor.'**
+  String get tripEstimated;
+
+  /// No description provided for @tripChooseBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Get on at'**
+  String get tripChooseBoard;
+
+  /// No description provided for @tripChooseAlight.
+  ///
+  /// In en, this message translates to:
+  /// **'Get off at'**
+  String get tripChooseAlight;
+
+  /// No description provided for @tripStopAway.
+  ///
+  /// In en, this message translates to:
+  /// **'{distance} away'**
+  String tripStopAway(String distance);
+
+  /// No description provided for @stopAlertWhereGoing.
+  ///
+  /// In en, this message translates to:
+  /// **'Where are you going?'**
+  String get stopAlertWhereGoing;
+
+  /// No description provided for @stopAlertWakeBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'Amica will alert you before {stop}, the stop to get off at.'**
+  String stopAlertWakeBefore(String stop);
 
   /// No description provided for @profileLogOut.
   ///

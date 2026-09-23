@@ -15,6 +15,9 @@ import '../../../services/location_service.dart';
 import '../../journey/models/journey.dart';
 import '../../journey/models/location_data_model.dart';
 import '../../journey/services/journey_service.dart';
+import '../../journey/widgets/journey_visuals.dart';
+import '../../journey/widgets/transit_trip_card.dart';
+import '../../../services/transit_plan_service.dart';
 import '../services/stop_alert_calculator.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
@@ -300,109 +303,179 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
       backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(_loc.stopAlertSetupTitle)),
       extendBodyBehindAppBar: true,
-      body: AmicaBackground(
-        child: SafeArea(child: _buildBody(context)),
-      ),
+      body: AmicaBackground(child: _buildBody(context)),
     );
   }
 
   Widget _buildBody(BuildContext context) {
     if (_isLoadingRide) {
-      return LoadingView(message: _loc.stopAlertActiveLoading);
+      return SafeArea(
+        child: LoadingView(message: _loc.stopAlertActiveLoading),
+      );
     }
 
     final error = _rideError;
     if (error != null) {
-      return Center(
-          child: Text(_loc.stopAlertActiveLoadError(error.toString())));
+      return SafeArea(
+        child: Center(
+            child: Text(_loc.stopAlertActiveLoadError(error.toString()))),
+      );
     }
 
     final ride = _ride;
     if (ride == null) {
-      return Center(child: Text(_loc.stopAlertActiveNoRide));
+      return SafeArea(child: Center(child: Text(_loc.stopAlertActiveNoRide)));
     }
 
     final dropOff = ride.destinationLocation;
     final mapLocation = _currentLocation ?? ride.currentLocation ?? ride.startLocation;
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-      children: [
-        _buildDistanceCard(context, ride),
-        const SizedBox(height: 18),
-        if (mapLocation != null) ...[
-          AmicaMapView(
-            latitude: mapLocation.latitude,
-            longitude: mapLocation.longitude,
-            markerTitle: _loc.stopAlertSetupYouAreHereMarker,
-            destinationLatitude: dropOff?.latitude,
-            destinationLongitude: dropOff?.longitude,
-            destinationTitle: ride.destinationName,
-          ),
-          const SizedBox(height: 18),
-        ],
-        GlassCard(
-          child: Column(
-            children: [
-              _InfoRow(
-                label: _loc.stopAlertActiveGettingOffAt,
-                value: ride.destinationName,
-              ),
-              const Divider(height: 22),
-              _InfoRow(
-                label: _loc.stopAlertActiveAlertDistance,
-                value: widget.calculator.formatAlertDistance(
-                  ride.alertDistanceMeters,
+    final plan = ride.transitPlan;
+    final c = Theme.of(context).amica;
+    final topInset = MediaQuery.of(context).padding.top + kToolbarHeight;
+
+    // Same layout as the Journeys screens: full-screen map, frosted sheet.
+    return LayoutBuilder(
+      builder: (context, constraints) => Stack(
+        children: [
+          if (mapLocation != null)
+            Positioned.fill(
+              child: AmicaMapView(
+                latitude: mapLocation.latitude,
+                longitude: mapLocation.longitude,
+                height: null,
+                borderRadius: 0,
+                showMyLocation: true,
+                markerTitle: _loc.stopAlertSetupYouAreHereMarker,
+                destinationLatitude: dropOff?.latitude,
+                destinationLongitude: dropOff?.longitude,
+                destinationTitle: ride.destinationName,
+                routeLegs: plan == null ? const [] : _legsFor(plan),
+                transitStops: plan == null ? const [] : mapStopsFor(plan),
+                mapPadding: EdgeInsets.only(
+                  top: topInset,
+                  bottom: constraints.maxHeight * 0.5,
                 ),
               ),
-              const Divider(height: 22),
-              _InfoRow(
-                label: _loc.stopAlertActiveBackgroundAlarm,
-                value: _nativeMonitorStarted
-                    ? _loc.stopAlertActiveStatusActive
-                    : _loc.stopAlertActiveStatusAppOnly,
+            ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: topInset + 24,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      c.shell.withValues(alpha: 0.92),
+                      c.shell.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
               ),
-              const Divider(height: 22),
-              _InfoRow(
-                label: _loc.stopAlertActiveDistanceMeasured,
-                value: ride.routeFactor > 1
-                    ? _loc.stopAlertActiveByRoad
-                    : _loc.stopAlertActiveStraightLine,
-              ),
-            ],
+            ),
           ),
-        ),
-        if (_locationError != null) ...[
-          const SizedBox(height: 12),
-          Text(
-            _locationError!,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall,
+          DraggableScrollableSheet(
+            initialChildSize: 0.5,
+            minChildSize: 0.22,
+            maxChildSize: 0.92,
+            snap: true,
+            snapSizes: const [0.5],
+            builder: (context, scrollController) => JourneyGlassSheet(
+              scrollController: scrollController,
+              children: [
+                _buildDistanceCard(context, ride),
+                if (plan != null) ...[
+                  const SizedBox(height: 12),
+                  TransitTripCard(mode: plan.mode, plan: plan),
+                ],
+                const SizedBox(height: 12),
+                AmicaCard(
+                  child: Column(
+                    children: [
+                      _InfoRow(
+                        label: _loc.stopAlertActiveGettingOffAt,
+                        value: ride.destinationName,
+                      ),
+                      const Divider(height: 22),
+                      _InfoRow(
+                        label: _loc.stopAlertActiveAlertDistance,
+                        value: widget.calculator.formatAlertDistance(
+                          ride.alertDistanceMeters,
+                        ),
+                      ),
+                      const Divider(height: 22),
+                      _InfoRow(
+                        label: _loc.stopAlertActiveBackgroundAlarm,
+                        value: _nativeMonitorStarted
+                            ? _loc.stopAlertActiveStatusActive
+                            : _loc.stopAlertActiveStatusAppOnly,
+                      ),
+                      const Divider(height: 22),
+                      _InfoRow(
+                        label: _loc.stopAlertActiveDistanceMeasured,
+                        value: ride.routeFactor > 1
+                            ? _loc.stopAlertActiveByRoad
+                            : _loc.stopAlertActiveStraightLine,
+                      ),
+                    ],
+                  ),
+                ),
+                if (_locationError != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    _locationError!,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+                const SizedBox(height: 20),
+                PrimaryButton(
+                  label: _isEndingRide
+                      ? _loc.stopAlertActiveEnding
+                      : _loc.stopAlertActiveGetOffButton,
+                  icon: Icons.check_circle_rounded,
+                  onPressed: _isEndingRide ? null : () => _endRide(ride),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  _nativeMonitorStarted
+                      ? _loc.stopAlertActiveCanLockPhone
+                      : _loc.stopAlertActiveKeepScreenOpen,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
           ),
         ],
-        const SizedBox(height: 24),
-        PrimaryButton(
-          label: _isEndingRide
-              ? _loc.stopAlertActiveEnding
-              : _loc.stopAlertActiveGetOffButton,
-          icon: Icons.check_circle_rounded,
-          onPressed: _isEndingRide ? null : () => _endRide(ride),
-        ),
-        const SizedBox(height: 14),
-        Text(
-          _nativeMonitorStarted
-              ? _loc.stopAlertActiveCanLockPhone
-              : _loc.stopAlertActiveKeepScreenOpen,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-      ],
+      ),
     );
+  }
+
+  TransitPlan? _cachedPlan;
+  List<MapRouteLeg> _cachedLegs = const [];
+
+  /// Keeps the same decoded legs across location ticks, so the map is not
+  /// re-framed every time the distance updates.
+  List<MapRouteLeg> _legsFor(TransitPlan plan) {
+    final cached = _cachedPlan;
+    if (cached == null ||
+        cached.boardStop.id != plan.boardStop.id ||
+        cached.alightStop.id != plan.alightStop.id) {
+      _cachedLegs = mapLegsFor(plan);
+    }
+    _cachedPlan = plan;
+    return _cachedLegs;
   }
 
   Widget _buildDistanceCard(BuildContext context, Journey ride) {
     final distance = _distanceMeters;
-    final color = _hasAlerted ? Theme.of(context).amica.gold : Theme.of(context).amica.sage;
+    final color =
+        _hasAlerted ? Theme.of(context).amica.gold : Theme.of(context).amica.accent;
 
     return GlassCard(
       borderColor: _hasAlerted ? Theme.of(context).amica.gold : null,
@@ -485,11 +558,11 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
       child: LinearProgressIndicator(
         value: progress,
         minHeight: 8,
-        backgroundColor: Theme.of(context).amica.shell,
+        backgroundColor: Theme.of(context).amica.accentSoft,
         valueColor: AlwaysStoppedAnimation<Color>(
           _hasAlerted
               ? Theme.of(context).amica.gold
-              : Theme.of(context).amica.sage,
+              : Theme.of(context).amica.accent,
         ),
       ),
     );
@@ -523,8 +596,10 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
       child: Icon(
         _hasAlerted
             ? Icons.notifications_active_rounded
-            : Icons.directions_bus_filled_rounded,
-        color: color,
+            : (_ride?.journeyType == 'train'
+                ? Icons.train_rounded
+                : Icons.directions_bus_filled_rounded),
+        color: _hasAlerted ? color : Theme.of(context).amica.accentInk,
         size: 38,
       ),
     );

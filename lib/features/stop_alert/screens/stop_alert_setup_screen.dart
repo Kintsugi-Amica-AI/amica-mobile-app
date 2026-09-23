@@ -12,6 +12,9 @@ import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../services/emergency_action_service.dart';
 import '../../../services/location_service.dart';
+import '../../../services/transit_plan_service.dart';
+import '../../journey/widgets/journey_visuals.dart';
+import '../../journey/widgets/transit_trip_card.dart';
 import '../../journey/models/journey.dart';
 import '../../journey/models/location_data_model.dart';
 import '../../journey/services/journey_service.dart';
@@ -29,6 +32,7 @@ class StopAlertSetupScreen extends StatefulWidget {
     this.emergencyActionService = const EmergencyActionService(),
     this.calculator = const StopAlertCalculator(),
     this.routeDistanceService = const RouteDistanceService(),
+    this.transitService = const TransitPlanService(),
   });
 
   final LocationService locationService;
@@ -36,6 +40,7 @@ class StopAlertSetupScreen extends StatefulWidget {
   final EmergencyActionService emergencyActionService;
   final StopAlertCalculator calculator;
   final RouteDistanceService routeDistanceService;
+  final TransitPlanService transitService;
 
   @override
   State<StopAlertSetupScreen> createState() => _StopAlertSetupScreenState();
@@ -60,6 +65,34 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
   String? _dropOffStatus;
   String? _errorMessage;
   late AppLocalizations _loc;
+
+  /// `bus` or `train`.
+  String _mode = 'bus';
+
+  // Trip plan: the stop to get on at, the stop to get OFF at (what the
+  // alarm is for), and the walks either side.
+  TransitPlan? _plan;
+  List<MapRouteLeg> _planLegs = const [];
+  bool _isLoadingPlan = false;
+  TransitPlanUnavailable? _planUnavailable;
+  int _planToken = 0;
+  String? _boardStopId;
+  String? _alightStopId;
+
+  /// Where the alarm counts down to: the suggested get-off stop when there
+  /// is a plan, otherwise the place she typed or pinned.
+  LocationDataModel? get _alarmTarget {
+    final plan = _plan;
+    if (plan != null) {
+      return LocationDataModel(
+        latitude: plan.alightStop.latitude,
+        longitude: plan.alightStop.longitude,
+        address: plan.alightStop.name,
+        updatedAt: DateTime.now(),
+      );
+    }
+    return _dropOffLocation;
+  }
 
   bool get _isBusy => _isLoadingLocation || _isStartingRide;
 
@@ -101,6 +134,24 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
     }
 
     _scheduleDropOffLookup(dropOffName);
+  }
+
+  /// The ✕ on the destination field: drops the text, the pin, the trip plan
+  /// and the road-distance estimate together.
+  void _clearDropOff() {
+    _dropOffSearchDebounce?.cancel();
+    _dropOffSearchToken++;
+    _dropOffController.clear();
+    setState(() {
+      _dropOffLocation = null;
+      _dropOffStatus = null;
+      _isResolvingDropOff = false;
+      _errorMessage = null;
+      _boardStopId = null;
+      _alightStopId = null;
+    });
+    // With no destination this clears the plan and the route estimate.
+    _schedulePlan();
   }
 
   void _scheduleDropOffLookup(String dropOffName) {
@@ -157,7 +208,7 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
         );
         _dropOffStatus = _loc.stopAlertSetupStopFound;
       });
-      _scheduleRouteEstimate();
+      _schedulePlan();
     } catch (_) {
       if (mounted && searchToken == _dropOffSearchToken) {
         setState(() {
@@ -185,7 +236,7 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
       _isResolvingDropOff = false;
       _errorMessage = null;
     });
-    _scheduleRouteEstimate();
+    _schedulePlan();
   }
 
   Future<void> _getCurrentLocation() async {
@@ -198,7 +249,7 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
       final location = await widget.locationService.getCurrentLocationData();
       if (mounted) {
         setState(() => _currentLocation = location);
-        _scheduleRouteEstimate();
+        _schedulePlan();
       }
     } on LocationServiceException catch (error) {
       if (mounted) {
@@ -223,7 +274,7 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
   /// picked, or null until both are known.
   double? get _straightLineToDropOff {
     final start = _currentLocation;
-    final dropOff = _dropOffLocation;
+    final dropOff = _alarmTarget;
     if (start == null || dropOff == null) {
       return null;
     }
@@ -263,10 +314,72 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
   /// Debounced so dragging a pin around the map does not fire a lookup per
   /// frame, and token-guarded so a slow answer for an old pin cannot overwrite
   /// a newer one.
+  /// Plans the trip (stops + walks), then measures road distance to the
+  /// get-off stop it chose.
+  void _schedulePlan() {
+    final start = _currentLocation;
+    final destination = _dropOffLocation;
+    final token = ++_planToken;
+    if (start == null || destination == null) {
+      setState(() {
+        _plan = null;
+        _planLegs = const [];
+        _isLoadingPlan = false;
+        _planUnavailable = null;
+      });
+      _scheduleRouteEstimate();
+      return;
+    }
+    setState(() {
+      _isLoadingPlan = true;
+      _planUnavailable = null;
+    });
+    unawaited(() async {
+      final result = await widget.transitService.fetchPlan(
+        originLatitude: start.latitude,
+        originLongitude: start.longitude,
+        destinationLatitude: destination.latitude,
+        destinationLongitude: destination.longitude,
+        mode: _mode,
+        boardStopId: _boardStopId,
+        alightStopId: _alightStopId,
+      );
+      if (!mounted || token != _planToken) return;
+      setState(() {
+        _plan = result.plan;
+        _planLegs = result.plan == null ? const [] : mapLegsFor(result.plan!);
+        _planUnavailable = result.unavailable;
+        _isLoadingPlan = false;
+      });
+      _scheduleRouteEstimate();
+    }());
+  }
+
+  void _chooseStop(String stopId) {
+    final plan = _plan;
+    if (plan == null) return;
+    if (plan.boardCandidates.any((s) => s.id == stopId)) {
+      _boardStopId = stopId;
+    } else if (plan.alightCandidates.any((s) => s.id == stopId)) {
+      _alightStopId = stopId;
+    } else {
+      return;
+    }
+    _schedulePlan();
+  }
+
+  void _setMode(String mode) {
+    if (mode == _mode) return;
+    setState(() => _mode = mode);
+    _boardStopId = null;
+    _alightStopId = null;
+    _schedulePlan();
+  }
+
   void _scheduleRouteEstimate() {
     _routeEstimateDebounce?.cancel();
     final start = _currentLocation;
-    final dropOff = _dropOffLocation;
+    final dropOff = _alarmTarget;
 
     if (start == null || dropOff == null) {
       _routeEstimateToken++;
@@ -323,18 +436,22 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
       return;
     }
 
-    final dropOffLocation = _dropOffLocation;
+    final dropOffLocation = _alarmTarget;
     if (dropOffLocation == null) {
       setState(() => _errorMessage = _loc.stopAlertSetupNeedStop);
       return;
     }
+    final plan = _plan;
 
     setState(() {
       _isStartingRide = true;
       _errorMessage = null;
     });
 
-    final dropOffName = _dropOffController.text.trim();
+    final typedName = _dropOffController.text.trim();
+    // With a plan, the alarm is for the stop she gets off at; the typed
+    // place is where she walks to afterwards.
+    final dropOffName = plan?.alightStop.name ?? typedName;
 
     try {
       final journeyId = await widget.journeyService.startStopAlertRide(
@@ -347,6 +464,9 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
         alertDistanceMeters: _alertDistanceMeters,
         routeFactor: _routeEstimate?.routeFactor ?? 1,
         routeDistanceMeters: _routeEstimate?.roadDistanceMeters,
+        journeyType: _mode,
+        transitPlan: plan,
+        finalDestinationName: plan == null ? null : typedName,
       );
 
       if (!mounted) {
@@ -383,6 +503,10 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
   // UI
   // ---------------------------------------------------------------------
 
+  static const double _sheetInitialSize = 0.5;
+  static const double _sheetMinSize = 0.18;
+  static const double _sheetMaxSize = 0.92;
+
   @override
   Widget build(BuildContext context) {
     final currentLocation = _currentLocation;
@@ -398,114 +522,252 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
     final dropOffTitle = _dropOffController.text.trim().isEmpty
         ? _loc.stopAlertSetupYourStopDefault
         : _dropOffController.text.trim();
+    final c = Theme.of(context).amica;
+    final topInset = MediaQuery.of(context).padding.top + kToolbarHeight;
+    final plan = _plan;
 
+    // Same layout as the Journeys screens: the map fills the screen and a
+    // frosted sheet floats over it.
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(_loc.stopAlertSetupTitle)),
       extendBodyBehindAppBar: true,
       body: AmicaBackground(
-        child: SafeArea(
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+        child: Form(
+          key: _formKey,
+          child: LayoutBuilder(
+            builder: (context, constraints) => Stack(
               children: [
-                Text(
-                  _loc.stopAlertSetupHeadline,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 6),
-                Text(_loc.stopAlertSetupIntro),
-                const SizedBox(height: 20),
-                GlassCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      PrimaryButton(
-                        label: _isLoadingLocation
-                            ? _loc.stopAlertSetupGettingLocation
-                            : _loc.stopAlertSetupUpdateLocation,
-                        icon: Icons.my_location_rounded,
-                        onPressed: _isBusy ? null : _getCurrentLocation,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        currentLocation == null
-                            ? _loc.stopAlertSetupLocationUnavailable
-                            : _loc.stopAlertSetupLocationKnown(
-                                currentLocation.latitude.toStringAsFixed(5),
-                                currentLocation.longitude.toStringAsFixed(5),
-                              ),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
+                Positioned.fill(
+                  child: AmicaMapView(
+                    latitude: mapCenter.latitude,
+                    longitude: mapCenter.longitude,
+                    height: null,
+                    borderRadius: 0,
+                    markerTitle: _loc.stopAlertSetupYouAreHereMarker,
+                    showStartMarker: currentLocation != null,
+                    showMyLocation: currentLocation != null,
+                    destinationLatitude: dropOffLocation?.latitude,
+                    destinationLongitude: dropOffLocation?.longitude,
+                    destinationTitle: dropOffTitle,
+                    routeLegs: _planLegs,
+                    transitStops: plan == null
+                        ? const []
+                        : mapStopsFor(plan, withCandidates: true),
+                    onTransitStopTap: _isStartingRide
+                        ? null
+                        : (stop) => _chooseStop(stop.id),
+                    mapPadding: EdgeInsets.only(
+                      top: topInset,
+                      bottom: constraints.maxHeight * _sheetInitialSize,
+                    ),
+                    onTap: _isStartingRide ? null : _pinDropOff,
                   ),
                 ),
-                const SizedBox(height: 16),
-                CustomTextField(
-                  label: _loc.stopAlertSetupDropOffLabel,
-                  controller: _dropOffController,
-                  prefixIcon: Icons.directions_bus_filled_outlined,
-                  validator: _validateDropOff,
-                ),
-                if (_isResolvingDropOff || _dropOffStatus != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    _isResolvingDropOff
-                        ? _loc.stopAlertSetupFindingStop
-                        : _dropOffStatus!,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-                const SizedBox(height: 16),
-                AmicaMapView(
-                  latitude: mapCenter.latitude,
-                  longitude: mapCenter.longitude,
-                  markerTitle: _loc.stopAlertSetupYouAreHereMarker,
-                  showStartMarker: currentLocation != null,
-                  destinationLatitude: dropOffLocation?.latitude,
-                  destinationLongitude: dropOffLocation?.longitude,
-                  destinationTitle: dropOffTitle,
-                  onTap: _isStartingRide ? null : _pinDropOff,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  dropOffLocation == null
-                      ? _loc.stopAlertSetupTapToPin
-                      : _loc.stopAlertSetupStopPinnedAt(
-                          dropOffLocation.latitude.toStringAsFixed(5),
-                          dropOffLocation.longitude.toStringAsFixed(5),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: topInset + 24,
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            c.shell.withValues(alpha: 0.92),
+                            c.shell.withValues(alpha: 0),
+                          ],
                         ),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 20),
-                _buildAlertDistancePicker(context),
-                if (_errorMessage != null) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    _errorMessage!,
-                    style: TextStyle(color: Theme.of(context).amica.terracotta),
+                      ),
+                    ),
                   ),
-                ],
-                const SizedBox(height: 24),
-                PrimaryButton(
-                  label: _isStartingRide
-                      ? _loc.startJourneyStarting
-                      : _loc.stopAlertSetupStartButton,
-                  icon: Icons.notifications_active_rounded,
-                  onPressed: (_isBusy || _isResolvingDropOff) ? null : _startRide,
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  _loc.stopAlertSetupKeepNotificationNote,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall,
+                DraggableScrollableSheet(
+                  initialChildSize: _sheetInitialSize,
+                  minChildSize: _sheetMinSize,
+                  maxChildSize: _sheetMaxSize,
+                  snap: true,
+                  snapSizes: const [_sheetInitialSize],
+                  builder: (context, scrollController) =>
+                      _buildSheet(context, scrollController),
                 ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSheet(BuildContext context, ScrollController scrollController) {
+    final c = Theme.of(context).amica;
+    final textTheme = Theme.of(context).textTheme;
+    final currentLocation = _currentLocation;
+    final dropOffLocation = _dropOffLocation;
+    final plan = _plan;
+
+    return JourneyGlassSheet(
+      scrollController: scrollController,
+      children: [
+        Text(_loc.stopAlertSetupHeadline, style: textTheme.headlineSmall),
+        const SizedBox(height: 4),
+        Text(_loc.stopAlertSetupIntro, style: textTheme.bodyMedium),
+        const SizedBox(height: 14),
+        // Bus or train.
+        Row(
+          children: [
+            JourneyTypeChip(
+              type: 'bus',
+              label: _loc.startJourneyTypeBus,
+              selected: _mode == 'bus',
+              onTap: _isBusy ? null : () => _setMode('bus'),
+            ),
+            const SizedBox(width: 8),
+            JourneyTypeChip(
+              type: 'train',
+              label: _loc.startJourneyTypeTrain,
+              selected: _mode == 'train',
+              onTap: _isBusy ? null : () => _setMode('train'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        // From.
+        AmicaCard(
+          padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
+          child: Row(
+            children: [
+              const GradientIconBadge(icon: Icons.near_me_rounded, size: 40),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_loc.startJourneyYourLocation,
+                        style: textTheme.titleSmall),
+                    const SizedBox(height: 2),
+                    Text(
+                      currentLocation == null
+                          ? (_isLoadingLocation
+                              ? _loc.stopAlertSetupGettingLocation
+                              : _loc.stopAlertSetupLocationUnavailable)
+                          : '${currentLocation.latitude.toStringAsFixed(5)}, '
+                              '${currentLocation.longitude.toStringAsFixed(5)}',
+                      style: textTheme.bodySmall?.copyWith(color: c.plum45),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: _loc.stopAlertSetupUpdateLocation,
+                onPressed: _isBusy ? null : _getCurrentLocation,
+                color: c.accentInk,
+                icon: _isLoadingLocation
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh_rounded),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        // To.
+        CustomTextField(
+          label: _loc.stopAlertWhereGoing,
+          controller: _dropOffController,
+          prefixIcon: Icons.favorite_border_rounded,
+          enabled: !_isStartingRide,
+          onClear: _clearDropOff,
+          validator: _validateDropOff,
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Icon(
+              dropOffLocation == null
+                  ? Icons.touch_app_outlined
+                  : Icons.place_rounded,
+              size: 15,
+              color: c.plum45,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                _isResolvingDropOff
+                    ? _loc.stopAlertSetupFindingStop
+                    : _dropOffStatus ??
+                        (dropOffLocation == null
+                            ? _loc.stopAlertSetupTapToPin
+                            : _loc.stopAlertSetupStopPinnedAt(
+                                dropOffLocation.latitude.toStringAsFixed(5),
+                                dropOffLocation.longitude.toStringAsFixed(5),
+                              )),
+                style: textTheme.bodySmall,
+              ),
+            ),
+          ],
+        ),
+        if (dropOffLocation != null) ...[
+          const SizedBox(height: 12),
+          TransitTripCard(
+            mode: _mode,
+            plan: plan,
+            isLoading: _isLoadingPlan,
+            unavailable: _planUnavailable,
+            onChooseBoard:
+                _isStartingRide ? null : (stop) => _chooseStop(stop.id),
+            onChooseAlight:
+                _isStartingRide ? null : (stop) => _chooseStop(stop.id),
+          ),
+          if (plan != null) ...[
+            const SizedBox(height: 10),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.notifications_active_outlined,
+                    size: 16, color: c.accentInk),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    _loc.stopAlertWakeBefore(plan.alightStop.name),
+                    style: textTheme.bodySmall?.copyWith(color: c.accentInk),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+        const SizedBox(height: 16),
+        _buildAlertDistancePicker(context),
+        if (_errorMessage != null) ...[
+          const SizedBox(height: 16),
+          Text(
+            _errorMessage!,
+            style: TextStyle(color: c.terracottaDeep),
+          ),
+        ],
+        const SizedBox(height: 22),
+        PrimaryButton(
+          label: _isStartingRide
+              ? _loc.startJourneyStarting
+              : _loc.stopAlertSetupStartButton,
+          icon: Icons.notifications_active_rounded,
+          onPressed: (_isBusy || _isResolvingDropOff || _isLoadingPlan)
+              ? null
+              : _startRide,
+        ),
+        const SizedBox(height: 14),
+        Text(
+          _loc.stopAlertSetupKeepNotificationNote,
+          textAlign: TextAlign.center,
+          style: textTheme.bodySmall,
+        ),
+      ],
     );
   }
 
@@ -516,9 +778,21 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            _loc.stopAlertSetupAlertDistanceLabel,
-            style: Theme.of(context).textTheme.titleMedium,
+          Row(
+            children: [
+              const GradientIconBadge(
+                icon: Icons.alarm_rounded,
+                size: 34,
+                soft: true,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  _loc.stopAlertSetupAlertDistanceLabel,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           Wrap(

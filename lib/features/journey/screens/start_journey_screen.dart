@@ -6,6 +6,7 @@ import 'package:geocoding/geocoding.dart' as geocoding;
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
+import '../../../core/navigation/amica_shell.dart';
 import '../../../core/widgets/amica_background.dart';
 import '../../../core/widgets/amica_map_view.dart';
 import '../../../core/widgets/custom_text_field.dart';
@@ -13,8 +14,10 @@ import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../services/journey_route_service.dart';
 import '../../../services/location_service.dart';
+import '../../../services/transit_plan_service.dart';
 import '../models/location_data_model.dart';
 import '../widgets/journey_visuals.dart';
+import '../widgets/transit_trip_card.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../services/journey_service.dart';
 
@@ -24,6 +27,7 @@ class StartJourneyScreen extends StatefulWidget {
     this.locationService = const LocationService(),
     this.journeyService = const JourneyService(),
     this.routeService = const JourneyRouteService(),
+    this.transitService = const TransitPlanService(),
     this.vehiclePlate,
     this.boardingStatus,
     this.isTab = false,
@@ -32,6 +36,7 @@ class StartJourneyScreen extends StatefulWidget {
   final LocationService locationService;
   final JourneyService journeyService;
   final JourneyRouteService routeService;
+  final TransitPlanService transitService;
   final String? vehiclePlate;
   final String? boardingStatus;
 
@@ -52,6 +57,17 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
   Timer? _routeDebounce;
   JourneyRoute? _route;
   int _routeToken = 0;
+
+  // Bus / train trip plan: stops to get on and off at, walks either side.
+  TransitPlan? _plan;
+  List<MapRouteLeg> _planLegs = const [];
+  bool _isLoadingPlan = false;
+  TransitPlanUnavailable? _planUnavailable;
+  int _planToken = 0;
+  String? _boardStopId;
+  String? _alightStopId;
+
+  bool get _usesTransit => _journeyType == 'bus' || _journeyType == 'train';
   int _reverseGeocodeToken = 0;
   bool _isLoadingRoute = false;
   bool _routeUnavailable = false;
@@ -81,10 +97,60 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
     if (widget.vehiclePlate != null) _journeyType = 'taxi';
     _destinationController.addListener(_onDestinationTextChanged);
     _durationController.addListener(_onDurationTextChanged);
+    if (!widget.isTab) {
+      // Pushed as its own screen: it is visible now, so locate straight away.
+      WidgetsBinding.instance.addPostFrameCallback((_) => _autoLocate());
+    }
+  }
+
+  ValueListenable<int>? _shellTab;
+  bool _autoLocateAttempted = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!widget.isTab) return;
+    // As the Journeys tab the screen is built at app start behind Home, so
+    // wait until the tab is actually opened before asking for location —
+    // otherwise the permission prompt would pop up over the Home screen.
+    final tab = AmicaShellScope.maybeOf(context)?.currentTab;
+    if (tab == _shellTab) return;
+    _shellTab?.removeListener(_onShellTabChanged);
+    _shellTab = tab?..addListener(_onShellTabChanged);
+    if (tab == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _autoLocate());
+    } else {
+      _onShellTabChanged();
+    }
+  }
+
+  void _onShellTabChanged() {
+    if (_shellTab?.value == AmicaShellScope.journeysTab) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _autoLocate());
+    }
+  }
+
+  /// Finds where she is without being asked: first the phone's last known
+  /// fix (instant, puts the map in the right place), then a precise one.
+  /// Tried once per screen; the refresh button is always there after that.
+  Future<void> _autoLocate() async {
+    if (!mounted ||
+        _autoLocateAttempted ||
+        _currentLocation != null ||
+        _isLoadingLocation) {
+      return;
+    }
+    _autoLocateAttempted = true;
+    final quick = await widget.locationService.getLastKnownLocationData();
+    if (mounted && quick != null && _currentLocation == null) {
+      setState(() => _currentLocation = quick);
+    }
+    if (mounted) await _getCurrentLocation();
   }
 
   @override
   void dispose() {
+    _shellTab?.removeListener(_onShellTabChanged);
     _destinationSearchDebounce?.cancel();
     _routeDebounce?.cancel();
     _destinationController
@@ -124,6 +190,29 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
     }
 
     _scheduleDestinationLookup(destinationName);
+  }
+
+  /// The ✕ on the destination field: drops the text, the pin, the route and
+  /// any bus/train plan in one go.
+  void _clearDestination() {
+    _destinationSearchDebounce?.cancel();
+    _destinationSearchToken++;
+    _reverseGeocodeToken++;
+    _planToken++;
+    _destinationController.clear();
+    setState(() {
+      _destinationLocation = null;
+      _destinationStatus = null;
+      _isResolvingDestination = false;
+      _errorMessage = null;
+      _clearRoute();
+      _plan = null;
+      _planLegs = const [];
+      _isLoadingPlan = false;
+      _planUnavailable = null;
+      _boardStopId = null;
+      _alightStopId = null;
+    });
   }
 
   void _scheduleDestinationLookup(String destinationName) {
@@ -268,6 +357,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
         route: _route?.mode == routeModeForJourneyType(_journeyType)
             ? _route
             : null,
+        transitPlan: _usesTransit ? _plan : null,
       );
 
       if (!mounted) {
@@ -427,10 +517,70 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
       });
       _applySuggestedDuration();
     });
+    _schedulePlanLookup();
+  }
+
+  /// For bus and train journeys: which stop to get on at, which to get off
+  /// at, and the walks to and from them.
+  void _schedulePlanLookup() {
+    final start = _currentLocation;
+    final destination = _destinationLocation;
+    final token = ++_planToken;
+    if (!_usesTransit || start == null || destination == null) {
+      if (_plan != null || _isLoadingPlan) {
+        setState(() {
+          _plan = null;
+          _planLegs = const [];
+          _isLoadingPlan = false;
+          _planUnavailable = null;
+        });
+      }
+      return;
+    }
+    setState(() {
+      _isLoadingPlan = true;
+      _planUnavailable = null;
+    });
+    unawaited(() async {
+      final result = await widget.transitService.fetchPlan(
+        originLatitude: start.latitude,
+        originLongitude: start.longitude,
+        destinationLatitude: destination.latitude,
+        destinationLongitude: destination.longitude,
+        mode: _journeyType,
+        boardStopId: _boardStopId,
+        alightStopId: _alightStopId,
+      );
+      if (!mounted || token != _planToken) return;
+      setState(() {
+        _plan = result.plan;
+        _planLegs = result.plan == null ? const [] : mapLegsFor(result.plan!);
+        _planUnavailable = result.unavailable;
+        _isLoadingPlan = false;
+      });
+      _applySuggestedDuration();
+    }());
+  }
+
+  /// The rider picked a different stop — from the chips or on the map.
+  void _chooseStop(String stopId) {
+    final plan = _plan;
+    if (plan == null) return;
+    if (plan.boardCandidates.any((s) => s.id == stopId)) {
+      _boardStopId = stopId;
+    } else if (plan.alightCandidates.any((s) => s.id == stopId)) {
+      _alightStopId = stopId;
+    } else {
+      return;
+    }
+    _schedulePlanLookup();
   }
 
   void _onJourneyTypeChanged(String? value) {
     setState(() => _journeyType = value ?? 'walk');
+    _boardStopId = null;
+    _alightStopId = null;
+    _schedulePlanLookup();
     _applySuggestedDuration();
     if (_route?.mode != routeModeForJourneyType(_journeyType)) {
       _scheduleRouteLookup();
@@ -465,6 +615,13 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
     }
 
     final buffer = _journeyType == 'walk' ? 1.15 : 1.35;
+    final plan = _plan;
+    if (_usesTransit && plan != null) {
+      // Walks + ride, the same buffer, and ten minutes for waiting at the
+      // stop — buses here do not run to a timetable you can count on.
+      final minutes = (plan.durationSeconds / 60 * buffer).ceil() + 10;
+      return math.max(10, minutes);
+    }
     final route = _route;
     if (route != null && route.mode == routeModeForJourneyType(_journeyType)) {
       // Directions' own prediction along the real route, plus the same
@@ -595,7 +752,16 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
                       destinationLatitude: destinationLocation?.latitude,
                       destinationLongitude: destinationLocation?.longitude,
                       destinationTitle: destinationTitle,
-                      routePoints: _route?.points ?? const [],
+                      routePoints: _usesTransit && _plan != null
+                          ? const []
+                          : _route?.points ?? const [],
+                      routeLegs: _usesTransit ? _planLegs : const [],
+                      transitStops: _usesTransit && _plan != null
+                          ? mapStopsFor(_plan!, withCandidates: true)
+                          : const [],
+                      onTransitStopTap: _isStartingJourney
+                          ? null
+                          : (stop) => _chooseStop(stop.id),
                       mapPadding: EdgeInsets.only(
                         top: topInset,
                         bottom: constraints.maxHeight * _sheetInitialSize,
@@ -734,6 +900,8 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
           label: loc.startJourneyDestinationNameLabel,
           controller: _destinationController,
           prefixIcon: Icons.favorite_border_rounded,
+          enabled: !_isStartingJourney,
+          onClear: _clearDestination,
           validator: (value) =>
               _required(context, value, loc.startJourneyDestinationLabel),
         ),
@@ -766,7 +934,19 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
             ),
           ],
         ),
-        if (_isLoadingRoute || _route != null || _routeUnavailable) ...[
+        if (_usesTransit) ...[
+          const SizedBox(height: 12),
+          TransitTripCard(
+            mode: _journeyType,
+            plan: _plan,
+            isLoading: _isLoadingPlan,
+            unavailable: _planUnavailable,
+            onChooseBoard:
+                _isStartingJourney ? null : (stop) => _chooseStop(stop.id),
+            onChooseAlight:
+                _isStartingJourney ? null : (stop) => _chooseStop(stop.id),
+          ),
+        ] else if (_isLoadingRoute || _route != null || _routeUnavailable) ...[
           const SizedBox(height: 10),
           Align(
             alignment: Alignment.centerLeft,

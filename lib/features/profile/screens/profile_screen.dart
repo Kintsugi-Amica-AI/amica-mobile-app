@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
+import '../../../core/constants/feature_flags.dart';
 import '../../../core/widgets/amica_primitives.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/loading_view.dart';
@@ -61,7 +62,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
     if (verified && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).phoneVerified)),
+        SnackBar(
+          content: Text(
+            FeatureFlags.phoneSmsVerification
+                ? AppLocalizations.of(context).phoneVerified
+                : AppLocalizations.of(context).phoneSaved,
+          ),
+        ),
       );
     }
   }
@@ -338,6 +345,10 @@ class _SetupChecklist extends StatelessWidget {
     final c = Theme.of(context).amica;
     final loc = AppLocalizations.of(context);
 
+    const smsOn = FeatureFlags.phoneSmsVerification;
+    final hasPhone = user?.phone.trim().isNotEmpty == true;
+    final phoneDone = smsOn ? user?.phoneVerified == true : hasPhone;
+
     final items = <({String label, bool done, IconData icon, VoidCallback onAdd})>[
       (
         label: guardianCount > 0
@@ -354,10 +365,12 @@ class _SetupChecklist extends StatelessWidget {
         onAdd: onAddVoicePhrase,
       ),
       (
-        label: user?.phoneVerified == true
-            ? loc.profilePhoneConfirmed
-            : loc.profilePhoneNotVerified,
-        done: user?.phoneVerified == true,
+        label: smsOn
+            ? (phoneDone
+                ? loc.profilePhoneConfirmed
+                : loc.profilePhoneNotVerified)
+            : (phoneDone ? loc.profilePhoneAdded : loc.profileAddPhone),
+        done: phoneDone,
         icon: Icons.phone_outlined,
         onAdd: onAddPhone,
       ),
@@ -438,7 +451,7 @@ class _SetupChecklist extends StatelessWidget {
                       ),
                       if (!items[i].done)
                         _PillButton(
-                          label: items[i].onAdd == onAddPhone
+                          label: smsOn && items[i].onAdd == onAddPhone
                               ? loc.profileVerifyAction
                               : loc.commonAdd,
                           icon: Icons.add_rounded,
@@ -619,9 +632,13 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                                   widget.onVerifyPhone();
                                 },
                           child: Text(
-                            widget.user?.phoneVerified == true
-                                ? loc.phoneChangeNumber
-                                : loc.profileVerifyAction,
+                            FeatureFlags.phoneSmsVerification
+                                ? (widget.user?.phoneVerified == true
+                                    ? loc.phoneChangeNumber
+                                    : loc.profileVerifyAction)
+                                : (widget.user?.phone.trim().isNotEmpty == true
+                                    ? loc.phoneChangeNumber
+                                    : loc.commonAdd),
                           ),
                         ),
                       ],

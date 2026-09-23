@@ -57,3 +57,22 @@ ground without per-screen changes. Nested `AmicaBackground`s paint nothing.
   (`UserProfileService.updateProfile`; notes are stored in `safetySettings.medicalNotes`).
 * Each **Add** in "Your safety setup" goes straight to the fix: add a guardian, open Settings for the voice phrase,
   or open the edit sheet for the phone number or medical notes.
+
+## Bus & train trips (third pass)
+
+* Backend `getTransitPlan` (in `amica-cloud-backend/functions/src/services/transitService.ts`):
+  * It first tries the Routes API with `TRANSIT` to get real lines and stops.
+  * If that returns nothing, it finds the nearest bus stops or stations to both ends with Places Nearby Search,
+    then composes walk → ride → walk.
+  * It returns the get-on and get-off stops, the other nearby stops the rider can pick, and the legs.
+* The same `GOOGLE_DIRECTIONS_API_KEY` needs **Routes API** and **Places API (New)** enabled.
+* Journeys (bus or train):
+  * A "Your bus trip" timeline shows the walks and stops, with chips to pick another stop. Tapping a stop on the map also picks it.
+  * The plan is saved on the journey as `transitPlan` and shown on the live timer.
+* Stop alert:
+  * It uses the same map and frosted-sheet layout as the Journeys screens, with a Bus / Train switch.
+  * The rider enters where she is going. The alarm targets the suggested **get-off stop**, and the typed place is
+    saved as `metadata.finalDestination`.
+* Home's "Walk with me" tile now opens the Journeys tab instead of a duplicate screen.
+* The fake incoming-call and in-call screens deliberately still look like the phone's own call UI. A branded
+  pastel call screen would give the deterrent away.

@@ -10,6 +10,8 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../core/navigation/amica_route_observer.dart';
 import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/primary_button.dart';
+import '../../journey/widgets/journey_visuals.dart';
 import '../services/plate_scan_service.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
@@ -494,7 +496,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
       backgroundColor: Colors.black,
       extendBodyBehindAppBar: true,
       // The viewfinder is black in both modes, so this app bar opts out of
-      // the Warm Dawn chrome and stays light-on-dark.
+      // the app chrome and stays light-on-dark.
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
@@ -533,28 +535,36 @@ class _PlateScanScreenState extends State<PlateScanScreen>
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
-        child: GlassCard(
+        child: AmicaGlass(
+          strong: true,
+          padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.videocam_off_outlined,
-                  color: Theme.of(context).amica.terracotta, size: 40),
-              const SizedBox(height: 12),
+              const GradientIconBadge(
+                icon: Icons.videocam_off_outlined,
+                size: 56,
+              ),
+              const SizedBox(height: 14),
               Text(
                 _errorMessage ?? _loc.plateScanCameraStartFailed,
                 textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).amica.plum,
+                    ),
               ),
               const SizedBox(height: 16),
-              OutlinedButton.icon(
+              PrimaryButton(
+                label: _loc.plateScanRetry,
+                icon: Icons.refresh_rounded,
                 onPressed: _initializeCamera,
-                icon: const Icon(Icons.refresh_rounded),
-                label: Text(_loc.plateScanRetry),
               ),
-              const SizedBox(height: 8),
-              TextButton.icon(
+              const SizedBox(height: 10),
+              PrimaryButton(
+                tone: AmicaButtonTone.quiet,
+                label: _loc.plateScanChooseGallery,
+                icon: Icons.photo_library_outlined,
                 onPressed: _scanFromGallery,
-                icon: const Icon(Icons.photo_library_outlined),
-                label: Text(_loc.plateScanChooseGallery),
               ),
             ],
           ),
@@ -564,6 +574,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
   }
 
   Widget _buildScanOverlay(BuildContext context) {
+    final c = Theme.of(context).amica;
     return SafeArea(
       child: Column(
         children: [
@@ -573,36 +584,43 @@ class _PlateScanScreenState extends State<PlateScanScreen>
             child: _ScanFrame(isActive: _state == _ScanState.scanning),
           ),
           const SizedBox(height: 20),
+          // Frosted status pill over the live camera.
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: GlassCard(
+            child: AmicaGlass(
+              strong: true,
+              blur: 16,
+              borderRadius: BorderRadius.circular(999),
               padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 14,
+                horizontal: 18,
+                vertical: 12,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (_state == _ScanState.capturing ||
                       _state == _ScanState.locked) ...[
-                    // Camera chrome sits on the black viewfinder, so it
-                    // stays white regardless of day or night mode.
-                    const SizedBox(
+                    SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color: c.accent,
                       ),
                     ),
                     const SizedBox(width: 12),
+                  ] else ...[
+                    Icon(Icons.center_focus_strong_rounded,
+                        size: 18, color: c.accentInk),
+                    const SizedBox(width: 10),
                   ],
-                  Expanded(
+                  Flexible(
                     child: Text(
                       _statusMessage,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).amica.plum,
+                            color: c.plum,
+                            fontWeight: FontWeight.w500,
                           ),
                     ),
                   ),
@@ -612,20 +630,30 @@ class _PlateScanScreenState extends State<PlateScanScreen>
           ),
           if (_errorMessage != null && _state == _ScanState.scanning) ...[
             const SizedBox(height: 8),
-            Text(
-              _errorMessage!,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Theme.of(context).amica.terracotta),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: AmicaGlass(
+                strong: true,
+                blur: 16,
+                borderRadius: BorderRadius.circular(16),
+                padding: const EdgeInsets.all(10),
+                child: Text(
+                  _errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: c.terracottaDeep, fontSize: 13),
+                ),
+              ),
             ),
           ],
           const Spacer(),
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
+            padding: const EdgeInsets.fromLTRB(28, 0, 28, 28),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _RoundIconButton(
                   icon: Icons.photo_library_outlined,
+                  tooltip: _loc.plateScanChooseGallery,
                   onPressed:
                       _state == _ScanState.scanning ? _scanFromGallery : null,
                 ),
@@ -635,9 +663,10 @@ class _PlateScanScreenState extends State<PlateScanScreen>
                       : null,
                 ),
                 _RoundIconButton(
-                    icon: Icons.keyboard,
-                    onPressed:
-                        _state == _ScanState.scanning ? _enterPlate : null),
+                  icon: Icons.keyboard_alt_outlined,
+                  onPressed:
+                      _state == _ScanState.scanning ? _enterPlate : null,
+                ),
               ],
             ),
           ),
@@ -647,7 +676,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
   }
 }
 
-/// A classic camera shutter button for manual plate capture.
+/// Shutter: a white ring around a brand-gradient core.
 class _ShutterButton extends StatelessWidget {
   const _ShutterButton({required this.onPressed});
 
@@ -655,24 +684,41 @@ class _ShutterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = Theme.of(context).amica;
     final enabled = onPressed != null;
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: 72,
-        height: 72,
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.white.withValues(alpha: enabled ? 0.9 : 0.35),
-            width: 3,
-          ),
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white.withValues(alpha: enabled ? 1 : 0.35),
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      child: GestureDetector(
+        onTap: onPressed,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 200),
+          opacity: enabled ? 1 : 0.45,
+          child: Container(
+            width: 78,
+            height: 78,
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 3.5),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: c.accentGradient,
+                boxShadow: [
+                  BoxShadow(
+                    color: c.accent.withValues(alpha: 0.5),
+                    blurRadius: 18,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.document_scanner_outlined,
+                color: AppColors.onAccent,
+                size: 28,
+              ),
+            ),
           ),
         ),
       ),
@@ -680,32 +726,45 @@ class _ShutterButton extends StatelessWidget {
   }
 }
 
+/// Frosted round button over the camera.
 class _RoundIconButton extends StatelessWidget {
-  const _RoundIconButton({required this.icon, required this.onPressed});
+  const _RoundIconButton({
+    required this.icon,
+    required this.onPressed,
+    this.tooltip,
+  });
 
   final IconData icon;
   final VoidCallback? onPressed;
+  final String? tooltip;
 
   @override
   Widget build(BuildContext context) {
-    return ClipOval(
+    final c = Theme.of(context).amica;
+    final button = AmicaGlass(
+      shape: BoxShape.circle,
+      strong: true,
+      blur: 14,
       child: Material(
-        color: Colors.white.withValues(alpha: 0.12),
+        color: Colors.transparent,
+        shape: const CircleBorder(),
         child: InkWell(
+          customBorder: const CircleBorder(),
           onTap: onPressed,
           child: SizedBox(
-            width: 48,
-            height: 48,
+            width: 52,
+            height: 52,
             child: Icon(
               icon,
               color: onPressed == null
-                  ? Colors.white.withValues(alpha: 0.35)
-                  : Colors.white,
+                  ? c.plum45.withValues(alpha: 0.6)
+                  : c.accentInk,
             ),
           ),
         ),
       ),
     );
+    return tooltip == null ? button : Tooltip(message: tooltip!, child: button);
   }
 }
 
@@ -735,18 +794,31 @@ class _ScanFrameState extends State<_ScanFrame>
   Widget build(BuildContext context) {
     const frameWidth = 280.0;
     const frameHeight = 230.0;
-    final color = widget.isActive ? Theme.of(context).amica.sage : Theme.of(context).amica.sage;
+    final c = Theme.of(context).amica;
 
     return SizedBox(
       width: frameWidth,
       height: frameHeight,
       child: Stack(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              border:
-                  Border.all(color: color.withValues(alpha: 0.85), width: 2),
-              borderRadius: BorderRadius.circular(16),
+          // Soft rounded frame with bright gradient corners.
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(26),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.35),
+                  width: 1.5,
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: CustomPaint(
+              painter: _CornerPainter(
+                start: c.accent,
+                end: c.accentEnd,
+              ),
             ),
           ),
           if (widget.isActive)
@@ -754,18 +826,25 @@ class _ScanFrameState extends State<_ScanFrame>
               animation: _controller,
               builder: (context, _) {
                 return Positioned(
-                  top: 8 + _controller.value * (frameHeight - 16),
-                  left: 8,
-                  right: 8,
+                  top: 14 + _controller.value * (frameHeight - 28),
+                  left: 18,
+                  right: 18,
                   child: Container(
-                    height: 2,
+                    height: 3,
                     decoration: BoxDecoration(
-                      color: color,
-                      borderRadius: BorderRadius.circular(2),
+                      gradient: LinearGradient(
+                        colors: [
+                          c.accent.withValues(alpha: 0),
+                          c.accent,
+                          c.accentEnd,
+                          c.accentEnd.withValues(alpha: 0),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(3),
                       boxShadow: [
                         BoxShadow(
-                          color: color.withValues(alpha: 0.8),
-                          blurRadius: 8,
+                          color: c.accentEnd.withValues(alpha: 0.7),
+                          blurRadius: 10,
                         ),
                       ],
                     ),
@@ -777,4 +856,53 @@ class _ScanFrameState extends State<_ScanFrame>
       ),
     );
   }
+}
+
+/// Four rounded corner brackets in the brand gradient.
+class _CornerPainter extends CustomPainter {
+  const _CornerPainter({required this.start, required this.end});
+
+  final Color start;
+  final Color end;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const len = 34.0;
+    const r = 26.0;
+    final paint = Paint()
+      ..shader = LinearGradient(colors: [start, end])
+          .createShader(Offset.zero & size)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5
+      ..strokeCap = StrokeCap.round;
+
+    final w = size.width;
+    final h = size.height;
+    final path = Path()
+      // top-left
+      ..moveTo(0, r + len)
+      ..lineTo(0, r)
+      ..arcToPoint(const Offset(r, 0), radius: const Radius.circular(r))
+      ..lineTo(r + len, 0)
+      // top-right
+      ..moveTo(w - r - len, 0)
+      ..lineTo(w - r, 0)
+      ..arcToPoint(Offset(w, r), radius: const Radius.circular(r))
+      ..lineTo(w, r + len)
+      // bottom-right
+      ..moveTo(w, h - r - len)
+      ..lineTo(w, h - r)
+      ..arcToPoint(Offset(w - r, h), radius: const Radius.circular(r))
+      ..lineTo(w - r - len, h)
+      // bottom-left
+      ..moveTo(r + len, h)
+      ..lineTo(r, h)
+      ..arcToPoint(Offset(0, h - r), radius: const Radius.circular(r))
+      ..lineTo(0, h - r - len);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_CornerPainter old) =>
+      old.start != start || old.end != end;
 }

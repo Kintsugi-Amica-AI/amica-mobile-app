@@ -453,7 +453,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phoneVerifyTitle => 'Verify your phone number';
 
   @override
-  String get phoneVerifySubtitle => 'We\'ll text you a 6-digit code to confirm this number is yours.';
+  String get phoneVerifySubtitle =>
+      'We\'ll text you a 6-digit code to confirm this number is yours.';
 
   @override
   String get phoneSendCode => 'Send code';
@@ -490,28 +491,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phoneNotVerified => 'Not verified yet';
 
   @override
-  String get phoneInvalidNumber => 'Enter a valid phone number, e.g. +94 77 123 4567';
+  String get phoneInvalidNumber =>
+      'Enter a valid phone number, e.g. +94 77 123 4567';
 
   @override
-  String get phoneErrInvalidCode => 'That code isn\'t right. Check the SMS and try again.';
+  String get phoneErrInvalidCode =>
+      'That code isn\'t right. Check the SMS and try again.';
 
   @override
   String get phoneErrExpired => 'This code has expired. Send a new one.';
 
   @override
-  String get phoneErrTooMany => 'Too many attempts. Please wait a while and try again.';
+  String get phoneErrTooMany =>
+      'Too many attempts. Please wait a while and try again.';
 
   @override
-  String get phoneErrInUse => 'This number is already linked to another Amica account.';
+  String get phoneErrInUse =>
+      'This number is already linked to another Amica account.';
 
   @override
-  String get phoneErrNotEnabled => 'Phone verification isn\'t turned on for this app yet.';
+  String get phoneErrNotEnabled =>
+      'Phone verification isn\'t turned on for this app yet.';
 
   @override
-  String get phoneErrAppNotAuthorized => 'This app build isn\'t registered for phone verification yet.';
+  String get phoneErrAppNotAuthorized =>
+      'This app build isn\'t registered for phone verification yet.';
 
   @override
-  String get phoneErrGeneric => 'Couldn\'t verify your number. Check your connection and try again.';
+  String get phoneErrGeneric =>
+      'Couldn\'t verify your number. Check your connection and try again.';
+
+  @override
+  String get phoneAddTitle => 'Add your phone number';
+
+  @override
+  String get phoneAddSubtitle =>
+      'Save the number you use every day. SMS verification is coming soon.';
+
+  @override
+  String get phoneSaved => 'Phone number saved';
+
+  @override
+  String get profilePhoneAdded => 'Phone number added';
+
+  @override
+  String get profileAddPhone => 'Add your phone number';
 
   @override
   String get profileVerifyAction => 'Verify';
@@ -528,7 +552,92 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileLoadFailedTitle => 'Couldn\'t load your profile';
 
   @override
-  String get profileLoadFailedBody => 'Your details are safe. Check your connection — this page updates by itself once you\'re back online.';
+  String get profileLoadFailedBody =>
+      'Your details are safe. Check your connection — this page updates by itself once you\'re back online.';
+
+  @override
+  String get tripTitleBus => 'Your bus trip';
+
+  @override
+  String get tripTitleTrain => 'Your train trip';
+
+  @override
+  String get tripPlanning => 'Finding stops near you…';
+
+  @override
+  String get tripTooClose =>
+      'It\'s close enough to walk — no bus or train needed.';
+
+  @override
+  String get tripNoStops =>
+      'No stops or stations found nearby. Amica will use the road route instead.';
+
+  @override
+  String get tripOffline =>
+      'Couldn\'t plan the trip right now. Amica will use the road route instead.';
+
+  @override
+  String tripWalkToStop(String distance, String stop) {
+    return 'Walk $distance to $stop';
+  }
+
+  @override
+  String tripGetOnAt(String stop) {
+    return 'Get on at $stop';
+  }
+
+  @override
+  String tripGetOffAt(String stop) {
+    return 'Get off at $stop';
+  }
+
+  @override
+  String tripWalkToDestination(String distance) {
+    return 'Walk $distance to your destination';
+  }
+
+  @override
+  String tripRideSummary(String distance, int minutes) {
+    return 'Ride $distance · about $minutes min';
+  }
+
+  @override
+  String tripMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String tripBusLine(String line) {
+    return 'Bus $line';
+  }
+
+  @override
+  String tripTrainLine(String line) {
+    return 'Train: $line';
+  }
+
+  @override
+  String get tripEstimated =>
+      'Estimated from the nearest stops — check the route with the conductor.';
+
+  @override
+  String get tripChooseBoard => 'Get on at';
+
+  @override
+  String get tripChooseAlight => 'Get off at';
+
+  @override
+  String tripStopAway(String distance) {
+    return '$distance away';
+  }
+
+  @override
+  String get stopAlertWhereGoing => 'Where are you going?';
+
+  @override
+  String stopAlertWakeBefore(String stop) {
+    return 'Amica will alert you before $stop, the stop to get off at.';
+  }
 
   @override
   String get profileLogOut => 'Log out';

@@ -4,12 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/feature_flags.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../auth/services/phone_verification_service.dart';
 
 /// Opens the two-step SMS verification sheet. Resolves to true once the
 /// number is verified, linked to the account and saved to the profile.
+///
+/// While [FeatureFlags.phoneSmsVerification] is off, the sheet is a single
+/// step: enter the number and save it unverified.
 Future<bool> showPhoneVerificationSheet(
   BuildContext context, {
   String initialPhone = '',
@@ -113,6 +117,24 @@ class _PhoneVerificationSheetState extends State<PhoneVerificationSheet> {
     }
   }
 
+  /// SMS verification off: save the number as-is, unverified.
+  Future<void> _saveWithoutCode() async {
+    if (!_phoneFormKey.currentState!.validate()) return;
+    final e164 = PhoneVerificationService.normalize(_phone.text)!;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await widget.service.saveUnverified(e164);
+      if (mounted) Navigator.pop(context, true);
+    } on PhoneVerificationException catch (error) {
+      _fail(error);
+    } catch (_) {
+      _fail(const PhoneVerificationException(PhoneVerificationError.unknown));
+    }
+  }
+
   Future<void> _confirm() async {
     final code = _code.text.trim();
     if (code.length != 6) {
@@ -172,6 +194,7 @@ class _PhoneVerificationSheetState extends State<PhoneVerificationSheet> {
     final loc = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final c = theme.amica;
+    const smsOn = FeatureFlags.phoneSmsVerification;
 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
@@ -201,13 +224,17 @@ class _PhoneVerificationSheetState extends State<PhoneVerificationSheet> {
               ),
               const SizedBox(height: 14),
               Text(
-                loc.phoneVerifyTitle,
+                smsOn ? loc.phoneVerifyTitle : loc.phoneAddTitle,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.headlineSmall,
               ),
               const SizedBox(height: 6),
               Text(
-                _codeStep ? loc.phoneCodeSentTo(_e164!) : loc.phoneVerifySubtitle,
+                _codeStep
+                    ? loc.phoneCodeSentTo(_e164!)
+                    : smsOn
+                        ? loc.phoneVerifySubtitle
+                        : loc.phoneAddSubtitle,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium,
               ),
@@ -230,7 +257,11 @@ class _PhoneVerificationSheetState extends State<PhoneVerificationSheet> {
                         PhoneVerificationService.normalize(v ?? '') == null
                             ? loc.phoneInvalidNumber
                             : null,
-                    onFieldSubmitted: (_) => _busy ? null : _sendCode(),
+                    onFieldSubmitted: (_) => _busy
+                        ? null
+                        : smsOn
+                            ? _sendCode()
+                            : _saveWithoutCode(),
                   ),
                 )
               else ...[
@@ -311,12 +342,20 @@ class _PhoneVerificationSheetState extends State<PhoneVerificationSheet> {
                 ),
               ],
               const SizedBox(height: 18),
-              PrimaryButton(
-                label: _codeStep ? loc.phoneVerifyButton : loc.phoneSendCode,
-                icon: _codeStep ? Icons.verified_rounded : Icons.send_rounded,
-                isBusy: _busy,
-                onPressed: _codeStep ? _confirm : () => _sendCode(),
-              ),
+              if (smsOn)
+                PrimaryButton(
+                  label: _codeStep ? loc.phoneVerifyButton : loc.phoneSendCode,
+                  icon: _codeStep ? Icons.verified_rounded : Icons.send_rounded,
+                  isBusy: _busy,
+                  onPressed: _codeStep ? _confirm : () => _sendCode(),
+                )
+              else
+                PrimaryButton(
+                  label: loc.commonSave,
+                  icon: Icons.check_rounded,
+                  isBusy: _busy,
+                  onPressed: _saveWithoutCode,
+                ),
             ],
           ),
         ),

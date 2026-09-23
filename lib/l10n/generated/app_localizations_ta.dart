@@ -462,7 +462,8 @@ class AppLocalizationsTa extends AppLocalizations {
   String get phoneVerifyTitle => 'உங்கள் தொலைபேசி எண்ணைச் சரிபார்க்கவும்';
 
   @override
-  String get phoneVerifySubtitle => 'இந்த எண் உங்களுடையது என்பதை உறுதிப்படுத்த 6 இலக்கக் குறியீட்டை SMS மூலம் அனுப்புவோம்.';
+  String get phoneVerifySubtitle =>
+      'இந்த எண் உங்களுடையது என்பதை உறுதிப்படுத்த 6 இலக்கக் குறியீட்டை SMS மூலம் அனுப்புவோம்.';
 
   @override
   String get phoneSendCode => 'குறியீட்டை அனுப்பு';
@@ -499,34 +500,59 @@ class AppLocalizationsTa extends AppLocalizations {
   String get phoneNotVerified => 'இன்னும் சரிபார்க்கப்படவில்லை';
 
   @override
-  String get phoneInvalidNumber => 'சரியான தொலைபேசி எண்ணை உள்ளிடவும், எ.கா. +94 77 123 4567';
+  String get phoneInvalidNumber =>
+      'சரியான தொலைபேசி எண்ணை உள்ளிடவும், எ.கா. +94 77 123 4567';
 
   @override
-  String get phoneErrInvalidCode => 'அந்தக் குறியீடு சரியில்லை. SMS-ஐச் சரிபார்த்து மீண்டும் முயலவும்.';
+  String get phoneErrInvalidCode =>
+      'அந்தக் குறியீடு சரியில்லை. SMS-ஐச் சரிபார்த்து மீண்டும் முயலவும்.';
 
   @override
-  String get phoneErrExpired => 'இந்தக் குறியீடு காலாவதியாகிவிட்டது. புதியதை அனுப்பவும்.';
+  String get phoneErrExpired =>
+      'இந்தக் குறியீடு காலாவதியாகிவிட்டது. புதியதை அனுப்பவும்.';
 
   @override
-  String get phoneErrTooMany => 'அதிகமான முயற்சிகள். சிறிது நேரம் காத்திருந்து மீண்டும் முயலவும்.';
+  String get phoneErrTooMany =>
+      'அதிகமான முயற்சிகள். சிறிது நேரம் காத்திருந்து மீண்டும் முயலவும்.';
 
   @override
-  String get phoneErrInUse => 'இந்த எண் ஏற்கனவே வேறொரு Amica கணக்குடன் இணைக்கப்பட்டுள்ளது.';
+  String get phoneErrInUse =>
+      'இந்த எண் ஏற்கனவே வேறொரு Amica கணக்குடன் இணைக்கப்பட்டுள்ளது.';
 
   @override
-  String get phoneErrNotEnabled => 'இந்தச் செயலிக்குத் தொலைபேசி சரிபார்ப்பு இன்னும் இயக்கப்படவில்லை.';
+  String get phoneErrNotEnabled =>
+      'இந்தச் செயலிக்குத் தொலைபேசி சரிபார்ப்பு இன்னும் இயக்கப்படவில்லை.';
 
   @override
-  String get phoneErrAppNotAuthorized => 'இந்தச் செயலி பதிப்பு தொலைபேசி சரிபார்ப்புக்கு இன்னும் பதிவு செய்யப்படவில்லை.';
+  String get phoneErrAppNotAuthorized =>
+      'இந்தச் செயலி பதிப்பு தொலைபேசி சரிபார்ப்புக்கு இன்னும் பதிவு செய்யப்படவில்லை.';
 
   @override
-  String get phoneErrGeneric => 'உங்கள் எண்ணைச் சரிபார்க்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.';
+  String get phoneErrGeneric =>
+      'உங்கள் எண்ணைச் சரிபார்க்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.';
+
+  @override
+  String get phoneAddTitle => 'உங்கள் தொலைபேசி எண்ணைச் சேர்க்கவும்';
+
+  @override
+  String get phoneAddSubtitle =>
+      'நீங்கள் தினமும் பயன்படுத்தும் எண்ணைச் சேமிக்கவும். SMS மூலம் சரிபார்ப்பு விரைவில் வரும்.';
+
+  @override
+  String get phoneSaved => 'தொலைபேசி எண் சேமிக்கப்பட்டது';
+
+  @override
+  String get profilePhoneAdded => 'தொலைபேசி எண் சேர்க்கப்பட்டது';
+
+  @override
+  String get profileAddPhone => 'உங்கள் தொலைபேசி எண்ணைச் சேர்க்கவும்';
 
   @override
   String get profileVerifyAction => 'சரிபார்';
 
   @override
-  String get profilePhoneNotVerified => 'உங்கள் தொலைபேசி எண்ணை உறுதிப்படுத்தவும்';
+  String get profilePhoneNotVerified =>
+      'உங்கள் தொலைபேசி எண்ணை உறுதிப்படுத்தவும்';
 
   @override
   String profileSaveFailedWithCode(String code) {
@@ -537,7 +563,92 @@ class AppLocalizationsTa extends AppLocalizations {
   String get profileLoadFailedTitle => 'உங்கள் சுயவிவரத்தை ஏற்ற முடியவில்லை';
 
   @override
-  String get profileLoadFailedBody => 'உங்கள் விவரங்கள் பாதுகாப்பாக உள்ளன. இணைப்பைச் சரிபார்க்கவும் — மீண்டும் இணைந்ததும் இந்தப் பக்கம் தானாகவே புதுப்பிக்கப்படும்.';
+  String get profileLoadFailedBody =>
+      'உங்கள் விவரங்கள் பாதுகாப்பாக உள்ளன. இணைப்பைச் சரிபார்க்கவும் — மீண்டும் இணைந்ததும் இந்தப் பக்கம் தானாகவே புதுப்பிக்கப்படும்.';
+
+  @override
+  String get tripTitleBus => 'உங்கள் பேருந்துப் பயணம்';
+
+  @override
+  String get tripTitleTrain => 'உங்கள் ரயில் பயணம்';
+
+  @override
+  String get tripPlanning => 'உங்களுக்கு அருகிலுள்ள நிறுத்தங்களைத் தேடுகிறது…';
+
+  @override
+  String get tripTooClose =>
+      'நடந்தே செல்லும் அளவுக்கு அருகில் உள்ளது — பேருந்து அல்லது ரயில் தேவையில்லை.';
+
+  @override
+  String get tripNoStops =>
+      'அருகில் நிறுத்தங்களோ நிலையங்களோ கிடைக்கவில்லை. அதற்குப் பதிலாக Amica சாலை வழியைப் பயன்படுத்தும்.';
+
+  @override
+  String get tripOffline =>
+      'இப்போது பயணத்தைத் திட்டமிட முடியவில்லை. அதற்குப் பதிலாக Amica சாலை வழியைப் பயன்படுத்தும்.';
+
+  @override
+  String tripWalkToStop(String distance, String stop) {
+    return '$stop வரை $distance நடக்கவும்';
+  }
+
+  @override
+  String tripGetOnAt(String stop) {
+    return '$stop இல் ஏறவும்';
+  }
+
+  @override
+  String tripGetOffAt(String stop) {
+    return '$stop இல் இறங்கவும்';
+  }
+
+  @override
+  String tripWalkToDestination(String distance) {
+    return 'உங்கள் இலக்கு வரை $distance நடக்கவும்';
+  }
+
+  @override
+  String tripRideSummary(String distance, int minutes) {
+    return 'பயணம் $distance · சுமார் $minutes நிமி.';
+  }
+
+  @override
+  String tripMinutes(int minutes) {
+    return '$minutes நிமி.';
+  }
+
+  @override
+  String tripBusLine(String line) {
+    return 'பேருந்து $line';
+  }
+
+  @override
+  String tripTrainLine(String line) {
+    return 'ரயில்: $line';
+  }
+
+  @override
+  String get tripEstimated =>
+      'அருகிலுள்ள நிறுத்தங்களைக் கொண்டு மதிப்பிடப்பட்டது — நடத்துநரிடம் வழியை உறுதிசெய்யவும்.';
+
+  @override
+  String get tripChooseBoard => 'ஏறும் இடம்';
+
+  @override
+  String get tripChooseAlight => 'இறங்கும் இடம்';
+
+  @override
+  String tripStopAway(String distance) {
+    return '$distance தொலைவில்';
+  }
+
+  @override
+  String get stopAlertWhereGoing => 'நீங்கள் எங்கே செல்கிறீர்கள்?';
+
+  @override
+  String stopAlertWakeBefore(String stop) {
+    return 'நீங்கள் இறங்க வேண்டிய $stop நிறுத்தத்திற்கு முன் Amica உங்களை எச்சரிக்கும்.';
+  }
 
   @override
   String get profileLogOut => 'வெளியேறு';

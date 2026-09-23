@@ -74,7 +74,7 @@ class _PlateResultScreenState extends State<PlateResultScreen> {
           _loc.plateResultStatusSafe,
         ),
       VehicleRiskStatus.reported => (
-          Theme.of(context).amica.terracotta,
+          Theme.of(context).amica.terracottaDeep,
           Icons.report_gmailerrorred_rounded,
           _loc.plateResultStatusReported,
         ),
@@ -107,90 +107,138 @@ class _PlateResultScreenState extends State<PlateResultScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
             children: [
+              // Status: soft concentric rings in the status colour.
               Center(
                 child: Container(
-                  width: 108,
-                  height: 108,
+                  width: 124,
+                  height: 124,
+                  alignment: Alignment.center,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: color.withValues(alpha: 0.14),
-                    border: Border.all(color: color.withValues(alpha: 0.5)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: color.withValues(alpha: 0.35),
-                        blurRadius: 28,
-                        spreadRadius: 2,
-                      ),
-                    ],
+                    color: color.withValues(alpha: 0.10),
                   ),
-                  child: Icon(icon, color: color, size: 48),
+                  child: Container(
+                    width: 92,
+                    height: 92,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: color.withValues(alpha: 0.18),
+                      border: Border.all(color: color.withValues(alpha: 0.45)),
+                    ),
+                    child: Icon(icon, color: color, size: 44),
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
-              Center(
-                child: Text(
-                  status.plateNumber.isEmpty ? 'UNKNOWN' : status.plateNumber,
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-              ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 18),
+              // The plate itself, drawn like a number plate.
               Center(
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFF2B1B3A),
+                      width: 2.5,
+                    ),
+                    boxShadow: Theme.of(context).amica.shadow,
+                  ),
+                  child: Text(
+                    status.plateNumber.isEmpty ? 'UNKNOWN' : status.plateNumber,
+                    style: const TextStyle(
+                      color: Color(0xFF2B1B3A),
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 2.5,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
                   decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.16),
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  child: Text(
-                    label.toUpperCase(),
-                    style: TextStyle(
-                      color: color,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(icon, size: 15, color: color),
+                      const SizedBox(width: 6),
+                      Text(
+                        label.toUpperCase(),
+                        style: TextStyle(
+                          color: color,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
               const SizedBox(height: 24),
-              GlassCard(
-                borderColor: color,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _StatRow(
-                        label: status.isDemo
-                            ? _loc.plateResultDemoPassengerRating
-                            : _loc.plateResultPassengerRating,
-                        value: status.ratingCount == 0
-                            ? _loc.plateResultNotRated
-                            : _loc.plateResultRatingValue(
-                                status.ratingAverage.toStringAsFixed(1),
-                                status.ratingCount)),
-                    const Divider(height: 24),
-                    _StatRow(
-                        label: _loc.plateResultUnverifiedChecks,
-                        value: '${status.unverifiedSafetyCheckCount}'),
-                    const Divider(height: 24),
-                    _StatRow(
+              // Four figures as a 2 × 2 grid of soft tiles.
+              Row(
+                children: [
+                  Expanded(
+                    child: _StatTile(
+                      icon: Icons.star_rounded,
+                      label: status.isDemo
+                          ? _loc.plateResultDemoPassengerRating
+                          : _loc.plateResultPassengerRating,
+                      value: status.ratingCount == 0
+                          ? _loc.plateResultNotRated
+                          : _loc.plateResultRatingValue(
+                              status.ratingAverage.toStringAsFixed(1),
+                              status.ratingCount),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _StatTile(
+                      icon: Icons.shield_outlined,
+                      label: _loc.plateResultRiskLevel,
+                      value: status.riskLevel.toUpperCase(),
+                      valueColor: color,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _StatTile(
+                      icon: Icons.help_outline_rounded,
+                      label: _loc.plateResultUnverifiedChecks,
+                      value: '${status.unverifiedSafetyCheckCount}',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _StatTile(
+                      icon: Icons.report_outlined,
                       label: _loc.plateResultReportsOnFile,
                       value: '${status.reportsCount}',
                     ),
-                    const Divider(height: 24),
-                    _StatRow(
-                      label: _loc.plateResultRiskLevel,
-                      value: status.riskLevel.toUpperCase(),
-                    ),
-                    if (status.notes != null) ...[
-                      const Divider(height: 24),
-                      Text(
-                        status.notes!,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
-                  ],
-                ),
+                  ),
+                ],
               ),
+              if (status.notes != null) ...[
+                const SizedBox(height: 10),
+                GlassCard(
+                  borderColor: color.withValues(alpha: 0.5),
+                  child: Text(
+                    status.notes!,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
               Text(
                 _loc.plateResultDbNote,
@@ -207,12 +255,13 @@ class _PlateResultScreenState extends State<PlateResultScreen> {
                   label: _boarding
                       ? _loc.plateResultNotifying
                       : _loc.plateResultTravelingButton,
-                  icon: Icons.directions_car,
+                  icon: Icons.local_taxi_rounded,
                   onPressed: _boarding || status.normalizedPlateNumber.isEmpty
                       ? null
                       : () => _board(status)),
               const SizedBox(height: 16),
               PrimaryButton(
+                tone: AmicaButtonTone.quiet,
                 label: _loc.plateResultScanAnotherButton,
                 icon: Icons.document_scanner_outlined,
                 onPressed: () => Navigator.pop(context),
@@ -236,23 +285,55 @@ class _PlateResultScreenState extends State<PlateResultScreen> {
   }
 }
 
-class _StatRow extends StatelessWidget {
-  const _StatRow({required this.label, required this.value});
+class _StatTile extends StatelessWidget {
+  const _StatTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
 
+  final IconData icon;
   final String label;
   final String value;
+  final Color? valueColor;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: Theme.of(context).textTheme.bodyMedium),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-      ],
+    final c = Theme.of(context).amica;
+    return AmicaCard(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+      borderRadius: 20,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: c.accentSoft,
+            ),
+            child: Icon(icon, size: 16, color: c.accentInk),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: valueColor,
+                ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
     );
   }
 }

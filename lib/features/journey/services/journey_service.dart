@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../services/journey_route_service.dart';
+import '../../../services/transit_plan_service.dart';
 import '../models/journey.dart';
 import '../models/location_data_model.dart';
 
@@ -34,6 +35,7 @@ class JourneyService {
     String journeyType = 'walk',
     String? vehiclePlate,
     JourneyRoute? route,
+    TransitPlan? transitPlan,
   }) async {
     final user = _currentUserOrThrow();
     final document = _firestore.collection(_collectionName).doc();
@@ -82,6 +84,8 @@ class JourneyService {
         // Saved so the journey screen can draw the suggested route without
         // asking the backend again, even with a weak signal on the way.
         'route': route?.toMap(),
+        // Bus / train: where to get on and off, and the walks either side.
+        'transitPlan': transitPlan?.toMap(),
         'pause': null,
         'schemaVersion': 1,
         'createdAt': FieldValue.serverTimestamp(),
@@ -187,6 +191,9 @@ class JourneyService {
     int alertDistanceMeters = Journey.defaultAlertDistanceMeters,
     double routeFactor = 1,
     double? routeDistanceMeters,
+    String journeyType = 'bus',
+    TransitPlan? transitPlan,
+    String? finalDestinationName,
   }) async {
     final user = _currentUserOrThrow();
     final document = _firestore.collection(_collectionName).doc();
@@ -197,7 +204,7 @@ class JourneyService {
       await document.set({
         'id': document.id,
         'userId': user.uid,
-        'journeyType': 'bus',
+        'journeyType': journeyType == 'train' ? 'train' : 'bus',
         'status': 'active',
         'startLocation': startLocation.toMap(),
         'currentLocation': startLocation.toMap(),
@@ -229,7 +236,14 @@ class JourneyService {
           'routeFactor': routeFactor,
           'routeDistanceMeters': routeDistanceMeters,
         },
-        'metadata': const <String, dynamic>{},
+        'metadata': <String, dynamic>{
+          // The drop-off above is the stop to get off at; this is where she
+          // is actually going after the short walk from it.
+          if (finalDestinationName != null &&
+              finalDestinationName.trim().isNotEmpty)
+            'finalDestination': finalDestinationName.trim(),
+        },
+        'transitPlan': transitPlan?.toMap(),
         'schemaVersion': 1,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),

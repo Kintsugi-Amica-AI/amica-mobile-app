@@ -15,6 +15,7 @@ import '../../../core/widgets/primary_button.dart';
 import '../../../services/emergency_action_service.dart';
 import '../../../services/journey_route_service.dart';
 import '../../../services/location_service.dart';
+import '../../../services/transit_plan_service.dart';
 import '../../emergency_contacts/models/emergency_contact.dart';
 import '../../emergency_contacts/services/emergency_contact_service.dart';
 import '../../sos/screens/sos_active_screen.dart';
@@ -23,6 +24,7 @@ import '../models/journey.dart';
 import '../models/location_data_model.dart';
 import '../services/journey_service.dart';
 import '../widgets/journey_visuals.dart';
+import '../widgets/transit_trip_card.dart';
 import 'safety_check_screen.dart';
 import '../../plate_scan/screens/vehicle_rating_screen.dart';
 import '../../plate_scan/services/vehicle_journey_service.dart';
@@ -736,6 +738,22 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
 
   /// The route saved with the journey, or one fetched here for journeys
   /// started before routes were saved (or when the fetch failed at start).
+  /// Decoding polylines is not free; keep the legs for the same plan so
+  /// the map is not handed a new list (and re-framed) on every tick.
+  TransitPlan? _cachedPlan;
+  List<MapRouteLeg> _cachedPlanLegs = const [];
+
+  List<MapRouteLeg> _planLegsFor(TransitPlan plan) {
+    if (!identical(plan, _cachedPlan) &&
+        (_cachedPlan == null ||
+            _cachedPlan!.boardStop.id != plan.boardStop.id ||
+            _cachedPlan!.alightStop.id != plan.alightStop.id)) {
+      _cachedPlanLegs = mapLegsFor(plan);
+    }
+    _cachedPlan = plan;
+    return _cachedPlanLegs;
+  }
+
   JourneyRoute? _routeFor(Journey journey) {
     final saved = journey.suggestedRoute;
     if (saved != null) {
@@ -828,6 +846,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     final mapLocation = journey.currentLocation ?? journey.startLocation;
     final destinationLocation = journey.destinationLocation;
     final route = _routeFor(journey);
+    final plan = journey.transitPlan;
     final c = Theme.of(context).amica;
     final topInset = MediaQuery.of(context).padding.top + kToolbarHeight;
 
@@ -848,7 +867,12 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
                       destinationLatitude: destinationLocation?.latitude,
                       destinationLongitude: destinationLocation?.longitude,
                       destinationTitle: journey.destinationName,
-                      routePoints: route?.points ?? const [],
+                      routePoints: plan != null
+                          ? const []
+                          : route?.points ?? const [],
+                      routeLegs: plan == null ? const [] : _planLegsFor(plan),
+                      transitStops:
+                          plan == null ? const [] : mapStopsFor(plan),
                       showMyLocation: true,
                       mapPadding: EdgeInsets.only(
                         top: topInset,
@@ -1016,7 +1040,13 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
               ),
             ),
             const SizedBox(height: 12),
-            // Suggested route.
+            // Bus / train: the stops and walks; otherwise the suggested route.
+            if (journey.transitPlan != null)
+              TransitTripCard(
+                mode: journey.transitPlan!.mode,
+                plan: journey.transitPlan,
+              )
+            else
             AmicaCard(
               padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
               child: Row(
