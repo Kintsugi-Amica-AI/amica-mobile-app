@@ -12,6 +12,7 @@ import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../services/location_service.dart';
 import '../models/location_data_model.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../services/journey_service.dart';
 
 class StartJourneyScreen extends StatefulWidget {
@@ -21,12 +22,17 @@ class StartJourneyScreen extends StatefulWidget {
     this.journeyService = const JourneyService(),
     this.vehiclePlate,
     this.boardingStatus,
+    this.isTab = false,
   });
 
   final LocationService locationService;
   final JourneyService journeyService;
   final String? vehiclePlate;
   final String? boardingStatus;
+
+  /// True when shown as the Journeys tab rather than pushed as a route —
+  /// suppresses the back arrow, since there is nothing to go back to.
+  final bool isTab;
 
   @override
   State<StartJourneyScreen> createState() => _StartJourneyScreenState();
@@ -117,9 +123,10 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
       return;
     }
 
+    final loc = AppLocalizations.of(context)!;
     setState(() {
       _isResolvingDestination = true;
-      _destinationStatus = 'Finding destination on map...';
+      _destinationStatus = loc.startJourneyFindingOnMap;
       _errorMessage = null;
     });
 
@@ -143,13 +150,13 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
           address: destinationName,
           updatedAt: DateTime.now(),
         );
-        _destinationStatus = 'Destination found on map.';
+        _destinationStatus = loc.startJourneyDestinationFound;
       });
       _applySuggestedDuration();
     } catch (_) {
       if (mounted && searchToken == _destinationSearchToken) {
         setState(() {
-          _destinationStatus = 'Destination not found. Pin it on the map.';
+          _destinationStatus = loc.startJourneyDestinationNotFound;
         });
       }
     } finally {
@@ -178,7 +185,8 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _errorMessage = 'Could not get current location.');
+        setState(() => _errorMessage =
+            AppLocalizations.of(context)!.startJourneyCouldNotGetLocation);
       }
     } finally {
       if (mounted) {
@@ -192,15 +200,16 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
       return;
     }
 
+    final loc = AppLocalizations.of(context)!;
     final startLocation = _currentLocation;
     if (startLocation == null) {
-      setState(() => _errorMessage = 'Get your current location first.');
+      setState(() => _errorMessage = loc.startJourneyGetLocationFirst);
       return;
     }
 
     final destinationLocation = _destinationLocation;
     if (destinationLocation == null) {
-      setState(() => _errorMessage = 'Choose the destination on the map.');
+      setState(() => _errorMessage = loc.startJourneyChooseDestination);
       return;
     }
 
@@ -236,7 +245,8 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _errorMessage = 'Could not start journey.');
+        setState(() => _errorMessage =
+            AppLocalizations.of(context)!.startJourneyCouldNotStart);
       }
     } finally {
       if (mounted) {
@@ -255,7 +265,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
         address: _destinationController.text.trim(),
         updatedAt: DateTime.now(),
       );
-      _destinationStatus = 'Destination pin selected.';
+      _destinationStatus = AppLocalizations.of(context)!.startJourneyDestinationPinSelected;
       _isResolvingDestination = false;
       _errorMessage = null;
     });
@@ -349,23 +359,24 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
 
   double _degreesToRadians(double degrees) => degrees * math.pi / 180;
 
-  String? _required(String? value, String fieldName) {
+  String? _required(BuildContext context, String? value, String fieldName) {
     if (value == null || value.trim().isEmpty) {
-      return '$fieldName is required';
+      return AppLocalizations.of(context)!.fieldRequired(fieldName);
     }
     return null;
   }
 
-  String? _validateDuration(String? value) {
+  String? _validateDuration(BuildContext context, String? value) {
     final duration = int.tryParse(value?.trim() ?? '');
     if (duration == null || duration <= 0) {
-      return 'Enter a positive duration';
+      return AppLocalizations.of(context)!.startJourneyDurationInvalid;
     }
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     final currentLocation = _currentLocation;
     final destinationLocation = _destinationLocation;
     final mapCenter = currentLocation ??
@@ -377,15 +388,17 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
           updatedAt: DateTime.now(),
         );
     final destinationTitle = _destinationController.text.trim().isEmpty
-        ? 'Destination'
+        ? loc.startJourneyDestinationLabel
         : _destinationController.text.trim();
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-          title: Text(widget.vehiclePlate == null
-              ? 'Start Journey'
-              : 'Start Vehicle Journey')),
+        automaticallyImplyLeading: !widget.isTab,
+        title: Text(widget.vehiclePlate == null
+            ? loc.startJourneyWalkWithMeTitle
+            : loc.startJourneyRideWithMeTitle),
+      ),
       extendBodyBehindAppBar: true,
       body: AmicaBackground(
         child: SafeArea(
@@ -395,7 +408,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
               children: [
                 if (widget.vehiclePlate != null) ...[
-                  Text('Vehicle: ${widget.vehiclePlate}',
+                  Text(loc.startJourneyVehicleLabel(widget.vehiclePlate!),
                       style: Theme.of(context).textTheme.titleLarge),
                   if (widget.boardingStatus != null)
                     Text(widget.boardingStatus!),
@@ -407,17 +420,19 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
                     children: [
                       PrimaryButton(
                         label: _isLoadingLocation
-                            ? 'Getting location...'
-                            : 'Get current location',
+                            ? loc.startJourneyGettingLocation
+                            : loc.startJourneyGetCurrentLocation,
                         icon: Icons.my_location_rounded,
                         onPressed: _isBusy ? null : _getCurrentLocation,
                       ),
                       const SizedBox(height: 10),
                       Text(
                         currentLocation == null
-                            ? 'Current location: not selected yet'
-                            : 'Current location: ${currentLocation.latitude.toStringAsFixed(5)}, '
-                                '${currentLocation.longitude.toStringAsFixed(5)}',
+                            ? loc.startJourneyCurrentLocationNotSelected
+                            : loc.startJourneyCurrentLocationValue(
+                                currentLocation.latitude.toStringAsFixed(5),
+                                currentLocation.longitude.toStringAsFixed(5),
+                              ),
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
@@ -425,16 +440,17 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
                 ),
                 const SizedBox(height: 16),
                 CustomTextField(
-                  label: 'Destination name or address',
+                  label: loc.startJourneyDestinationNameLabel,
                   controller: _destinationController,
                   prefixIcon: Icons.place_outlined,
-                  validator: (value) => _required(value, 'Destination'),
+                  validator: (value) => _required(
+                      context, value, loc.startJourneyDestinationLabel),
                 ),
                 if (_isResolvingDestination || _destinationStatus != null) ...[
                   const SizedBox(height: 8),
                   Text(
                     _isResolvingDestination
-                        ? 'Finding destination on map...'
+                        ? loc.startJourneyFindingOnMap
                         : _destinationStatus!,
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
@@ -443,7 +459,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
                 AmicaMapView(
                   latitude: mapCenter.latitude,
                   longitude: mapCenter.longitude,
-                  markerTitle: 'Journey start',
+                  markerTitle: loc.startJourneyMapStartMarker,
                   showStartMarker: currentLocation != null,
                   destinationLatitude: destinationLocation?.latitude,
                   destinationLongitude: destinationLocation?.longitude,
@@ -453,35 +469,43 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
                 const SizedBox(height: 8),
                 Text(
                   destinationLocation == null
-                      ? 'Tap map to pin destination.'
-                      : 'Destination pin: ${destinationLocation.latitude.toStringAsFixed(5)}, '
-                          '${destinationLocation.longitude.toStringAsFixed(5)}',
+                      ? loc.startJourneyTapMapToPin
+                      : loc.startJourneyDestinationPinValue(
+                          destinationLocation.latitude.toStringAsFixed(5),
+                          destinationLocation.longitude.toStringAsFixed(5),
+                        ),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   initialValue: _journeyType,
-                  decoration: const InputDecoration(labelText: 'Journey type'),
-                  items: const [
-                    DropdownMenuItem(value: 'walk', child: Text('Walk')),
-                    DropdownMenuItem(value: 'taxi', child: Text('Taxi')),
-                    DropdownMenuItem(value: 'bus', child: Text('Bus')),
-                    DropdownMenuItem(value: 'train', child: Text('Train')),
-                    DropdownMenuItem(value: 'other', child: Text('Other')),
+                  decoration:
+                      InputDecoration(labelText: loc.startJourneyTypeLabel),
+                  items: [
+                    DropdownMenuItem(
+                        value: 'walk', child: Text(loc.startJourneyTypeWalk)),
+                    DropdownMenuItem(
+                        value: 'taxi', child: Text(loc.startJourneyTypeTaxi)),
+                    DropdownMenuItem(
+                        value: 'bus', child: Text(loc.startJourneyTypeBus)),
+                    DropdownMenuItem(
+                        value: 'train', child: Text(loc.startJourneyTypeTrain)),
+                    DropdownMenuItem(
+                        value: 'other', child: Text(loc.startJourneyTypeOther)),
                   ],
                   onChanged: _isBusy ? null : _onJourneyTypeChanged,
                 ),
                 const SizedBox(height: 16),
                 CustomTextField(
-                  label: 'Estimated duration in minutes',
+                  label: loc.startJourneyDurationLabel,
                   controller: _durationController,
                   keyboardType: TextInputType.number,
                   prefixIcon: Icons.hourglass_bottom_rounded,
-                  validator: _validateDuration,
+                  validator: (value) => _validateDuration(context, value),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Suggested duration: $_suggestedDurationMinutes minutes (approximate; no traffic data)',
+                  loc.startJourneySuggestedDuration(_suggestedDurationMinutes),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 if (_errorMessage != null) ...[
@@ -495,10 +519,10 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
                 const SizedBox(height: 24),
                 PrimaryButton(
                   label: _isStartingJourney
-                      ? 'Starting...'
+                      ? loc.startJourneyStarting
                       : widget.vehiclePlate == null
-                          ? 'Start Journey'
-                          : 'Start Vehicle Journey',
+                          ? loc.startJourneyStartButton
+                          : loc.startJourneyStartVehicleButton,
                   icon: Icons.play_arrow_rounded,
                   onPressed: (_isBusy || _isResolvingDestination)
                       ? null

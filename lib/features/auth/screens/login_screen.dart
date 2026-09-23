@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
-import '../../../core/widgets/amica_background.dart';
 import '../../../core/widgets/amica_logo.dart';
 import '../../../core/widgets/custom_text_field.dart';
-import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -61,7 +61,9 @@ class _LoginScreenState extends State<LoginScreen> {
     } on AuthServiceException catch (error) {
       setState(() => _errorMessage = error.message);
     } catch (_) {
-      setState(() => _errorMessage = 'Login failed. Please try again.');
+      setState(
+        () => _errorMessage = AppLocalizations.of(context)!.loginFailed,
+      );
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -86,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _errorMessage = error.message);
     } catch (_) {
       setState(
-        () => _errorMessage = 'Google sign-in failed. Please try again.',
+        () => _errorMessage = AppLocalizations.of(context)!.googleSignInFailed,
       );
     } finally {
       if (mounted) {
@@ -97,107 +99,127 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = Theme.of(context).amica;
+    final theme = Theme.of(context);
+    final loc = AppLocalizations.of(context)!;
+
+    // No card around the form. On the old screen the fields sat inside a
+    // translucent panel floating on a gradient, which made the first thing
+    // a new user saw look like a pop-up rather than the app.
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: AmicaBackground(
-        child: SafeArea(
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-              children: [
-                const AmicaLogo(),
-                const SizedBox(height: 32),
-                GlassCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: c.ivory,
+      body: SafeArea(
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
+            children: [
+              const SizedBox(height: 12),
+              const AmicaLogo(),
+              const SizedBox(height: 36),
+              Text(loc.loginWelcomeBack, style: theme.textTheme.headlineMedium),
+              const SizedBox(height: 6),
+              Text(
+                loc.loginSubtitle,
+                style: theme.textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 26),
+              CustomTextField(
+                label: loc.commonEmail,
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                validator: (value) {
+                  if (value == null || !value.contains('@')) {
+                    return loc.commonEnterValidEmail;
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              CustomTextField(
+                label: loc.commonPassword,
+                controller: _passwordController,
+                obscureText: true,
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: (_) => _isBusy ? null : _login(),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return loc.loginPasswordRequired;
+                  }
+                  return null;
+                },
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: _isBusy
+                      ? null
+                      : () => Navigator.pushNamed(
+                            context,
+                            AppRoutes.forgotPassword,
+                          ),
+                  child: Text(loc.loginForgotPassword),
+                ),
+              ),
+              if (_errorMessage != null) ...[
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 13,
+                    vertical: 11,
+                  ),
+                  decoration: BoxDecoration(
+                    color: c.blush,
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Row(
                     children: [
-                      Text(
-                        'Welcome back',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'Sign in to manage journeys, trusted contacts, and safety alerts.',
-                      ),
-                      const SizedBox(height: 28),
-                      CustomTextField(
-                        label: 'Email',
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        prefixIcon: Icons.alternate_email_rounded,
-                        validator: (value) {
-                          if (value == null || !value.contains('@')) {
-                            return 'Enter a valid email';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      CustomTextField(
-                        label: 'Password',
-                        controller: _passwordController,
-                        obscureText: true,
-                        prefixIcon: Icons.lock_outline_rounded,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Password is required';
-                          }
-                          return null;
-                        },
-                      ),
-                      if (_errorMessage != null) ...[
-                        const SizedBox(height: 16),
-                        Text(
+                      Icon(Icons.error_outline_rounded,
+                          size: 17, color: c.terracottaDeep),
+                      const SizedBox(width: 9),
+                      Expanded(
+                        child: Text(
                           _errorMessage!,
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
+                            color: c.terracottaDeep,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            height: 1.4,
                           ),
-                        ),
-                      ],
-                      const SizedBox(height: 24),
-                      PrimaryButton(
-                        label: _isLoading ? 'Logging in...' : 'Log in',
-                        icon: Icons.login_rounded,
-                        onPressed: _isBusy ? null : _login,
-                      ),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: _isBusy ? null : _continueWithGoogle,
-                        icon: const Icon(Icons.g_mobiledata_rounded),
-                        label: Text(
-                          _isGoogleLoading
-                              ? 'Connecting...'
-                              : 'Continue with Google',
-                        ),
-                      ),
-                      Center(
-                        child: TextButton(
-                          onPressed: _isBusy
-                              ? null
-                              : () => Navigator.pushNamed(
-                                    context,
-                                    AppRoutes.signup,
-                                  ),
-                          child: const Text('Create account'),
-                        ),
-                      ),
-                      Center(
-                        child: TextButton(
-                          onPressed: _isBusy
-                              ? null
-                              : () => Navigator.pushNamed(
-                                    context,
-                                    AppRoutes.forgotPassword,
-                                  ),
-                          child: const Text('Forgot password?'),
                         ),
                       ),
                     ],
                   ),
                 ),
               ],
-            ),
+              const SizedBox(height: 20),
+              PrimaryButton(
+                label: loc.loginButton,
+                isBusy: _isLoading,
+                onPressed: _isBusy ? null : _login,
+              ),
+              const SizedBox(height: 10),
+              PrimaryButton(
+                label: loc.continueWithGoogle,
+                tone: AmicaButtonTone.quiet,
+                isBusy: _isGoogleLoading,
+                onPressed: _isBusy ? null : _continueWithGoogle,
+              ),
+              const SizedBox(height: 22),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(loc.loginNewToAmica, style: theme.textTheme.bodyMedium),
+                  TextButton(
+                    onPressed: _isBusy
+                        ? null
+                        : () => Navigator.pushNamed(context, AppRoutes.signup),
+                    child: Text(loc.loginCreateAccount),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

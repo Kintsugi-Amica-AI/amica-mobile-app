@@ -18,6 +18,7 @@ import '../../journey/services/journey_service.dart';
 import '../services/route_distance_service.dart';
 import '../services/stop_alert_calculator.dart';
 import 'stop_alert_active_screen.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 /// Where a rider picks the stop they want to get off at before boarding.
 class StopAlertSetupScreen extends StatefulWidget {
@@ -58,6 +59,7 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
   bool _isStartingRide = false;
   String? _dropOffStatus;
   String? _errorMessage;
+  late AppLocalizations _loc;
 
   bool get _isBusy => _isLoadingLocation || _isStartingRide;
 
@@ -66,6 +68,12 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
     super.initState();
     _dropOffController.addListener(_onDropOffTextChanged);
     unawaited(_getCurrentLocation());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loc = AppLocalizations.of(context)!;
   }
 
   @override
@@ -123,7 +131,7 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
 
     setState(() {
       _isResolvingDropOff = true;
-      _dropOffStatus = 'Finding your stop on the map...';
+      _dropOffStatus = _loc.stopAlertSetupFindingStop;
       _errorMessage = null;
     });
 
@@ -147,13 +155,13 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
           address: dropOffName,
           updatedAt: DateTime.now(),
         );
-        _dropOffStatus = 'Stop found on the map.';
+        _dropOffStatus = _loc.stopAlertSetupStopFound;
       });
       _scheduleRouteEstimate();
     } catch (_) {
       if (mounted && searchToken == _dropOffSearchToken) {
         setState(() {
-          _dropOffStatus = 'Stop not found. Tap the map to pin it.';
+          _dropOffStatus = _loc.stopAlertSetupStopNotFound;
         });
       }
     } finally {
@@ -173,7 +181,7 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
         address: _dropOffController.text.trim(),
         updatedAt: DateTime.now(),
       );
-      _dropOffStatus = 'Stop pinned on the map.';
+      _dropOffStatus = _loc.stopAlertSetupStopPinned;
       _isResolvingDropOff = false;
       _errorMessage = null;
     });
@@ -198,7 +206,7 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _errorMessage = 'Could not get your current location.');
+        setState(() => _errorMessage = _loc.stopAlertSetupLocationError);
       }
     } finally {
       if (mounted) {
@@ -311,13 +319,13 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
 
     final startLocation = _currentLocation;
     if (startLocation == null) {
-      setState(() => _errorMessage = 'Get your current location first.');
+      setState(() => _errorMessage = _loc.stopAlertSetupNeedLocation);
       return;
     }
 
     final dropOffLocation = _dropOffLocation;
     if (dropOffLocation == null) {
-      setState(() => _errorMessage = 'Search for your stop or tap the map to pin it.');
+      setState(() => _errorMessage = _loc.stopAlertSetupNeedStop);
       return;
     }
 
@@ -355,7 +363,7 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _errorMessage = 'Could not start the bus ride.');
+        setState(() => _errorMessage = _loc.stopAlertSetupStartFailed);
       }
     } finally {
       if (mounted) {
@@ -366,7 +374,7 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
 
   String? _validateDropOff(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Name your stop so the alert can tell you where you are going';
+      return _loc.stopAlertSetupValidateDropOff;
     }
     return null;
   }
@@ -388,12 +396,12 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
           updatedAt: DateTime.now(),
         );
     final dropOffTitle = _dropOffController.text.trim().isEmpty
-        ? 'Your stop'
+        ? _loc.stopAlertSetupYourStopDefault
         : _dropOffController.text.trim();
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(title: const Text('Bus stop alert')),
+      appBar: AppBar(title: Text(_loc.stopAlertSetupTitle)),
       extendBodyBehindAppBar: true,
       body: AmicaBackground(
         child: SafeArea(
@@ -403,15 +411,11 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
               children: [
                 Text(
-                  'Never miss your stop',
+                  _loc.stopAlertSetupHeadline,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 6),
-                const Text(
-                  'Pick where you are getting off. Amica watches the distance '
-                  'and sounds an alarm before you arrive, so you can rest on '
-                  'the bus without missing your stop.',
-                ),
+                Text(_loc.stopAlertSetupIntro),
                 const SizedBox(height: 20),
                 GlassCard(
                   child: Column(
@@ -419,18 +423,19 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
                     children: [
                       PrimaryButton(
                         label: _isLoadingLocation
-                            ? 'Getting location...'
-                            : 'Update current location',
+                            ? _loc.stopAlertSetupGettingLocation
+                            : _loc.stopAlertSetupUpdateLocation,
                         icon: Icons.my_location_rounded,
                         onPressed: _isBusy ? null : _getCurrentLocation,
                       ),
                       const SizedBox(height: 10),
                       Text(
                         currentLocation == null
-                            ? 'Current location: not available yet'
-                            : 'Current location: '
-                                '${currentLocation.latitude.toStringAsFixed(5)}, '
-                                '${currentLocation.longitude.toStringAsFixed(5)}',
+                            ? _loc.stopAlertSetupLocationUnavailable
+                            : _loc.stopAlertSetupLocationKnown(
+                                currentLocation.latitude.toStringAsFixed(5),
+                                currentLocation.longitude.toStringAsFixed(5),
+                              ),
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
@@ -438,7 +443,7 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
                 ),
                 const SizedBox(height: 16),
                 CustomTextField(
-                  label: 'Where are you getting off?',
+                  label: _loc.stopAlertSetupDropOffLabel,
                   controller: _dropOffController,
                   prefixIcon: Icons.directions_bus_filled_outlined,
                   validator: _validateDropOff,
@@ -447,7 +452,7 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
                   const SizedBox(height: 8),
                   Text(
                     _isResolvingDropOff
-                        ? 'Finding your stop on the map...'
+                        ? _loc.stopAlertSetupFindingStop
                         : _dropOffStatus!,
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
@@ -456,7 +461,7 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
                 AmicaMapView(
                   latitude: mapCenter.latitude,
                   longitude: mapCenter.longitude,
-                  markerTitle: 'You are here',
+                  markerTitle: _loc.stopAlertSetupYouAreHereMarker,
                   showStartMarker: currentLocation != null,
                   destinationLatitude: dropOffLocation?.latitude,
                   destinationLongitude: dropOffLocation?.longitude,
@@ -466,10 +471,11 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
                 const SizedBox(height: 8),
                 Text(
                   dropOffLocation == null
-                      ? 'Tap the map to pin your stop.'
-                      : 'Stop pinned at '
-                          '${dropOffLocation.latitude.toStringAsFixed(5)}, '
-                          '${dropOffLocation.longitude.toStringAsFixed(5)}',
+                      ? _loc.stopAlertSetupTapToPin
+                      : _loc.stopAlertSetupStopPinnedAt(
+                          dropOffLocation.latitude.toStringAsFixed(5),
+                          dropOffLocation.longitude.toStringAsFixed(5),
+                        ),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 20),
@@ -478,19 +484,20 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
                   const SizedBox(height: 16),
                   Text(
                     _errorMessage!,
-                    style: const TextStyle(color: AppColors.alert),
+                    style: TextStyle(color: Theme.of(context).amica.terracotta),
                   ),
                 ],
                 const SizedBox(height: 24),
                 PrimaryButton(
-                  label: _isStartingRide ? 'Starting...' : 'Start bus ride',
+                  label: _isStartingRide
+                      ? _loc.startJourneyStarting
+                      : _loc.stopAlertSetupStartButton,
                   icon: Icons.notifications_active_rounded,
                   onPressed: (_isBusy || _isResolvingDropOff) ? null : _startRide,
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Keep the Amica tracking notification visible. The alarm '
-                  'still sounds with the app closed and the screen off.',
+                  _loc.stopAlertSetupKeepNotificationNote,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
@@ -510,7 +517,7 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Alert me this far from the stop',
+            _loc.stopAlertSetupAlertDistanceLabel,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 12),
@@ -532,7 +539,7 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
           if (_isEstimatingRoute) ...[
             const SizedBox(height: 14),
             Text(
-              'Checking the road distance to your stop...',
+              _loc.stopAlertSetupCheckingRoadDistance,
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ] else if (distance != null) ...[
@@ -541,10 +548,10 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
               _routeEstimate == null
                   // Said plainly, because it reads shorter than the ride will
                   // actually be.
-                  ? 'Your stop is ${widget.calculator.formatDistance(distance)} '
-                      'away in a straight line.'
-                  : 'Your stop is about '
-                      '${widget.calculator.formatDistance(distance)} away by road.',
+                  ? _loc.stopAlertSetupDistanceStraightLine(
+                      widget.calculator.formatDistance(distance))
+                  : _loc.stopAlertSetupDistanceByRoad(
+                      widget.calculator.formatDistance(distance)),
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
@@ -553,17 +560,17 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.warning_amber_rounded,
-                    color: AppColors.warning, size: 20),
+                Icon(Icons.warning_amber_rounded,
+                    color: Theme.of(context).amica.gold, size: 20),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'You are already within '
-                    '${widget.calculator.formatAlertDistance(_alertDistanceMeters)} '
-                    'of this stop, so the alarm would sound straight away. '
-                    'Pick a shorter alert distance.',
+                    _loc.stopAlertSetupTooClose(
+                      widget.calculator
+                          .formatAlertDistance(_alertDistanceMeters),
+                    ),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.warning,
+                          color: Theme.of(context).amica.gold,
                         ),
                   ),
                 ),

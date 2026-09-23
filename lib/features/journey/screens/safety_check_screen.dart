@@ -7,6 +7,7 @@ import '../../../core/utils/date_time_utils.dart';
 import '../../../core/widgets/amica_background.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 /// What the user decided when the journey timer ran out.
 ///
@@ -103,7 +104,9 @@ class _SafetyCheckScreenState extends State<SafetyCheckScreen>
 
   @override
   Widget build(BuildContext context) {
-    final destinationName = widget.arguments?.destinationName ?? 'your trip';
+    final loc = AppLocalizations.of(context)!;
+    final destinationName =
+        widget.arguments?.destinationName ?? loc.safetyCheckDefaultTrip;
 
     return PopScope(
       canPop: false,
@@ -117,13 +120,13 @@ class _SafetyCheckScreenState extends State<SafetyCheckScreen>
                 Center(child: _buildPulsingShield()),
                 const SizedBox(height: 24),
                 Text(
-                  'Are you safe?',
+                  loc.safetyCheckAreYouSafe,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Your journey timer for $destinationName has ended.',
+                  loc.safetyCheckTimerEnded(destinationName),
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
@@ -131,21 +134,20 @@ class _SafetyCheckScreenState extends State<SafetyCheckScreen>
                 _buildEscalationCard(context),
                 const SizedBox(height: 28),
                 PrimaryButton(
-                  label: 'I am safe',
+                  label: loc.safetyCheckImSafe,
                   icon: Icons.verified_user_rounded,
                   onPressed: () => _answer(SafetyCheckResult.safe),
                 ),
                 const SizedBox(height: 12),
                 PrimaryButton(
-                  label: 'Send SOS now',
+                  label: loc.safetyCheckSendSosNow,
                   icon: Icons.sos_rounded,
                   isDanger: true,
                   onPressed: () => _answer(SafetyCheckResult.sos),
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Tapping "I am safe" closes this journey. Amica will stop '
-                  'watching and will not contact anyone.',
+                  loc.safetyCheckSafeClosesNote,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
@@ -157,32 +159,47 @@ class _SafetyCheckScreenState extends State<SafetyCheckScreen>
     );
   }
 
+  /// A slow breath rather than a throb: this screen appears when a journey
+  /// timer is running out, and an urgently pulsing glow makes an already
+  /// anxious moment worse.
   Widget _buildPulsingShield() {
+    final c = Theme.of(context).amica;
+
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (context, child) {
-        final glow = 24 + (_pulseController.value * 22);
-        return Container(
-          width: 116,
-          height: 116,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: AppColors.auraGradient,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.5),
-                blurRadius: glow,
-                spreadRadius: 2,
+        final halo = 108 + (_pulseController.value * 14);
+        return SizedBox(
+          width: 130,
+          height: 130,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: halo,
+                height: halo,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: c.blush.withValues(alpha: 0.55),
+                ),
+              ),
+              Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: c.blush,
+                ),
+                child: child,
               ),
             ],
           ),
-          child: child,
         );
       },
-      child: const Icon(
-        Icons.shield_moon_rounded,
-        color: Colors.white,
-        size: 54,
+      child: Icon(
+        Icons.shield_outlined,
+        color: c.terracottaDeep,
+        size: 46,
       ),
     );
   }
@@ -190,16 +207,15 @@ class _SafetyCheckScreenState extends State<SafetyCheckScreen>
   Widget _buildEscalationCard(BuildContext context) {
     if (widget.arguments?.escalationAt == null) {
       return GlassCard(
-        borderColor: AppColors.warning,
+        borderColor: Theme.of(context).amica.gold,
         child: Row(
           children: [
-            const Icon(Icons.info_outline_rounded,
-                color: AppColors.warning, size: 20),
+            Icon(Icons.info_outline_rounded,
+                color: Theme.of(context).amica.gold, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Answer so Amica knows whether to alert your emergency '
-                'contact.',
+                AppLocalizations.of(context)!.safetyCheckAnswerPrompt,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
@@ -212,7 +228,7 @@ class _SafetyCheckScreenState extends State<SafetyCheckScreen>
       valueListenable: _untilEscalationNotifier,
       builder: (context, remaining, _) {
         final hasEscalated = remaining == null || remaining == Duration.zero;
-        final color = hasEscalated ? AppColors.alert : AppColors.warning;
+        final color = hasEscalated ? Theme.of(context).amica.terracotta : Theme.of(context).amica.gold;
 
         return GlassCard(
           borderColor: color,
@@ -228,8 +244,8 @@ class _SafetyCheckScreenState extends State<SafetyCheckScreen>
               const SizedBox(height: 10),
               Text(
                 hasEscalated
-                    ? 'Amica has alerted your emergency contact'
-                    : 'Auto-alert in',
+                    ? AppLocalizations.of(context)!.safetyCheckContactAlerted
+                    : AppLocalizations.of(context)!.safetyCheckAutoAlertIn,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       letterSpacing: 1.2,
@@ -247,16 +263,14 @@ class _SafetyCheckScreenState extends State<SafetyCheckScreen>
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'If you do not answer, Amica messages your primary '
-                  'emergency contact with your live location, then calls them.',
+                  AppLocalizations.of(context)!.safetyCheckEscalationExplain,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ] else ...[
                 const SizedBox(height: 6),
                 Text(
-                  'You can still confirm you are safe, or escalate to a full '
-                  'SOS with your live location.',
+                  AppLocalizations.of(context)!.safetyCheckAfterEscalationNote,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),

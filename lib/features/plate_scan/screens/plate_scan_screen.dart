@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -10,6 +11,7 @@ import '../../../core/constants/app_routes.dart';
 import '../../../core/navigation/amica_route_observer.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../services/plate_scan_service.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class PlateScanScreen extends StatefulWidget {
   PlateScanScreen({
@@ -42,18 +44,25 @@ class _PlateScanScreenState extends State<PlateScanScreen>
   bool _isPausedByRoute = false;
   _ScanState _state = _ScanState.initializing;
   String? _errorMessage;
-  String _statusMessage = 'Starting camera...';
+  String _statusMessage = '';
+  late AppLocalizations _loc;
+  bool _didInitCamera = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    unawaited(_initializeCamera());
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _loc = AppLocalizations.of(context)!;
+    if (!_didInitCamera) {
+      _didInitCamera = true;
+      _statusMessage = _loc.plateScanStartingCamera;
+      unawaited(_initializeCamera());
+    }
     final route = ModalRoute.of(context);
     if (route is PageRoute) {
       amicaRouteObserver.subscribe(this, route);
@@ -75,7 +84,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
     if (_state == _ScanState.locked || _state == _ScanState.capturing) {
       setState(() {
         _state = _ScanState.scanning;
-        _statusMessage = 'Align the plate in the frame and tap the shutter';
+        _statusMessage = _loc.plateScanAlignPrompt;
       });
     }
   }
@@ -94,7 +103,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
     setState(() {
       _state = _ScanState.initializing;
       _errorMessage = null;
-      _statusMessage = 'Starting camera...';
+      _statusMessage = _loc.plateScanStartingCamera;
     });
 
     try {
@@ -103,7 +112,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
       if (cameras.isEmpty) {
         setState(() {
           _state = _ScanState.error;
-          _errorMessage = 'No camera was found on this device.';
+          _errorMessage = _loc.plateScanNoCamera;
         });
         return;
       }
@@ -128,7 +137,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
       setState(() {
         _controller = controller;
         _state = _ScanState.scanning;
-        _statusMessage = 'Align the plate in the frame and tap the shutter';
+        _statusMessage = _loc.plateScanAlignPrompt;
       });
       _autoScanTimer?.cancel();
       _autoScanTimer = Timer.periodic(const Duration(seconds: 2), (_) {
@@ -143,8 +152,8 @@ class _PlateScanScreenState extends State<PlateScanScreen>
       setState(() {
         _state = _ScanState.error;
         _errorMessage = error.code == 'CameraAccessDenied'
-            ? 'Camera permission is required to scan a plate. Enable it in system settings.'
-            : error.description ?? 'Could not start the camera.';
+            ? _loc.plateScanPermissionRequired
+            : error.description ?? _loc.plateScanCameraStartFailed;
       });
     } catch (_) {
       if (!mounted) {
@@ -152,7 +161,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
       }
       setState(() {
         _state = _ScanState.error;
-        _errorMessage = 'Could not start the camera.';
+        _errorMessage = _loc.plateScanCameraStartFailed;
       });
     }
   }
@@ -206,7 +215,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
     _isCapturing = true;
     setState(() {
       _state = _ScanState.capturing;
-      _statusMessage = 'Reading plate...';
+      _statusMessage = _loc.plateScanReading;
     });
 
     XFile? photo;
@@ -240,22 +249,21 @@ class _PlateScanScreenState extends State<PlateScanScreen>
         } else {
           setState(() {
             _state = _ScanState.scanning;
-            _statusMessage = 'Detected $plateText';
+            _statusMessage = _loc.plateScanDetected(plateText);
           });
         }
       } else {
         _candidateCount = 0;
         setState(() {
           _state = _ScanState.scanning;
-          _statusMessage =
-              'No plate detected. Align it inside the frame and try again.';
+          _statusMessage = _loc.plateScanNotDetected;
         });
       }
     } on PlateScanException catch (error) {
       if (mounted) {
         setState(() {
           _state = _ScanState.scanning;
-          _statusMessage = 'Align the plate in the frame and tap the shutter';
+          _statusMessage = _loc.plateScanAlignPrompt;
           _errorMessage = error.message;
         });
       }
@@ -263,7 +271,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
       if (mounted) {
         setState(() {
           _state = _ScanState.scanning;
-          _statusMessage = 'Align the plate in the frame and tap the shutter';
+          _statusMessage = _loc.plateScanAlignPrompt;
         });
       }
     } finally {
@@ -285,7 +293,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
   Future<void> _lockAndLookUp(String plateText) async {
     setState(() {
       _state = _ScanState.locked;
-      _statusMessage = 'Checking $plateText...';
+      _statusMessage = _loc.plateScanChecking(plateText);
     });
 
     try {
@@ -301,7 +309,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
       }
       setState(() {
         _state = _ScanState.scanning;
-        _statusMessage = 'Align the plate in the frame and tap the shutter';
+        _statusMessage = _loc.plateScanAlignPrompt;
         _errorMessage = error.message;
       });
     }
@@ -331,8 +339,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
       final plateText =
           await widget.plateScanService.extractPlateText(photo.path);
       if (plateText.isEmpty) {
-        throw const PlateScanException(
-            'No single plate detected. Try another image or enter the plate.');
+        throw PlateScanException(_loc.plateScanGalleryNoPlate);
       }
       final status = await widget.plateScanService.checkVehicle(plateText);
 
@@ -351,7 +358,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
       if (!mounted) return;
       setState(() {
         _state = _ScanState.scanning;
-        _errorMessage = 'Could not scan the plate. Please try again.';
+        _errorMessage = _loc.plateScanGalleryFailed;
       });
     } finally {
       _isCapturing = false;
@@ -364,7 +371,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
     final text = await showDialog<String>(
         context: context,
         builder: (context) => AlertDialog(
-              title: const Text('Enter plate number'),
+              title: Text(_loc.plateScanEnterTitle),
               content: TextField(
                   controller: controller,
                   autofocus: true,
@@ -373,10 +380,10 @@ class _PlateScanScreenState extends State<PlateScanScreen>
               actions: [
                 TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Cancel')),
+                    child: Text(_loc.commonCancel)),
                 TextButton(
                     onPressed: () => Navigator.pop(context, controller.text),
-                    child: const Text('Check')),
+                    child: Text(_loc.plateScanCheckButton)),
               ],
             ));
     controller.dispose();
@@ -386,7 +393,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
     final plate = widget.plateScanService.canonicalPlate(text);
     if (plate.isEmpty) {
       setState(
-          () => _errorMessage = 'Enter two or three letters and four digits.');
+          () => _errorMessage = _loc.plateScanInvalidPlate);
       return;
     }
     await _lockAndLookUp(plate);
@@ -406,9 +413,17 @@ class _PlateScanScreenState extends State<PlateScanScreen>
     return Scaffold(
       backgroundColor: Colors.black,
       extendBodyBehindAppBar: true,
+      // The viewfinder is black in both modes, so this app bar opts out of
+      // the Warm Dawn chrome and stays light-on-dark.
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('Scan before you ride'),
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        systemOverlayStyle: SystemUiOverlayStyle.light,
+        title: Text(
+          _loc.plateScanTitle,
+          style: TextStyle(color: Colors.white),
+        ),
       ),
       body: Stack(
         fit: StackFit.expand,
@@ -442,24 +457,24 @@ class _PlateScanScreenState extends State<PlateScanScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.videocam_off_outlined,
-                  color: AppColors.alert, size: 40),
+              Icon(Icons.videocam_off_outlined,
+                  color: Theme.of(context).amica.terracotta, size: 40),
               const SizedBox(height: 12),
               Text(
-                _errorMessage ?? 'Could not start the camera.',
+                _errorMessage ?? _loc.plateScanCameraStartFailed,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               OutlinedButton.icon(
                 onPressed: _initializeCamera,
                 icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Retry'),
+                label: Text(_loc.plateScanRetry),
               ),
               const SizedBox(height: 8),
               TextButton.icon(
                 onPressed: _scanFromGallery,
                 icon: const Icon(Icons.photo_library_outlined),
-                label: const Text('Choose from gallery instead'),
+                label: Text(_loc.plateScanChooseGallery),
               ),
             ],
           ),
@@ -490,12 +505,14 @@ class _PlateScanScreenState extends State<PlateScanScreen>
                 children: [
                   if (_state == _ScanState.capturing ||
                       _state == _ScanState.locked) ...[
+                    // Camera chrome sits on the black viewfinder, so it
+                    // stays white regardless of day or night mode.
                     const SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppColors.secondary,
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -505,7 +522,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
                       _statusMessage,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textPrimary,
+                            color: Theme.of(context).amica.plum,
                           ),
                     ),
                   ),
@@ -518,7 +535,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
             Text(
               _errorMessage!,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.alert),
+              style: TextStyle(color: Theme.of(context).amica.terracotta),
             ),
           ],
           const Spacer(),
@@ -638,7 +655,7 @@ class _ScanFrameState extends State<_ScanFrame>
   Widget build(BuildContext context) {
     const frameWidth = 280.0;
     const frameHeight = 230.0;
-    final color = widget.isActive ? AppColors.secondary : AppColors.success;
+    final color = widget.isActive ? Theme.of(context).amica.sage : Theme.of(context).amica.sage;
 
     return SizedBox(
       width: frameWidth,

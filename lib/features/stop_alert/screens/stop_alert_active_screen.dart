@@ -16,6 +16,7 @@ import '../../journey/models/journey.dart';
 import '../../journey/models/location_data_model.dart';
 import '../../journey/services/journey_service.dart';
 import '../services/stop_alert_calculator.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class StopAlertActiveArguments {
   const StopAlertActiveArguments({this.journeyId});
@@ -68,6 +69,7 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
   bool _nativeMonitorStarting = false;
   String? _nativeMonitorRideId;
   String? _locationError;
+  late AppLocalizations _loc;
 
   @override
   void initState() {
@@ -79,6 +81,12 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
 
     _listenToRide();
     _listenToPosition();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loc = AppLocalizations.of(context)!;
   }
 
   @override
@@ -152,8 +160,7 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
           return;
         }
         setState(() {
-          _locationError =
-              'Live location paused. Amica keeps watching in the background.';
+          _locationError = _loc.stopAlertActiveLocationPaused;
         });
       },
     );
@@ -272,7 +279,7 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not close the ride record')),
+          SnackBar(content: Text(_loc.stopAlertActiveCloseFailed)),
         );
       }
     }
@@ -291,7 +298,7 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(title: const Text('Bus stop alert')),
+      appBar: AppBar(title: Text(_loc.stopAlertSetupTitle)),
       extendBodyBehindAppBar: true,
       body: AmicaBackground(
         child: SafeArea(child: _buildBody(context)),
@@ -301,17 +308,18 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
 
   Widget _buildBody(BuildContext context) {
     if (_isLoadingRide) {
-      return const LoadingView(message: 'Loading your ride');
+      return LoadingView(message: _loc.stopAlertActiveLoading);
     }
 
     final error = _rideError;
     if (error != null) {
-      return Center(child: Text('Could not load the ride: $error'));
+      return Center(
+          child: Text(_loc.stopAlertActiveLoadError(error.toString())));
     }
 
     final ride = _ride;
     if (ride == null) {
-      return const Center(child: Text('No active bus ride found.'));
+      return Center(child: Text(_loc.stopAlertActiveNoRide));
     }
 
     final dropOff = ride.destinationLocation;
@@ -326,7 +334,7 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
           AmicaMapView(
             latitude: mapLocation.latitude,
             longitude: mapLocation.longitude,
-            markerTitle: 'You are here',
+            markerTitle: _loc.stopAlertSetupYouAreHereMarker,
             destinationLatitude: dropOff?.latitude,
             destinationLongitude: dropOff?.longitude,
             destinationTitle: ride.destinationName,
@@ -337,25 +345,29 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
           child: Column(
             children: [
               _InfoRow(
-                label: 'Getting off at',
+                label: _loc.stopAlertActiveGettingOffAt,
                 value: ride.destinationName,
               ),
               const Divider(height: 22),
               _InfoRow(
-                label: 'Alert distance',
+                label: _loc.stopAlertActiveAlertDistance,
                 value: widget.calculator.formatAlertDistance(
                   ride.alertDistanceMeters,
                 ),
               ),
               const Divider(height: 22),
               _InfoRow(
-                label: 'Background alarm',
-                value: _nativeMonitorStarted ? 'Active' : 'App only',
+                label: _loc.stopAlertActiveBackgroundAlarm,
+                value: _nativeMonitorStarted
+                    ? _loc.stopAlertActiveStatusActive
+                    : _loc.stopAlertActiveStatusAppOnly,
               ),
               const Divider(height: 22),
               _InfoRow(
-                label: 'Distance measured',
-                value: ride.routeFactor > 1 ? 'By road' : 'Straight line',
+                label: _loc.stopAlertActiveDistanceMeasured,
+                value: ride.routeFactor > 1
+                    ? _loc.stopAlertActiveByRoad
+                    : _loc.stopAlertActiveStraightLine,
               ),
             ],
           ),
@@ -370,15 +382,17 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
         ],
         const SizedBox(height: 24),
         PrimaryButton(
-          label: _isEndingRide ? 'Ending...' : 'I am getting off here',
+          label: _isEndingRide
+              ? _loc.stopAlertActiveEnding
+              : _loc.stopAlertActiveGetOffButton,
           icon: Icons.check_circle_rounded,
           onPressed: _isEndingRide ? null : () => _endRide(ride),
         ),
         const SizedBox(height: 14),
         Text(
           _nativeMonitorStarted
-              ? 'You can lock your phone. Amica will alarm before your stop.'
-              : 'Keep this screen open so Amica can watch your stop.',
+              ? _loc.stopAlertActiveCanLockPhone
+              : _loc.stopAlertActiveKeepScreenOpen,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodySmall,
         ),
@@ -388,27 +402,27 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
 
   Widget _buildDistanceCard(BuildContext context, Journey ride) {
     final distance = _distanceMeters;
-    final color = _hasAlerted ? AppColors.warning : AppColors.secondary;
+    final color = _hasAlerted ? Theme.of(context).amica.gold : Theme.of(context).amica.sage;
 
     return GlassCard(
-      borderColor: _hasAlerted ? AppColors.warning : null,
+      borderColor: _hasAlerted ? Theme.of(context).amica.gold : null,
       child: Column(
         children: [
           _buildPulsingIcon(color),
           const SizedBox(height: 16),
           Text(
-            _hasAlerted ? 'YOUR STOP IS COMING UP' : 'DISTANCE TO YOUR STOP',
+            _hasAlerted
+                ? _loc.stopAlertActiveComingUp
+                : _loc.stopAlertActiveDistanceLabel,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   letterSpacing: 1.4,
-                  color: _hasAlerted ? AppColors.warning : null,
+                  color: _hasAlerted ? Theme.of(context).amica.gold : null,
                 ),
           ),
           const SizedBox(height: 8),
-          ShaderMask(
-            shaderCallback: (bounds) =>
-                AppColors.primaryButtonGradient.createShader(bounds),
-            child: Text(
+          Builder(
+            builder: (context) => Text(
               distance == null
                   ? '--'
                   : widget.calculator.formatDistance(
@@ -419,19 +433,19 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
                         routeFactor: ride.routeFactor,
                       ),
                     ),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 46,
-                fontWeight: FontWeight.w800,
-              ),
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    fontSize: 46,
+                    height: 1.05,
+                  ),
             ),
           ),
           const SizedBox(height: 6),
           Text(
             _hasAlerted
-                ? 'Get ready to get off at ${ride.destinationName}.'
-                : 'Amica will alarm at '
-                    '${widget.calculator.formatAlertDistance(ride.alertDistanceMeters)}.',
+                ? _loc.stopAlertActiveGetReady(ride.destinationName)
+                : _loc.stopAlertActiveWillAlarmAt(
+                    widget.calculator
+                        .formatAlertDistance(ride.alertDistanceMeters)),
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
@@ -471,9 +485,11 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
       child: LinearProgressIndicator(
         value: progress,
         minHeight: 8,
-        backgroundColor: Colors.white.withValues(alpha: 0.12),
+        backgroundColor: Theme.of(context).amica.shell,
         valueColor: AlwaysStoppedAnimation<Color>(
-          _hasAlerted ? AppColors.warning : AppColors.secondary,
+          _hasAlerted
+              ? Theme.of(context).amica.gold
+              : Theme.of(context).amica.sage,
         ),
       ),
     );
@@ -535,7 +551,7 @@ class _InfoRow extends StatelessWidget {
             value,
             textAlign: TextAlign.end,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.textPrimary,
+                  color: Theme.of(context).amica.plum,
                   fontWeight: FontWeight.w600,
                 ),
           ),

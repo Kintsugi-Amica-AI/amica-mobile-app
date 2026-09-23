@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
-import '../../../core/widgets/amica_background.dart';
+import '../../../core/widgets/amica_primitives.dart';
 import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/loading_view.dart';
 import '../models/emergency_contact.dart';
 import '../services/emergency_contact_service.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import 'add_emergency_contact_screen.dart';
 
 class EmergencyContactsScreen extends StatelessWidget {
@@ -33,20 +35,21 @@ class EmergencyContactsScreen extends StatelessWidget {
     BuildContext context,
     EmergencyContact contact,
   ) async {
+    final loc = AppLocalizations.of(context)!;
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Delete contact?'),
-          content: Text('Remove ${contact.name} from emergency contacts?'),
+          title: Text(loc.contactsDeleteConfirmTitle),
+          content: Text(loc.contactsDeleteConfirmBody(contact.name)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text(loc.commonCancel),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Delete'),
+              child: Text(loc.commonDelete),
             ),
           ],
         );
@@ -61,7 +64,7 @@ class EmergencyContactsScreen extends StatelessWidget {
       await service.deleteEmergencyContact(contact.id);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Contact deleted')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.contactsDeleted)),
         );
       }
     } on EmergencyContactServiceException catch (error) {
@@ -73,7 +76,11 @@ class EmergencyContactsScreen extends StatelessWidget {
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not delete contact')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.contactsCouldNotDelete,
+            ),
+          ),
         );
       }
     }
@@ -95,7 +102,11 @@ class EmergencyContactsScreen extends StatelessWidget {
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not update contact')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.contactsCouldNotUpdate,
+            ),
+          ),
         );
       }
     }
@@ -103,17 +114,22 @@ class EmergencyContactsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = Theme.of(context).amica;
+    final loc = AppLocalizations.of(context)!;
+
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(title: const Text('Emergency Contacts')),
-      extendBodyBehindAppBar: true,
-      body: AmicaBackground(
-        child: SafeArea(
-          child: StreamBuilder<List<EmergencyContact>>(
+      backgroundColor: c.ivory,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Text(loc.contactsAppBarTitle),
+      ),
+      body: SafeArea(
+        top: false,
+        child: StreamBuilder<List<EmergencyContact>>(
             stream: service.watchEmergencyContacts(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const LoadingView(message: 'Loading emergency contacts');
+                return LoadingView(message: loc.contactsLoading);
               }
 
               if (snapshot.hasError) {
@@ -121,7 +137,7 @@ class EmergencyContactsScreen extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(24),
                     child: Text(
-                      'Could not load emergency contacts.\n${snapshot.error}',
+                      loc.contactsLoadError('${snapshot.error}'),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -130,24 +146,18 @@ class EmergencyContactsScreen extends StatelessWidget {
 
               final contacts = snapshot.data ?? const <EmergencyContact>[];
               if (contacts.isEmpty) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: GlassCard(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.contacts_outlined,
-                            color: AppColors.textSecondary,
-                            size: 40,
-                          ),
-                          SizedBox(height: 12),
-                          Text(
-                            'No emergency contacts yet.\nAdd someone you trust before testing SOS alerts.',
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+                return AmicaEmptyState(
+                  icon: Icons.people_outline_rounded,
+                  title: loc.contactsEmptyTitle,
+                  message: loc.contactsEmptyMessage,
+                  action: SizedBox(
+                    width: 250,
+                    child: PrimaryButton(
+                      label: loc.contactsAddFirstGuardian,
+                      icon: Icons.person_add_alt_1_rounded,
+                      onPressed: () => Navigator.pushNamed(
+                        context,
+                        AppRoutes.addEmergencyContact,
                       ),
                     ),
                   ),
@@ -155,10 +165,20 @@ class EmergencyContactsScreen extends StatelessWidget {
               }
 
               return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-                itemCount: contacts.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
+                itemCount: contacts.length + 1,
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemBuilder: (context, i) {
+                  if (i == 0) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        loc.contactsAlertedTogetherNote,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    );
+                  }
+                  final index = i - 1;
                   final contact = contacts[index];
                   return _EmergencyContactCard(
                     contact: contact,
@@ -173,17 +193,18 @@ class EmergencyContactsScreen extends StatelessWidget {
                 },
               );
             },
-          ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        tooltip: 'Add contact',
-        backgroundColor: AppColors.primary,
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: c.plum,
+        foregroundColor: c.ivory,
+        elevation: 0,
         onPressed: () => Navigator.pushNamed(
           context,
           AppRoutes.addEmergencyContact,
         ),
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.person_add_alt_1_rounded, size: 19),
+        label: Text(loc.contactsAddGuardianFab),
       ),
     );
   }
@@ -204,91 +225,90 @@ class _EmergencyContactCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final relationshipText = contact.relationship.isEmpty
-        ? 'Relationship not set'
-        : contact.relationship;
-    final initial = contact.name.isEmpty ? '?' : contact.name[0].toUpperCase();
+    final c = Theme.of(context).amica;
+    final theme = Theme.of(context);
+    final loc = AppLocalizations.of(context)!;
+    final relationshipText =
+        contact.relationship.isEmpty ? null : contact.relationship;
 
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return AmicaCard(
+      onTap: onEdit,
+      padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
+      child: Row(
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: AppColors.primaryButtonGradient,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  initial,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 18,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          AmicaAvatar(
+            initial: contact.name,
+            size: 44,
+            background: contact.isActive ? c.blush : c.shell,
+            foreground: contact.isActive ? c.terracottaDeep : c.plum45,
+          ),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      contact.name,
-                      style: Theme.of(context).textTheme.titleMedium,
+                    Flexible(
+                      child: Text(
+                        contact.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleMedium,
+                      ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(contact.phone,
-                        style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 4),
-                    Text(relationshipText,
-                        style: Theme.of(context).textTheme.bodySmall),
+                    if (relationshipText != null) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        relationshipText,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w500,
+                          color: c.plum45,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
-              ),
-              Chip(
-                label: Text(contact.isActive ? 'Active' : 'Inactive'),
-                visualDensity: VisualDensity.compact,
-                backgroundColor: (contact.isActive
-                        ? AppColors.success
-                        : AppColors.textMuted)
-                    .withValues(alpha: 0.16),
-                labelStyle: TextStyle(
-                  color: contact.isActive
-                      ? AppColors.success
-                      : AppColors.textMuted,
+                const SizedBox(height: 2),
+                Text(
+                  contact.phone,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                    color: c.plum70,
+                  ),
                 ),
-                side: BorderSide.none,
-              ),
-            ],
+                const SizedBox(height: 6),
+                // "Priority 1" meant nothing to a user. Say what it does.
+                Text(
+                  contact.isActive
+                      ? loc.contactsAlertedOnSos
+                      : loc.contactsMuted,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: contact.isActive ? c.sage : c.plum45,
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
-          Text('Priority ${contact.priority}',
-              style: Theme.of(context).textTheme.bodySmall),
-          const SizedBox(height: 8),
-          Row(
+          Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Use for SOS'),
-              const Spacer(),
-              Switch(
-                value: contact.isActive,
-                onChanged: onActiveChanged,
-              ),
+              Switch(value: contact.isActive, onChanged: onActiveChanged),
+              const SizedBox(height: 2),
               IconButton(
-                tooltip: 'Edit',
-                onPressed: onEdit,
-                icon: const Icon(Icons.edit_outlined),
-              ),
-              IconButton(
-                tooltip: 'Delete',
+                tooltip: loc.contactsRemoveTooltip(contact.name),
                 onPressed: onDelete,
-                icon: const Icon(Icons.delete_outline_rounded,
-                    color: AppColors.alert),
+                visualDensity: VisualDensity.compact,
+                icon: Icon(
+                  Icons.delete_outline_rounded,
+                  size: 19,
+                  color: c.plum45,
+                ),
               ),
             ],
           ),

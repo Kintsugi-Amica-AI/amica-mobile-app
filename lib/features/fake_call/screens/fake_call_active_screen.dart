@@ -10,6 +10,7 @@ import '../../emergency_contacts/services/emergency_contact_service.dart';
 import '../../sos/screens/sos_active_screen.dart';
 import '../../sos/services/sos_service.dart';
 import '../services/fake_call_service.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../services/voice_sos_service.dart';
 
 class FakeCallActiveArguments {
@@ -177,7 +178,10 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
     } on EmergencyActionException catch (error) {
       _showError(error.message);
     } catch (_) {
-      _showError('Could not complete Voice SOS. Use manual SOS if needed.');
+      if (!mounted) return;
+      _showError(
+        AppLocalizations.of(context)!.fakeCallActiveCouldNotCompleteVoiceSos,
+      );
     }
   }
 
@@ -221,6 +225,7 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     final callerName = widget.arguments?.callerName ??
         widget.fakeCallService.getDefaultCallerName();
     final callerNumber = widget.arguments?.callerNumber ??
@@ -233,10 +238,10 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
           padding: const EdgeInsets.all(24),
           children: [
             const SizedBox(height: 8),
-            const Text(
-              'Mobile',
+            Text(
+              loc.fakeCallMobile,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70, fontSize: 16),
+              style: const TextStyle(color: Colors.white70, fontSize: 16),
             ),
             const SizedBox(height: 48),
             CircleAvatar(
@@ -274,27 +279,27 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
               style: const TextStyle(color: Colors.white, fontSize: 24),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Call connected',
+            Text(
+              loc.fakeCallActiveConnected,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70),
+              style: const TextStyle(color: Colors.white70),
             ),
             const SizedBox(height: 56),
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _CallControlButton(icon: Icons.mic_off, label: 'Mute'),
-                _CallControlButton(icon: Icons.dialpad, label: 'Keypad'),
-                _CallControlButton(icon: Icons.volume_up, label: 'Speaker'),
+                _CallControlButton(icon: Icons.mic_off, label: loc.fakeCallActiveMute),
+                _CallControlButton(icon: Icons.dialpad, label: loc.fakeCallActiveKeypad),
+                _CallControlButton(icon: Icons.volume_up, label: loc.fakeCallActiveSpeaker),
               ],
             ),
             const SizedBox(height: 28),
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _CallControlButton(icon: Icons.add, label: 'Add call'),
-                _CallControlButton(icon: Icons.pause, label: 'Hold'),
-                _CallControlButton(icon: Icons.bluetooth, label: 'Bluetooth'),
+                _CallControlButton(icon: Icons.add, label: loc.fakeCallActiveAddCall),
+                _CallControlButton(icon: Icons.pause, label: loc.fakeCallActiveHold),
+                _CallControlButton(icon: Icons.bluetooth, label: loc.fakeCallActiveBluetooth),
               ],
             ),
             const SizedBox(height: 32),

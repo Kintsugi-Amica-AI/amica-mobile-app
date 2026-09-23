@@ -8,6 +8,7 @@ import '../models/vehicle_status.dart';
 import '../services/vehicle_journey_service.dart';
 import '../../journey/screens/start_journey_screen.dart';
 import 'vehicle_rating_screen.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class PlateResultScreen extends StatefulWidget {
   const PlateResultScreen({super.key});
@@ -19,21 +20,28 @@ class PlateResultScreen extends StatefulWidget {
 class _PlateResultScreenState extends State<PlateResultScreen> {
   bool _boarding = false;
   String? _boardingStatus;
+  late AppLocalizations _loc;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loc = AppLocalizations.of(context)!;
+  }
 
   Future<void> _board(VehicleStatus vehicle) async {
     final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-              title: Text('Traveling in ${vehicle.plateNumber}?'),
-              content: const Text(
-                  'Check the plate matches the vehicle. This sends a boarding SMS to your active emergency contacts. SIM charges may apply.'),
+              title: Text(
+                  _loc.plateResultDialogTitle(vehicle.plateNumber)),
+              content: Text(_loc.plateResultDialogBody),
               actions: [
                 TextButton(
                     onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Cancel')),
+                    child: Text(_loc.commonCancel)),
                 FilledButton(
                     onPressed: () => Navigator.pop(context, true),
-                    child: const Text('Confirm and notify')),
+                    child: Text(_loc.plateResultConfirmButton)),
               ],
             ));
     if (confirmed != true || !mounted) return;
@@ -51,8 +59,7 @@ class _PlateResultScreenState extends State<PlateResultScreen> {
                   boardingStatus: result)));
     } catch (_) {
       if (mounted) {
-        setState(() => _boardingStatus =
-            'Could not load contacts. Check your connection and retry.');
+        setState(() => _boardingStatus = _loc.plateResultBoardingFailed);
       }
     } finally {
       if (mounted) setState(() => _boarding = false);
@@ -62,19 +69,19 @@ class _PlateResultScreenState extends State<PlateResultScreen> {
   (Color, IconData, String) _presentation(VehicleRiskStatus status) {
     return switch (status) {
       VehicleRiskStatus.safe => (
-          AppColors.success,
+          Theme.of(context).amica.sage,
           Icons.verified_user_rounded,
-          'Safe',
+          _loc.plateResultStatusSafe,
         ),
       VehicleRiskStatus.reported => (
-          AppColors.alert,
+          Theme.of(context).amica.terracotta,
           Icons.report_gmailerrorred_rounded,
-          'Reported',
+          _loc.plateResultStatusReported,
         ),
       VehicleRiskStatus.unknown => (
-          AppColors.warning,
+          Theme.of(context).amica.gold,
           Icons.help_outline_rounded,
-          'Unknown',
+          _loc.plateResultStatusUnknown,
         ),
     };
   }
@@ -93,7 +100,7 @@ class _PlateResultScreenState extends State<PlateResultScreen> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(title: const Text('Vehicle status')),
+      appBar: AppBar(title: Text(_loc.plateResultTitle)),
       extendBodyBehindAppBar: true,
       body: AmicaBackground(
         child: SafeArea(
@@ -153,23 +160,25 @@ class _PlateResultScreenState extends State<PlateResultScreen> {
                   children: [
                     _StatRow(
                         label: status.isDemo
-                            ? 'Demo passenger rating'
-                            : 'Passenger rating',
+                            ? _loc.plateResultDemoPassengerRating
+                            : _loc.plateResultPassengerRating,
                         value: status.ratingCount == 0
-                            ? 'Not rated'
-                            : '${status.ratingAverage.toStringAsFixed(1)}/5 (${status.ratingCount})'),
+                            ? _loc.plateResultNotRated
+                            : _loc.plateResultRatingValue(
+                                status.ratingAverage.toStringAsFixed(1),
+                                status.ratingCount)),
                     const Divider(height: 24),
                     _StatRow(
-                        label: 'Unverified missed checks',
+                        label: _loc.plateResultUnverifiedChecks,
                         value: '${status.unverifiedSafetyCheckCount}'),
                     const Divider(height: 24),
                     _StatRow(
-                      label: 'Reports on file',
+                      label: _loc.plateResultReportsOnFile,
                       value: '${status.reportsCount}',
                     ),
                     const Divider(height: 24),
                     _StatRow(
-                      label: 'Risk level',
+                      label: _loc.plateResultRiskLevel,
                       value: status.riskLevel.toUpperCase(),
                     ),
                     if (status.notes != null) ...[
@@ -184,33 +193,33 @@ class _PlateResultScreenState extends State<PlateResultScreen> {
               ),
               const SizedBox(height: 20),
               Text(
-                'Vehicle checks use the shared Amica safety database. When in doubt, share your trip with a trusted contact before riding.',
+                _loc.plateResultDbNote,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 24),
               Text(status.isDemo
-                  ? 'Demo data. These ratings are fictional.'
-                  : 'Passenger feedback is associated with this plate, not a verified driver identity or safety guarantee.'),
+                  ? _loc.plateResultDemoNote
+                  : _loc.plateResultFeedbackNote),
               if (_boardingStatus != null) Text(_boardingStatus!),
               const SizedBox(height: 16),
               PrimaryButton(
                   label: _boarding
-                      ? 'Notifying contacts...'
-                      : 'I am traveling in this vehicle',
+                      ? _loc.plateResultNotifying
+                      : _loc.plateResultTravelingButton,
                   icon: Icons.directions_car,
                   onPressed: _boarding || status.normalizedPlateNumber.isEmpty
                       ? null
                       : () => _board(status)),
               const SizedBox(height: 16),
               PrimaryButton(
-                label: 'Scan another plate',
+                label: _loc.plateResultScanAnotherButton,
                 icon: Icons.document_scanner_outlined,
                 onPressed: () => Navigator.pop(context),
               ),
               TextButton.icon(
                 icon: const Icon(Icons.star_outline),
-                label: const Text('Rate a completed ride'),
+                label: Text(_loc.plateResultRateButton),
                 onPressed: status.normalizedPlateNumber.isEmpty
                     ? null
                     : () => Navigator.push(

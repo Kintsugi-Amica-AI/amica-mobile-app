@@ -7,13 +7,13 @@
 <body>
 <x-dc>
 <helmet>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500;6..72,600&family=DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Playfair+Display:wght@400;500;600;700&family=Karla:wght@400;500;600;700&family=Cormorant+Garamond:wght@400;500;600;700&family=Jost:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Public+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Public+Sans:wght@400;500;600;700&display=swap">
   <style>
 /* ── Amica · "Warm Dawn" design system ───────────────────────────────── */
 :root{
   /* Type. Swap these two lines to change the whole design's voice. */
-  --serif:'Newsreader',Georgia,'Times New Roman',serif;
-  --sans:'Instrument Sans','Helvetica Neue',Arial,sans-serif;
+  --serif:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;
+  --sans:'Public Sans','Helvetica Neue',Arial,sans-serif;
   /* Surfaces */
   --ivory:#FDF8F4;      /* app background */
   --shell:#F6EDE6;      /* recessed / secondary surface */
@@ -63,9 +63,9 @@ a{color:var(--terracotta);text-decoration:none;} a:hover{color:var(--terracotta-
 .flow{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;}
 
 /* ── Type ─────────────────────────────────────────────────────────── */
-.display{font-family:var(--serif);font-weight:400;
-  font-size:31px;line-height:1.14;letter-spacing:-.012em;margin:0;}
-.h1{font-family:var(--serif);font-weight:400;font-size:25px;line-height:1.2;margin:0;}
+.display{font-family:var(--serif);font-weight:600;
+  font-size:29px;line-height:1.14;letter-spacing:-.022em;margin:0;}
+.h1{font-family:var(--serif);font-weight:600;font-size:25px;line-height:1.2;letter-spacing:-.016em;margin:0;}
 .h2{font-size:18px;font-weight:600;line-height:1.3;letter-spacing:-.01em;margin:0;}
 .title{font-size:15.5px;font-weight:600;line-height:1.35;margin:0;}
 .body{font-size:14px;line-height:1.5;color:var(--plum-70);margin:0;}
@@ -130,26 +130,6 @@ svg.filled{fill:currentColor;stroke:none;}
 
 .listrow{display:flex;align-items:center;gap:13px;min-height:60px;padding:10px 0;}
 .divider{height:1px;background:var(--line-soft);}
-
-/* ── Type options under review ─────────────────────────────────────────
-   Each class swaps only the two family variables (plus a little optical
-   tuning, so every candidate is judged at its best). Once one is chosen
-   its two lines move into :root and these classes go away.            */
-.type-a{ --serif:'DM Serif Display',Georgia,serif;
-         --sans:'DM Sans','Helvetica Neue',Arial,sans-serif; }
-.type-b{ --serif:'Playfair Display',Georgia,serif;
-         --sans:'Karla','Helvetica Neue',Arial,sans-serif; }
-.type-c{ --serif:'Cormorant Garamond',Georgia,serif;
-         --sans:'Jost','Helvetica Neue',Arial,sans-serif; }
-.type-d{ --serif:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;
-         --sans:'Public Sans','Helvetica Neue',Arial,sans-serif; }
-
-.type-a .display{font-size:30px;letter-spacing:-.005em;}
-.type-b .display{font-size:29px;}
-.type-c .display{font-size:36px;font-weight:600;letter-spacing:0;}
-.type-c .h1{font-weight:600;}
-.type-d .display{font-size:29px;font-weight:600;letter-spacing:-.022em;}
-.type-d .h1{font-weight:600;}
   </style>
 </helmet>
 <!-- Deliberately unbranded: on screen this must read as the phone's own

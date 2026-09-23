@@ -12,6 +12,7 @@ import '../../../core/widgets/primary_button.dart';
 import '../../../services/emergency_action_service.dart';
 import '../../auth/services/user_profile_service.dart';
 import '../services/fake_call_service.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import 'fake_call_active_screen.dart';
 
 class FakeCallArguments {
@@ -162,19 +163,23 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
       }
       setState(() => _scheduledRemaining = _selectedDelay);
       _startCountdown();
+      if (!mounted) return;
+      final loc = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '$_callerName will call in '
-            '${widget.fakeCallService.formatScheduleDelay(_selectedDelay)}. '
-            'You can close Amica.',
+            loc.fakeCallScheduledSnackbar(
+              _callerName,
+              widget.fakeCallService.formatScheduleDelay(_selectedDelay),
+            ),
           ),
         ),
       );
     } on EmergencyActionException catch (error) {
       _showError(error.message);
     } catch (_) {
-      _showError('Could not schedule the call on this device.');
+      if (!mounted) return;
+      _showError(AppLocalizations.of(context)!.fakeCallCouldNotSchedule);
     } finally {
       if (mounted) {
         setState(() => _isBusy = false);
@@ -192,13 +197,18 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
         return;
       }
       setState(() => _scheduledRemaining = Duration.zero);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Scheduled call cancelled')),
+        SnackBar(
+          content:
+              Text(AppLocalizations.of(context)!.fakeCallScheduleCancelled),
+        ),
       );
     } on EmergencyActionException catch (error) {
       _showError(error.message);
     } catch (_) {
-      _showError('Could not cancel the scheduled call.');
+      if (!mounted) return;
+      _showError(AppLocalizations.of(context)!.fakeCallCouldNotCancel);
     } finally {
       if (mounted) {
         setState(() => _isBusy = false);
@@ -218,8 +228,10 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: LoadingView(message: 'Preparing call'),
+      return Scaffold(
+        body: LoadingView(
+          message: AppLocalizations.of(context)!.fakeCallPreparingCall,
+        ),
       );
     }
 
@@ -231,9 +243,10 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
   // ---------------------------------------------------------------------
 
   Widget _buildScheduler(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(title: const Text('Fake call')),
+      appBar: AppBar(title: Text(loc.fakeCallAppBarTitle)),
       extendBodyBehindAppBar: true,
       body: AmicaBackground(
         child: SafeArea(
@@ -241,15 +254,11 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
             children: [
               Text(
-                'Make it look like someone is expecting you',
+                loc.fakeCallHeroTitle,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 6),
-              const Text(
-                'Ring now, or schedule a call for the moment you get into a '
-                'vehicle. Amica keeps the countdown running even if you close '
-                'the app or lock your phone.',
-              ),
+              Text(loc.fakeCallHeroSubtitle),
               const SizedBox(height: 22),
               _buildCallerCard(context),
               const SizedBox(height: 20),
@@ -260,7 +269,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
               const SizedBox(height: 24),
               if (_hasSchedule) ...[
                 PrimaryButton(
-                  label: 'Ring now instead',
+                  label: loc.fakeCallRingNowInstead,
                   icon: Icons.phone_in_talk_rounded,
                   onPressed: _isBusy ? null : _ringNow,
                 ),
@@ -268,14 +277,16 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
                 OutlinedButton.icon(
                   onPressed: _isBusy ? null : _cancelSchedule,
                   icon: const Icon(Icons.cancel_outlined),
-                  label: const Text('Cancel scheduled call'),
+                  label: Text(loc.fakeCallCancelScheduled),
                 ),
               ] else ...[
                 PrimaryButton(
                   label: _isBusy
-                      ? 'Scheduling...'
-                      : 'Schedule in '
-                          '${widget.fakeCallService.formatScheduleDelay(_selectedDelay)}',
+                      ? loc.fakeCallScheduling
+                      : loc.fakeCallScheduleIn(
+                          widget.fakeCallService
+                              .formatScheduleDelay(_selectedDelay),
+                        ),
                   icon: Icons.schedule_rounded,
                   onPressed: _isBusy ? null : _scheduleCall,
                 ),
@@ -283,13 +294,12 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
                 OutlinedButton.icon(
                   onPressed: _isBusy ? null : _ringNow,
                   icon: const Icon(Icons.phone_in_talk_outlined),
-                  label: const Text('Ring now'),
+                  label: Text(loc.fakeCallRingNow),
                 ),
               ],
               const SizedBox(height: 20),
               Text(
-                'No real call is placed. During the call, Amica can listen for '
-                'your secret phrase and send a silent SOS.',
+                loc.fakeCallDisclaimer,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
@@ -306,7 +316,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
         children: [
           CircleAvatar(
             radius: 26,
-            backgroundColor: AppColors.surfaceElevated,
+            backgroundColor: Theme.of(context).amica.shell,
             child: Text(
               _callerName.isEmpty ? 'A' : _callerName[0].toUpperCase(),
               style: const TextStyle(
@@ -334,7 +344,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
             ),
           ),
           IconButton(
-            tooltip: 'Edit caller',
+            tooltip: AppLocalizations.of(context)!.fakeCallEditCallerTooltip,
             onPressed: () async {
               await Navigator.pushNamed(context, AppRoutes.settings);
               await _load();
@@ -352,7 +362,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Call me in',
+            AppLocalizations.of(context)!.fakeCallMeIn,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 12),
@@ -379,38 +389,32 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
 
   Widget _buildArmedCard(BuildContext context) {
     return GlassCard(
-      borderColor: AppColors.warning,
+      borderColor: Theme.of(context).amica.gold,
       child: Column(
         children: [
-          const Icon(
+          Icon(
             Icons.phone_forwarded_rounded,
-            color: AppColors.warning,
+            color: Theme.of(context).amica.gold,
             size: 26,
           ),
           const SizedBox(height: 10),
           Text(
-            'CALLING IN',
+            AppLocalizations.of(context)!.fakeCallCallingIn,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   letterSpacing: 1.4,
                 ),
           ),
           const SizedBox(height: 6),
-          ShaderMask(
-            shaderCallback: (bounds) =>
-                AppColors.primaryButtonGradient.createShader(bounds),
-            child: Text(
-              DateTimeUtils.formatDuration(_scheduledRemaining),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 44,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
+          Text(
+            DateTimeUtils.formatDuration(_scheduledRemaining),
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  fontSize: 44,
+                  height: 1.05,
+                ),
           ),
           const SizedBox(height: 6),
           Text(
-            'Keep the "Call scheduled" notification visible. You can close '
-            'Amica now.',
+            AppLocalizations.of(context)!.fakeCallKeepNotificationVisible,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall,
           ),
@@ -432,9 +436,9 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
           child: Column(
             children: [
               const SizedBox(height: 24),
-              const Text(
-                'Incoming call',
-                style: TextStyle(color: Colors.white70, fontSize: 16),
+              Text(
+                AppLocalizations.of(context)!.fakeCallIncoming,
+                style: const TextStyle(color: Colors.white70, fontSize: 16),
               ),
               const Spacer(),
               CircleAvatar(
@@ -465,19 +469,22 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
                 style: const TextStyle(color: Colors.white70, fontSize: 18),
               ),
               const SizedBox(height: 12),
-              const Text('Mobile', style: TextStyle(color: Colors.white54)),
+              Text(
+                AppLocalizations.of(context)!.fakeCallMobile,
+                style: const TextStyle(color: Colors.white54),
+              ),
               const Spacer(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _CallActionButton(
-                    label: 'Decline',
+                    label: AppLocalizations.of(context)!.fakeCallDecline,
                     icon: Icons.call_end,
                     color: Colors.red,
                     onPressed: () => Navigator.pop(context),
                   ),
                   _CallActionButton(
-                    label: 'Accept',
+                    label: AppLocalizations.of(context)!.fakeCallAccept,
                     icon: Icons.call,
                     color: Colors.green,
                     onPressed: _ringNow,

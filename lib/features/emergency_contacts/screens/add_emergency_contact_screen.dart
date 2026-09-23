@@ -6,6 +6,7 @@ import '../../../core/widgets/custom_text_field.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../models/emergency_contact.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../services/emergency_contact_service.dart';
 
 class AddEmergencyContactScreen extends StatefulWidget {
@@ -96,7 +97,8 @@ class _AddEmergencyContactScreenState extends State<AddEmergencyContactScreen> {
       setState(() => _errorMessage = error.message);
     } catch (_) {
       setState(
-        () => _errorMessage = 'Could not save contact. Please try again.',
+        () => _errorMessage =
+            AppLocalizations.of(context)!.addContactCouldNotSave,
       );
     } finally {
       if (mounted) {
@@ -117,7 +119,7 @@ class _AddEmergencyContactScreenState extends State<AddEmergencyContactScreen> {
         if (mounted) {
           setState(
             () => _errorMessage =
-                'Contacts permission is required to import a contact.',
+                AppLocalizations.of(context)!.addContactPermissionRequired,
           );
         }
         return;
@@ -131,7 +133,7 @@ class _AddEmergencyContactScreenState extends State<AddEmergencyContactScreen> {
       if (contact.phones.isEmpty) {
         setState(
           () => _errorMessage =
-              'That contact has no phone number saved. Enter one manually.',
+              AppLocalizations.of(context)!.addContactNoPhoneNumber,
         );
         return;
       }
@@ -143,7 +145,8 @@ class _AddEmergencyContactScreenState extends State<AddEmergencyContactScreen> {
     } catch (_) {
       if (mounted) {
         setState(
-          () => _errorMessage = 'Could not import that contact.',
+          () => _errorMessage =
+              AppLocalizations.of(context)!.addContactCouldNotImport,
         );
       }
     } finally {
@@ -153,27 +156,28 @@ class _AddEmergencyContactScreenState extends State<AddEmergencyContactScreen> {
     }
   }
 
-  String? _required(String? value, String fieldName) {
+  String? _required(BuildContext context, String? value, String fieldName) {
     if (value == null || value.trim().isEmpty) {
-      return '$fieldName is required';
+      return AppLocalizations.of(context)!.fieldRequired(fieldName);
     }
     return null;
   }
 
-  String? _validatePriority(String? value) {
+  String? _validatePriority(BuildContext context, String? value) {
     final priority = int.tryParse(value?.trim() ?? '');
     if (priority == null || priority < 1) {
-      return 'Priority must be a positive number';
+      return AppLocalizations.of(context)!.addContactPriorityInvalid;
     }
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit contact' : 'Add contact'),
+        title: Text(_isEditing ? loc.addContactEditTitle : loc.addContactAddTitle),
       ),
       extendBodyBehindAppBar: true,
       body: AmicaBackground(
@@ -194,8 +198,8 @@ class _AddEmergencyContactScreenState extends State<AddEmergencyContactScreen> {
                       : const Icon(Icons.contact_page_outlined),
                   label: Text(
                     _isImportingContact
-                        ? 'Opening contacts...'
-                        : 'Import from phone contacts',
+                        ? loc.addContactOpeningContacts
+                        : loc.addContactImportFromPhone,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -203,33 +207,35 @@ class _AddEmergencyContactScreenState extends State<AddEmergencyContactScreen> {
                   child: Column(
                     children: [
                       CustomTextField(
-                        label: 'Name',
+                        label: loc.addContactNameLabel,
                         controller: _nameController,
                         prefixIcon: Icons.person_outline_rounded,
-                        validator: (value) => _required(value, 'Name'),
+                        validator: (value) =>
+                            _required(context, value, loc.addContactNameLabel),
                       ),
                       const SizedBox(height: 16),
                       CustomTextField(
-                        label: 'Phone number',
+                        label: loc.addContactPhoneLabel,
                         controller: _phoneController,
                         keyboardType: TextInputType.phone,
                         prefixIcon: Icons.call_outlined,
-                        validator: (value) => _required(value, 'Phone number'),
+                        validator: (value) => _required(
+                            context, value, loc.addContactPhoneLabel),
                       ),
                       const SizedBox(height: 16),
                       CustomTextField(
-                        label: 'Relationship',
+                        label: loc.addContactRelationshipLabel,
                         controller: _relationshipController,
                         prefixIcon: Icons.diversity_1_outlined,
                       ),
                       const SizedBox(height: 16),
                       CustomTextField(
-                        label: 'Priority',
+                        label: loc.addContactPriorityLabel,
                         controller: _priorityController,
                         keyboardType: TextInputType.number,
                         prefixIcon: Icons.flag_outlined,
-                        helperText: 'Lower numbers are contacted first.',
-                        validator: _validatePriority,
+                        helperText: loc.addContactPriorityHelper,
+                        validator: (value) => _validatePriority(context, value),
                       ),
                       if (_errorMessage != null) ...[
                         const SizedBox(height: 16),
@@ -242,14 +248,16 @@ class _AddEmergencyContactScreenState extends State<AddEmergencyContactScreen> {
                       ],
                       const SizedBox(height: 24),
                       PrimaryButton(
-                        label: _isSaving ? 'Saving...' : 'Save Contact',
+                        label: _isSaving
+                            ? loc.addContactSaving
+                            : loc.addContactSaveButton,
                         icon: Icons.save_outlined,
                         onPressed: _isSaving ? null : _saveContact,
                       ),
                       TextButton(
                         onPressed:
                             _isSaving ? null : () => Navigator.pop(context),
-                        child: const Text('Cancel'),
+                        child: Text(loc.commonCancel),
                       ),
                     ],
                   ),

@@ -1,33 +1,142 @@
 {
   "pages": [
-    { "id": "page-1", "name": "Screens" },
-    { "id": "page-2", "name": "Design system" },
-    { "id": "page-3", "name": "Type options" }
+    {
+      "id": "page-1",
+      "name": "Screens"
+    },
+    {
+      "id": "page-2",
+      "name": "Design system"
+    }
   ],
   "artboards": [
-    { "file": "Onboarding.dc.html",     "page": "page-1", "x": 0,    "y": 0,    "w": 390, "h": 844, "title": "Welcome" },
-    { "file": "SignIn.dc.html",         "page": "page-1", "x": 480,  "y": 0,    "w": 390, "h": 844, "title": "Sign in" },
-    { "file": "Main.dc.html",           "page": "page-1", "x": 960,  "y": 0,    "w": 390, "h": 844, "title": "Home — day" },
-    { "file": "HomeNight.dc.html",      "page": "page-1", "x": 1440, "y": 0,    "w": 390, "h": 844, "title": "Home — night / journey running" },
-
-    { "file": "SosHold.dc.html",        "page": "page-1", "x": 0,    "y": 1000, "w": 390, "h": 844, "title": "SOS — holding" },
-    { "file": "SosActive.dc.html",      "page": "page-1", "x": 480,  "y": 1000, "w": 390, "h": 844, "title": "SOS — live" },
-    { "file": "JourneyStart.dc.html",   "page": "page-1", "x": 960,  "y": 1000, "w": 390, "h": 844, "title": "Walk with me — setup" },
-    { "file": "JourneyLive.dc.html",    "page": "page-1", "x": 1440, "y": 1000, "w": 390, "h": 844, "title": "Walk with me — running" },
-
-    { "file": "Circle.dc.html",         "page": "page-1", "x": 0,    "y": 2000, "w": 390, "h": 844, "title": "Your circle" },
-    { "file": "FakeCall.dc.html",       "page": "page-1", "x": 480,  "y": 2000, "w": 390, "h": 844, "title": "Fake call — setup" },
-    { "file": "FakeCallRinging.dc.html","page": "page-1", "x": 960,  "y": 2000, "w": 390, "h": 844, "title": "Fake call — ringing" },
-    { "file": "PlateScan.dc.html",      "page": "page-1", "x": 1440, "y": 2000, "w": 390, "h": 844, "title": "Scan before you ride" },
-    { "file": "Profile.dc.html",        "page": "page-1", "x": 1920, "y": 2000, "w": 390, "h": 844, "title": "You" },
-
-    { "file": "DesignSystem.dc.html",   "page": "page-2", "x": 0,    "y": 0,    "w": 1120, "h": 1830, "title": "Warm Dawn — tokens and components", "print": "flow" },
-
-    { "file": "TypeCurrent.dc.html",    "page": "page-3", "x": 0,    "y": 0,    "w": 390, "h": 844, "title": "Now — Newsreader + Instrument Sans" },
-    { "file": "TypeA.dc.html",          "page": "page-3", "x": 480,  "y": 0,    "w": 390, "h": 844, "title": "A — DM Serif Display + DM Sans" },
-    { "file": "TypeB.dc.html",          "page": "page-3", "x": 960,  "y": 0,    "w": 390, "h": 844, "title": "B — Playfair Display + Karla" },
-    { "file": "TypeC.dc.html",          "page": "page-3", "x": 1440, "y": 0,    "w": 390, "h": 844, "title": "C — Cormorant Garamond + Jost" },
-    { "file": "TypeD.dc.html",          "page": "page-3", "x": 1920, "y": 0,    "w": 390, "h": 844, "title": "D — Bricolage Grotesque + Public Sans" }
+    {
+      "file": "Onboarding.dc.html",
+      "page": "page-1",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Welcome"
+    },
+    {
+      "file": "SignIn.dc.html",
+      "page": "page-1",
+      "x": 480,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Sign in"
+    },
+    {
+      "file": "Main.dc.html",
+      "page": "page-1",
+      "x": 960,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Home \u2014 day"
+    },
+    {
+      "file": "HomeNight.dc.html",
+      "page": "page-1",
+      "x": 1440,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Home \u2014 night / journey running"
+    },
+    {
+      "file": "SosHold.dc.html",
+      "page": "page-1",
+      "x": 0,
+      "y": 1000,
+      "w": 390,
+      "h": 844,
+      "title": "SOS \u2014 holding"
+    },
+    {
+      "file": "SosActive.dc.html",
+      "page": "page-1",
+      "x": 480,
+      "y": 1000,
+      "w": 390,
+      "h": 844,
+      "title": "SOS \u2014 live"
+    },
+    {
+      "file": "JourneyStart.dc.html",
+      "page": "page-1",
+      "x": 960,
+      "y": 1000,
+      "w": 390,
+      "h": 844,
+      "title": "Walk with me \u2014 setup"
+    },
+    {
+      "file": "JourneyLive.dc.html",
+      "page": "page-1",
+      "x": 1440,
+      "y": 1000,
+      "w": 390,
+      "h": 844,
+      "title": "Walk with me \u2014 running"
+    },
+    {
+      "file": "Circle.dc.html",
+      "page": "page-1",
+      "x": 0,
+      "y": 2000,
+      "w": 390,
+      "h": 844,
+      "title": "Your circle"
+    },
+    {
+      "file": "FakeCall.dc.html",
+      "page": "page-1",
+      "x": 480,
+      "y": 2000,
+      "w": 390,
+      "h": 844,
+      "title": "Fake call \u2014 setup"
+    },
+    {
+      "file": "FakeCallRinging.dc.html",
+      "page": "page-1",
+      "x": 960,
+      "y": 2000,
+      "w": 390,
+      "h": 844,
+      "title": "Fake call \u2014 ringing"
+    },
+    {
+      "file": "PlateScan.dc.html",
+      "page": "page-1",
+      "x": 1440,
+      "y": 2000,
+      "w": 390,
+      "h": 844,
+      "title": "Scan before you ride"
+    },
+    {
+      "file": "Profile.dc.html",
+      "page": "page-1",
+      "x": 1920,
+      "y": 2000,
+      "w": 390,
+      "h": 844,
+      "title": "You"
+    },
+    {
+      "file": "DesignSystem.dc.html",
+      "page": "page-2",
+      "x": 0,
+      "y": 0,
+      "w": 1120,
+      "h": 1830,
+      "title": "Warm Dawn \u2014 tokens and components",
+      "print": "flow"
+    }
   ],
   "annotations": [
     {
@@ -36,7 +145,7 @@
       "x": 0,
       "y": -232,
       "w": 830,
-      "text": "AMICA · WARM DAWN\n\nA redesign of the women's safety app. Out: deep-space violet, neon cyan, glassmorphic blur, and four glowing cards competing with the panic button. In: daylight warmth, measured contrast, and one colour held back so it can only ever mean emergency.\n\nThe structural changes matter as much as the visual ones — the three notes below say what changed and why."
+      "text": "AMICA \u00b7 WARM DAWN\n\nA redesign of the women's safety app. Out: deep-space violet, neon cyan, glassmorphic blur, and four glowing cards competing with the panic button. In: daylight warmth, measured contrast, and one colour held back so it can only ever mean emergency.\n\nThe structural changes matter as much as the visual ones \u2014 the three notes below say what changed and why."
     },
     {
       "id": "note-hierarchy",
@@ -44,7 +153,7 @@
       "x": 1920,
       "y": 0,
       "w": 340,
-      "text": "HIERARCHY\n\nOnly one thing on the home screen is allowed to be loud. The four tools collapsed from a 2×2 grid of glowing cards into a single quiet row, and the SOS moved down into the thumb zone where a hand actually reaches it.\n\nThe status card is new: she can see the app is working. Trust is a visible state, not a promise.\n\nA bottom tab bar replaces push-only navigation — and Logout is no longer one tap from the SOS button."
+      "text": "HIERARCHY\n\nOnly one thing on the home screen is allowed to be loud. The four tools collapsed from a 2\u00d72 grid of glowing cards into a single quiet row, and the SOS moved down into the thumb zone where a hand actually reaches it.\n\nThe status card is new: she can see the app is working. Trust is a visible state, not a promise.\n\nA bottom tab bar replaces push-only navigation \u2014 and Logout is no longer one tap from the SOS button."
     },
     {
       "id": "note-hold",
@@ -52,7 +161,7 @@
       "x": 0,
       "y": 884,
       "w": 830,
-      "text": "HOLD, DON'T TAP  ·  the single biggest UX change\n\nThe old SOS fired on one tap. This one needs a 2-second hold, then gives 5 seconds to cancel — and before it commits, it says out loud exactly what it is about to set off: who gets your location, that audio starts recording, that 119 is pre-dialled.\n\nAccidental alerts are what make people stop trusting a safety app. Standing an alert down asks for a PIN, so nobody else can end it for her."
+      "text": "HOLD, DON'T TAP  \u00b7  the single biggest UX change\n\nThe old SOS fired on one tap. This one needs a 2-second hold, then gives 5 seconds to cancel \u2014 and before it commits, it says out loud exactly what it is about to set off: who gets your location, that audio starts recording, that 119 is pre-dialled.\n\nAccidental alerts are what make people stop trusting a safety app. Standing an alert down asks for a PIN, so nobody else can end it for her."
     },
     {
       "id": "note-unbranded",
@@ -60,7 +169,7 @@
       "x": 960,
       "y": 2884,
       "w": 390,
-      "text": "THE ONE SCREEN THAT MUST NOT LOOK LIKE AMICA\n\nA fake call only deters anyone if the screen is indistinguishable from a real one. No wordmark, no Warm Dawn palette, no serif — system font, platform call chrome, nothing else."
+      "text": "THE ONE SCREEN THAT MUST NOT LOOK LIKE AMICA\n\nA fake call only deters anyone if the screen is indistinguishable from a real one. No wordmark, no Warm Dawn palette, no serif \u2014 system font, platform call chrome, nothing else."
     },
     {
       "id": "note-tokens",
@@ -68,56 +177,11 @@
       "x": 1200,
       "y": 0,
       "w": 360,
-      "text": "These values go straight into lib/core/constants/app_colors.dart and lib/core/theme/app_theme.dart.\n\nEvery text pairing here was measured. Three tokens failed WCAG AA on the first pass — muted plum, gold, and night muted — and were darkened or lightened until they cleared 4.5:1. The ratios are printed on the swatches."
-    },
-    {
-      "id": "type-brief",
-      "page": "page-3",
-      "x": 0,
-      "y": -300,
-      "w": 830,
-      "text": "PICK A VOICE\n\nThe same home screen, five times. Nothing changes between them but the two typefaces, so whatever you notice is the type doing it.\n\nTell me a letter and I'll roll it through all thirteen screens and the design system sheet. Mixing is fine too — a serif from one and a sans from another."
-    },
-    {
-      "id": "type-now",
-      "page": "page-3",
-      "x": 0,
-      "y": 884,
-      "w": 390,
-      "text": "NOW · Newsreader + Instrument Sans\n\nLiterary but plain-spoken. Reads like a well-set newspaper — warm without being sweet.\n\nAgainst it: quiet. It doesn't announce itself, which some people want from a brand."
-    },
-    {
-      "id": "type-a",
-      "page": "page-3",
-      "x": 480,
-      "y": 884,
-      "w": 390,
-      "text": "A · DM Serif Display + DM Sans\n\nThe warmest and roundest of the five. High contrast, generous curves, immediately friendly — the register wellness apps use, and the easiest to like.\n\nAgainst it: also the most familiar. It may feel like a template rather than a brand."
-    },
-    {
-      "id": "type-b",
-      "page": "page-3",
-      "x": 960,
-      "y": 884,
-      "w": 390,
-      "text": "B · Playfair Display + Karla\n\nEditorial and grown-up — fashion-magazine confidence rather than softness. Karla's slightly odd letterforms keep it from feeling corporate.\n\nAgainst it: Playfair's hairlines thin out badly on a dim phone at night, which is exactly when this app gets used."
-    },
-    {
-      "id": "type-c",
-      "page": "page-3",
-      "x": 1440,
-      "y": 884,
-      "w": 390,
-      "text": "C · Cormorant Garamond + Jost\n\nThe most elegant and the most delicate. Fine, calligraphic, a little romantic; Jost underneath is geometric and cool.\n\nAgainst it: the strongest reservation I have. Cormorant is a light face at any size, and this is an app someone reads one-handed while frightened."
-    },
-    {
-      "id": "type-d",
-      "page": "page-3",
-      "x": 1920,
-      "y": 884,
-      "w": 390,
-      "text": "D · Bricolage Grotesque + Public Sans\n\nNo serif at all. Modern, slightly wonky, app-native — confident rather than gentle, and the most legible of the five under stress.\n\nAgainst it: losing the serif loses the voice. Amica stops sounding like a friend writing to you and starts sounding like software."
+      "text": "These values go straight into lib/core/constants/app_colors.dart and lib/core/theme/app_theme.dart.\n\nEvery text pairing here was measured. Three tokens failed WCAG AA on the first pass \u2014 muted plum, gold, and night muted \u2014 and were darkened or lightened until they cleared 4.5:1. The ratios are printed on the swatches."
     }
   ],
-  "launch": { "view": "canvas", "page": "page-3" }
+  "launch": {
+    "view": "canvas",
+    "page": "page-1"
+  }
 }

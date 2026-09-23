@@ -2,17 +2,34 @@ import 'package:flutter/material.dart';
 
 import '../constants/app_colors.dart';
 
-/// Amica's in-app brand mark: a glowing gradient shield with a spark,
-/// used on auth and splash-style moments. Built entirely from vector
-/// primitives so no image assets are required.
+/// Amica's brand mark.
+///
+/// Was a glowing gradient circle with a shield-and-moon glyph and a
+/// letter-spaced all-caps wordmark under a neon shader. Warm Dawn states it
+/// quietly: a flat blush disc, a single stroke shield, and the name set in
+/// Bricolage Grotesque as ordinary words rather than shouted capitals.
+///
+/// Still pure vector — no image asset required.
 class AmicaLogo extends StatelessWidget {
-  const AmicaLogo({super.key, this.size = 84, this.showWordmark = true});
+  const AmicaLogo({
+    super.key,
+    this.size = 72,
+    this.showWordmark = true,
+    this.tagline = 'Someone knows where you are',
+  });
 
   final double size;
   final bool showWordmark;
 
+  /// The line under the wordmark. Says what the app does for you, rather
+  /// than what it is built from.
+  final String tagline;
+
   @override
   Widget build(BuildContext context) {
+    final c = Theme.of(context).amica;
+    final theme = Theme.of(context);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -21,44 +38,25 @@ class AmicaLogo extends StatelessWidget {
           height: size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: AppColors.auraGradient,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.45),
-                blurRadius: 30,
-                spreadRadius: 2,
-              ),
-            ],
+            color: c.blush,
           ),
           child: Icon(
-            Icons.shield_moon_rounded,
-            color: Colors.white,
-            size: size * 0.5,
+            Icons.shield_outlined,
+            color: c.terracottaDeep,
+            size: size * 0.44,
           ),
         ),
         if (showWordmark) ...[
-          const SizedBox(height: 16),
-          ShaderMask(
-            shaderCallback: (bounds) =>
-                AppColors.primaryButtonGradient.createShader(bounds),
-            child: const Text(
-              'AMICA',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 30,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 6,
-              ),
-            ),
+          SizedBox(height: size * 0.22),
+          Text(
+            'Amica',
+            style: theme.textTheme.displaySmall?.copyWith(fontSize: 34),
           ),
-          const SizedBox(height: 4),
-          const Text(
-            'Your AI Safety Companion',
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 13,
-              letterSpacing: 1.2,
-            ),
+          const SizedBox(height: 5),
+          Text(
+            tagline,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium,
           ),
         ],
       ],

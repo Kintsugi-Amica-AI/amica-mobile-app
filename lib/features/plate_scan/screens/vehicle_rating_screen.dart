@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/vehicle_journey_service.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class CompletedVehicleJourneysScreen extends StatefulWidget {
   const CompletedVehicleJourneysScreen({super.key, required this.plate});
@@ -21,15 +22,16 @@ class _CompletedVehicleJourneysScreenState
           .snapshots();
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Completed vehicle rides')),
+  Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    return Scaffold(
+        appBar: AppBar(title: Text(loc.vehicleRatingCompletedTitle)),
         body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream: _journeys,
             builder: (context, snapshot) {
               if (snapshot.hasError) {
-                return const Center(
-                    child:
-                        Text('Could not load your rides. Please reconnect.'));
+                return Center(
+                    child: Text(loc.vehicleRatingLoadError));
               }
               if (!snapshot.hasData) {
                 return const Center(child: CircularProgressIndicator());
@@ -41,8 +43,8 @@ class _CompletedVehicleJourneysScreenState
                     data['metadata']['vehiclePlate'] == widget.plate;
               }).toList();
               if (rides.isEmpty) {
-                return const Center(
-                    child: Text('No completed rides for this vehicle yet.'));
+                return Center(
+                    child: Text(loc.vehicleRatingNoRides));
               }
               return ListView(
                   children: rides.map((doc) {
@@ -60,8 +62,8 @@ class _CompletedVehicleJourneysScreenState
                               journeyId: doc.id, plate: widget.plate))),
                 );
               }).toList());
-            }),
-      );
+            }));
+  }
 }
 
 class VehicleRatingScreen extends StatefulWidget {
@@ -77,6 +79,13 @@ class _VehicleRatingScreenState extends State<VehicleRatingScreen> {
   int _stars = 0;
   bool _saving = false;
   String? _error;
+  late AppLocalizations _loc;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loc = AppLocalizations.of(context)!;
+  }
 
   Future<void> _save() async {
     setState(() {
@@ -87,15 +96,15 @@ class _VehicleRatingScreenState extends State<VehicleRatingScreen> {
       await const VehicleJourneyService()
           .submitRating(widget.journeyId, widget.plate, _stars);
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Rating submitted')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(_loc.vehicleRatingSubmitted)));
         Navigator.pop(context);
       }
     } on VehicleRatingException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
       if (mounted) {
-        setState(() => _error = 'Could not save your rating. Please retry.');
+        setState(() => _error = _loc.vehicleRatingSaveFailed);
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -104,16 +113,16 @@ class _VehicleRatingScreenState extends State<VehicleRatingScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Rate your journey')),
+        appBar: AppBar(title: Text(_loc.vehicleRatingTitle)),
         body: ListView(padding: const EdgeInsets.all(24), children: [
           Text(widget.plate, style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 16),
-          const Text('How was your experience traveling in this vehicle?'),
+          Text(_loc.vehicleRatingPrompt),
           Wrap(
               children: List.generate(
                   5,
                   (index) => IconButton(
-                        tooltip: '${index + 1} stars',
+                        tooltip: _loc.vehicleRatingStarsTooltip(index + 1),
                         onPressed: _saving
                             ? null
                             : () => setState(() => _stars = index + 1),
@@ -125,10 +134,12 @@ class _VehicleRatingScreenState extends State<VehicleRatingScreen> {
           const SizedBox(height: 16),
           FilledButton(
               onPressed: _saving || _stars == 0 ? null : _save,
-              child: Text(_saving ? 'Saving...' : 'Submit rating')),
+              child: Text(_saving
+                  ? _loc.vehicleRatingSaving
+                  : _loc.vehicleRatingSubmitButton)),
           TextButton(
               onPressed: _saving ? null : () => Navigator.pop(context),
-              child: const Text('Skip')),
+              child: Text(_loc.vehicleRatingSkipButton)),
         ]),
       );
 }

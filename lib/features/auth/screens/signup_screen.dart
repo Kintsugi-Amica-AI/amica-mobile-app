@@ -5,6 +5,7 @@ import '../../../core/widgets/amica_background.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../services/auth_service.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -71,7 +72,9 @@ class _SignupScreenState extends State<SignupScreen> {
     } on AuthServiceException catch (error) {
       setState(() => _errorMessage = error.message);
     } catch (_) {
-      setState(() => _errorMessage = 'Signup failed. Please try again.');
+      setState(
+        () => _errorMessage = AppLocalizations.of(context)!.signupFailed,
+      );
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -96,7 +99,7 @@ class _SignupScreenState extends State<SignupScreen> {
       setState(() => _errorMessage = error.message);
     } catch (_) {
       setState(
-        () => _errorMessage = 'Google sign-in failed. Please try again.',
+        () => _errorMessage = AppLocalizations.of(context)!.googleSignInFailed,
       );
     } finally {
       if (mounted) {
@@ -107,16 +110,17 @@ class _SignupScreenState extends State<SignupScreen> {
 
   String? _required(String? value, String fieldName) {
     if (value == null || value.trim().isEmpty) {
-      return '$fieldName is required';
+      return AppLocalizations.of(context)!.fieldRequired(fieldName);
     }
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(title: const Text('Create account')),
+      appBar: AppBar(title: Text(loc.signupAppBarTitle)),
       extendBodyBehindAppBar: true,
       body: AmicaBackground(
         child: SafeArea(
@@ -126,74 +130,73 @@ class _SignupScreenState extends State<SignupScreen> {
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
               children: [
                 Text(
-                  'Join Amica',
+                  loc.signupJoinAmica,
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Create your profile for safety alerts and trusted contacts.',
-                ),
+                Text(loc.signupSubtitle),
                 const SizedBox(height: 20),
                 GlassCard(
                   child: Column(
                     children: [
                       CustomTextField(
-                        label: 'Name',
+                        label: loc.signupNameLabel,
                         controller: _nameController,
                         prefixIcon: Icons.person_outline_rounded,
-                        validator: (value) => _required(value, 'Name'),
+                        validator: (value) => _required(value, loc.signupNameLabel),
                       ),
                       const SizedBox(height: 16),
                       CustomTextField(
-                        label: 'Email',
+                        label: loc.commonEmail,
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         prefixIcon: Icons.alternate_email_rounded,
                         validator: (value) {
                           if (value == null || !value.contains('@')) {
-                            return 'Enter a valid email';
+                            return loc.signupEmailInvalid;
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: 16),
                       CustomTextField(
-                        label: 'Phone',
+                        label: loc.signupPhoneLabel,
                         controller: _phoneController,
                         keyboardType: TextInputType.phone,
                         prefixIcon: Icons.call_outlined,
-                        validator: (value) => _required(value, 'Phone'),
+                        validator: (value) => _required(value, loc.signupPhoneLabel),
                       ),
                       const SizedBox(height: 16),
                       CustomTextField(
-                        label: 'Secret phrase',
+                        label: loc.signupSecretPhraseLabel,
                         controller: _secretPhraseController,
                         prefixIcon: Icons.record_voice_over_outlined,
-                        helperText: 'Say this during a fake call to trigger stealth SOS.',
-                        validator: (value) => _required(value, 'Secret phrase'),
+                        helperText: loc.signupSecretPhraseHelper,
+                        validator: (value) =>
+                            _required(value, loc.signupSecretPhraseLabel),
                       ),
                       const SizedBox(height: 16),
                       CustomTextField(
-                        label: 'Password',
+                        label: loc.commonPassword,
                         controller: _passwordController,
                         obscureText: true,
                         prefixIcon: Icons.lock_outline_rounded,
                         validator: (value) {
                           if (value == null || value.length < 6) {
-                            return 'Password must be at least 6 characters';
+                            return loc.signupPasswordTooShort;
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: 16),
                       CustomTextField(
-                        label: 'Confirm password',
+                        label: loc.signupConfirmPasswordLabel,
                         controller: _confirmPasswordController,
                         obscureText: true,
                         prefixIcon: Icons.lock_reset_rounded,
                         validator: (value) {
                           if (value != _passwordController.text) {
-                            return 'Passwords do not match';
+                            return loc.signupPasswordsDoNotMatch;
                           }
                           return null;
                         },
@@ -209,8 +212,9 @@ class _SignupScreenState extends State<SignupScreen> {
                       ],
                       const SizedBox(height: 24),
                       PrimaryButton(
-                        label:
-                            _isLoading ? 'Creating account...' : 'Create account',
+                        label: _isLoading
+                            ? loc.signupCreatingAccount
+                            : loc.signupCreateAccountButton,
                         icon: Icons.person_add_alt_1_rounded,
                         onPressed: _isBusy ? null : _signup,
                       ),
@@ -219,9 +223,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         onPressed: _isBusy ? null : _continueWithGoogle,
                         icon: const Icon(Icons.g_mobiledata_rounded),
                         label: Text(
-                          _isGoogleLoading
-                              ? 'Connecting...'
-                              : 'Continue with Google',
+                          _isGoogleLoading ? loc.connecting : loc.continueWithGoogle,
                         ),
                       ),
                       TextButton(
@@ -231,7 +233,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                   context,
                                   AppRoutes.login,
                                 ),
-                        child: const Text('Already have an account? Log in'),
+                        child: Text(loc.signupAlreadyHaveAccount),
                       ),
                     ],
                   ),

@@ -6,6 +6,8 @@ import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/loading_view.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../auth/services/user_profile_service.dart';
+import '../../../core/locale/locale_controller.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../fake_call/services/fake_call_shortcut_service.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -91,7 +93,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return;
       }
       setState(() {
-        _errorMessage = 'Could not load settings.';
+        _errorMessage = AppLocalizations.of(context)!.settingsCouldNotLoad;
         _isLoading = false;
       });
     }
@@ -124,12 +126,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Settings saved')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.settingsSaved)),
       );
     } on UserProfileException catch (error) {
       _showSaveError(error.message);
     } catch (_) {
-      _showSaveError('Could not save settings. Please try again.');
+      _showSaveError(AppLocalizations.of(context)!.settingsCouldNotSave);
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
@@ -149,12 +151,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     if (_isLoading) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: Colors.transparent,
         body: AmicaBackground(
           child: SafeArea(
-            child: LoadingView(message: 'Loading settings'),
+            child: LoadingView(message: loc.settingsLoading),
           ),
         ),
       );
@@ -162,7 +165,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(loc.settingsAppBarTitle)),
       extendBodyBehindAppBar: true,
       body: AmicaBackground(
         child: SafeArea(
@@ -174,17 +177,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 if (_errorMessage != null) ...[
                   Text(
                     _errorMessage!,
-                    style: const TextStyle(color: AppColors.alert),
+                    style: TextStyle(color: Theme.of(context).amica.terracotta),
                   ),
                   const SizedBox(height: 12),
                 ],
                 Row(
                   children: [
-                    const Icon(Icons.phone_in_talk_outlined,
-                        color: AppColors.warning, size: 20),
+                    Icon(Icons.phone_in_talk_outlined,
+                        color: Theme.of(context).amica.gold, size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      'Fake Call',
+                      loc.settingsFakeCallSection,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ],
@@ -200,20 +203,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           setState(
                               () => _fakeCallVolumeShortcutEnabled = value);
                         },
-                        title: const Text('Volume-up shortcut'),
-                        subtitle: const Text(
-                          'When enabled, Amica keeps a safety shortcut notification running. Press volume up three times to open the call screen.',
-                        ),
+                        title: Text(loc.settingsVolumeShortcutTitle),
+                        subtitle: Text(loc.settingsVolumeShortcutSubtitle),
                       ),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _callerNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Fake caller name',
+                        decoration: InputDecoration(
+                          labelText: loc.settingsFakeCallerNameLabel,
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Enter a caller name.';
+                            return loc.settingsEnterCallerName;
                           }
                           return null;
                         },
@@ -222,12 +223,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       TextFormField(
                         controller: _callerNumberController,
                         keyboardType: TextInputType.phone,
-                        decoration: const InputDecoration(
-                          labelText: 'Fake caller number',
+                        decoration: InputDecoration(
+                          labelText: loc.settingsFakeCallerNumberLabel,
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Enter a caller number.';
+                            return loc.settingsEnterCallerNumber;
                           }
                           return null;
                         },
@@ -238,11 +239,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 24),
                 Row(
                   children: [
-                    const Icon(Icons.record_voice_over_outlined,
-                        color: AppColors.secondary, size: 20),
+                    Icon(Icons.record_voice_over_outlined,
+                        color: Theme.of(context).amica.sage, size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      'Stealth Voice SOS',
+                      loc.settingsVoiceSosSection,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ],
@@ -257,10 +258,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onChanged: (value) {
                           setState(() => _voiceSosEnabled = value);
                         },
-                        title: const Text('Enable voice SOS'),
-                        subtitle: const Text(
-                          'Listen for the secret phrase during an active fake call.',
-                        ),
+                        title: Text(loc.settingsEnableVoiceSos),
+                        subtitle: Text(loc.settingsListenForPhrase),
                       ),
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
@@ -268,9 +267,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onChanged: (value) {
                           setState(() => _secretPhraseEnabled = value);
                         },
-                        title: const Text('Enable secret phrase'),
-                        subtitle: const Text(
-                            'Use the phrase below to trigger Voice SOS.'),
+                        title: Text(loc.settingsEnableSecretPhrase),
+                        subtitle: Text(loc.settingsUsePhraseBelow),
                       ),
                       const SizedBox(height: 8),
                       for (var index = 0;
@@ -285,12 +283,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               enabled: !_isSaving,
                               maxLength: 120,
                               decoration: InputDecoration(
-                                  labelText: 'Secret phrase ${index + 1}'),
+                                  labelText: loc.settingsSecretPhraseLabel(
+                                      index + 1)),
                               validator: (value) {
                                 final phrase =
                                     UserProfileService.normalizeSecretPhrase(
                                         value ?? '');
-                                if (phrase.isEmpty) return 'Enter a phrase.';
+                                if (phrase.isEmpty) {
+                                  return loc.settingsEnterPhrase;
+                                }
                                 if (_phraseControllers
                                         .where((c) =>
                                             UserProfileService
@@ -299,13 +300,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                             phrase)
                                         .length >
                                     1) {
-                                  return 'This phrase is already in the list.';
+                                  return loc.settingsPhraseAlreadyListed;
                                 }
                                 return null;
                               },
                             )),
                             IconButton(
-                              tooltip: 'Remove phrase',
+                              tooltip: loc.settingsRemovePhrase,
                               onPressed: _isSaving ||
                                       _phraseControllers.length == 1
                                   ? null
@@ -323,7 +324,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       TextButton.icon(
                         icon: const Icon(Icons.add),
-                        label: const Text('Add phrase'),
+                        label: Text(loc.settingsAddPhrase),
                         onPressed: _isSaving || _phraseControllers.length >= 10
                             ? null
                             : () => setState(() => _phraseControllers
@@ -334,14 +335,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         controller: _voiceSosMessageController,
                         minLines: 3,
                         maxLines: 5,
-                        decoration: const InputDecoration(
-                          labelText: 'SOS message for emergency contact',
-                          helperText:
-                              'Saved with the Voice SOS alert when the phrase is spoken.',
+                        decoration: InputDecoration(
+                          labelText: loc.settingsSosMessageLabel,
+                          helperText: loc.settingsSosMessageHelper,
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Enter the message to send.';
+                            return loc.settingsEnterMessage;
                           }
                           return null;
                         },
@@ -350,8 +350,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Icon(Icons.language_rounded,
+                        color: Theme.of(context).amica.terracotta, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      loc.settingsLanguageSection,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  loc.settingsLanguageSubtitle,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 12),
+                GlassCard(
+                  child: ValueListenableBuilder<Locale?>(
+                    valueListenable: AmicaLocaleController.instance,
+                    builder: (context, selected, _) {
+                      // No selection yet means "follow the device language",
+                      // shown as whichever supported locale that resolves
+                      // to right now so exactly one option is always
+                      // highlighted.
+                      final effective = selected ??
+                          Localizations.localeOf(context);
+                      return Column(
+                        children: [
+                          for (final locale
+                              in AmicaLocaleController.supportedLocales)
+                            RadioListTile<String>(
+                              contentPadding: EdgeInsets.zero,
+                              value: locale.languageCode,
+                              groupValue: effective.languageCode,
+                              title: Text(
+                                AmicaLocaleController
+                                        .nativeNames[locale.languageCode] ??
+                                    locale.languageCode,
+                              ),
+                              onChanged: (_) => AmicaLocaleController.instance
+                                  .setLocale(locale),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 24),
                 PrimaryButton(
-                  label: _isSaving ? 'Saving...' : 'Save Settings',
+                  label: _isSaving ? loc.settingsSaving : loc.settingsSaveButton,
                   icon: Icons.save_outlined,
                   onPressed: _isSaving ? null : _saveSettings,
                 ),

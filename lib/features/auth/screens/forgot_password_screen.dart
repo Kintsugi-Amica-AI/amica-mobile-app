@@ -5,6 +5,7 @@ import '../../../core/widgets/amica_background.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../services/auth_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -52,14 +53,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       }
 
       setState(() {
-        _successMessage =
-            'Password reset email sent. Check your inbox and follow the link.';
+        _successMessage = AppLocalizations.of(context)!.forgotPasswordSuccess;
       });
     } on AuthServiceException catch (error) {
       setState(() => _errorMessage = error.message);
     } catch (_) {
       setState(
-        () => _errorMessage = 'Could not send reset email. Please try again.',
+        () => _errorMessage = AppLocalizations.of(context)!.forgotPasswordFailed,
       );
     } finally {
       if (mounted) {
@@ -70,9 +70,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(title: const Text('Reset password')),
+      appBar: AppBar(title: Text(loc.forgotPasswordAppBarTitle)),
       extendBodyBehindAppBar: true,
       body: AmicaBackground(
         child: SafeArea(
@@ -81,29 +82,27 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
               children: [
-                const Icon(Icons.lock_reset_rounded,
-                    color: AppColors.secondary, size: 48),
+                Icon(Icons.lock_reset_rounded,
+                    color: Theme.of(context).amica.sage, size: 48),
                 const SizedBox(height: 16),
                 Text(
-                  'Forgot your password?',
+                  loc.forgotPasswordHeading,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Enter your account email and Amica will send a password reset link.',
-                ),
+                Text(loc.forgotPasswordSubtitle),
                 const SizedBox(height: 24),
                 GlassCard(
                   child: Column(
                     children: [
                       CustomTextField(
-                        label: 'Email',
+                        label: loc.commonEmail,
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         prefixIcon: Icons.alternate_email_rounded,
                         validator: (value) {
                           if (value == null || !value.trim().contains('@')) {
-                            return 'Enter a valid email address';
+                            return loc.forgotPasswordEmailInvalid;
                           }
                           return null;
                         },
@@ -121,19 +120,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         const SizedBox(height: 16),
                         Text(
                           _successMessage!,
-                          style: const TextStyle(color: AppColors.success),
+                          style: TextStyle(color: Theme.of(context).amica.sage),
                         ),
                       ],
                       const SizedBox(height: 24),
                       PrimaryButton(
-                        label: _isLoading ? 'Sending...' : 'Send reset link',
+                        label: _isLoading
+                            ? loc.forgotPasswordSending
+                            : loc.forgotPasswordSendButton,
                         icon: Icons.mail_outline_rounded,
                         onPressed: _isLoading ? null : _sendResetLink,
                       ),
                       TextButton(
                         onPressed:
                             _isLoading ? null : () => Navigator.pop(context),
-                        child: const Text('Back to login'),
+                        child: Text(loc.forgotPasswordBackToLogin),
                       ),
                     ],
                   ),

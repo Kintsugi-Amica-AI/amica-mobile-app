@@ -22,11 +22,13 @@ import '../services/journey_service.dart';
 import 'safety_check_screen.dart';
 import '../../plate_scan/screens/vehicle_rating_screen.dart';
 import '../../plate_scan/services/vehicle_journey_service.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class JourneyTimerScreen extends StatefulWidget {
   const JourneyTimerScreen({
     super.key,
     this.journeyId,
+    this.isTab = false,
     this.journeyService = const JourneyService(),
     this.locationService = const LocationService(),
     this.sosService = const SosService(),
@@ -35,6 +37,9 @@ class JourneyTimerScreen extends StatefulWidget {
   });
 
   final String? journeyId;
+
+  /// True when shown as the Journeys tab rather than pushed as a route.
+  final bool isTab;
   final JourneyService journeyService;
   final LocationService locationService;
   final SosService sosService;
@@ -77,6 +82,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
   String? _nativeSafetyMonitorJourneyId;
   bool _incidentRecorded = false;
   bool _incidentSyncing = false;
+  late AppLocalizations _loc;
 
   @override
   void initState() {
@@ -87,6 +93,12 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
       const Duration(seconds: 1),
       (_) => _updateRemainingAndSafetyState(),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loc = AppLocalizations.of(context)!;
   }
 
   @override
@@ -232,7 +244,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Journey marked safe')),
+        SnackBar(content: Text(_loc.journeyTimerMarkedSafe)),
       );
       final plate = journey.metadata['vehiclePlate'];
       if (plate is String && plate.isNotEmpty) {
@@ -251,7 +263,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not mark journey safe')),
+          SnackBar(content: Text(_loc.journeyTimerMarkSafeFailed)),
         );
       }
     } finally {
@@ -264,7 +276,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
   Future<void> _sendSos(Journey journey, {bool timerTriggered = false}) async {
     _cancelSafetyEscalations();
     setState(() => _isSaving = true);
-    _showEscalationSnack('Sending SOS alert...');
+    _showEscalationSnack(_loc.journeyTimerSendingSos);
     try {
       await _stopNativeSafetyMonitor();
       final location = await _sosLocation(journey);
@@ -308,7 +320,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not create SOS alert')),
+          SnackBar(content: Text(_loc.journeyTimerSosCreateFailed)),
         );
       }
     } finally {
@@ -506,7 +518,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
       final contact = await widget.emergencyContactService
           .getPrimaryActiveEmergencyContact();
       if (contact == null) {
-        _showEscalationSnack('No active emergency contact found.');
+        _showEscalationSnack(_loc.journeyTimerNoContactFound);
         return;
       }
 
@@ -521,9 +533,9 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
           submitted++;
         } catch (_) {/* Continue with the remaining recipients. */}
       }
-      _showEscalationSnack('Emergency SMS submitted for $submitted contacts.');
+      _showEscalationSnack(_loc.journeyTimerSmsSubmitted(submitted));
     } catch (_) {
-      _showEscalationSnack('Could not prepare emergency message.');
+      _showEscalationSnack(_loc.journeyTimerMessagePrepFailed);
     }
   }
 
@@ -537,14 +549,14 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
       final contact = await widget.emergencyContactService
           .getPrimaryActiveEmergencyContact();
       if (contact == null) {
-        _showEscalationSnack('No active emergency contact found for call.');
+        _showEscalationSnack(_loc.journeyTimerNoContactFoundCall);
         return;
       }
 
       await _startDirectPhoneCall(contact);
-      _showEscalationSnack('Calling ${contact.name}.');
+      _showEscalationSnack(_loc.journeyTimerCalling(contact.name));
     } catch (_) {
-      _showEscalationSnack('Could not open emergency call.');
+      _showEscalationSnack(_loc.journeyTimerCallOpenFailed);
     }
   }
 
@@ -574,13 +586,20 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     LocationDataModel? location,
   ) {
     final locationText = location == null
-        ? 'Location not available.'
-        : 'Location: https://maps.google.com/?q=${location.latitude},'
-            '${location.longitude}';
+        ? _loc.journeyTimerEmergencyLocationUnavailable
+        : _loc.journeyTimerEmergencyLocationLine(
+            'https://maps.google.com/?q=${location.latitude},'
+            '${location.longitude}');
 
-    return 'Amica safety alert: I did not respond to my journey safety check. '
-        '${journey.metadata['vehiclePlate'] is String ? 'Vehicle: ${journey.metadata['vehiclePlate']}. ' : ''}'
-        'Destination: ${journey.destinationName}. $locationText';
+    final vehiclePlate = journey.metadata['vehiclePlate'];
+    final vehicleText = vehiclePlate is String
+        ? '${_loc.journeyTimerEmergencyVehicleLine(vehiclePlate)} '
+        : '';
+    final destinationText =
+        _loc.journeyTimerEmergencyDestinationLine(journey.destinationName);
+
+    return '${_loc.journeyTimerEmergencyAlertIntro} '
+        '$vehicleText$destinationText $locationText';
   }
 
   void _showEscalationSnack(String message) {
@@ -592,13 +611,29 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     );
   }
 
+  String _statusLabel(String status) {
+    switch (status) {
+      case 'active':
+        return _loc.journeyTimerStatusActive;
+      case 'safe':
+        return _loc.journeyTimerStatusSafe;
+      case 'sos':
+        return _loc.journeyTimerStatusSos;
+      default:
+        return status.toUpperCase();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final journey = _journey;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(title: const Text('Journey Timer')),
+      appBar: AppBar(
+        automaticallyImplyLeading: !widget.isTab,
+        title: Text(_loc.journeyTimerTitle),
+      ),
       extendBodyBehindAppBar: true,
       body:
           AmicaBackground(child: SafeArea(child: _buildBody(context, journey))),
@@ -607,24 +642,25 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
 
   Widget _buildBody(BuildContext context, Journey? journey) {
     if (_isLoadingJourney) {
-      return const LoadingView(message: 'Loading journey');
+      return LoadingView(message: _loc.journeyTimerLoading);
     }
 
     final error = _journeyError;
     if (error != null) {
-      return Center(child: Text('Could not load journey: $error'));
+      return Center(
+          child: Text(_loc.journeyTimerLoadError(error.toString())));
     }
 
     if (journey == null) {
-      return const Center(child: Text('No active journey found.'));
+      return Center(child: Text(_loc.journeyTimerNoActiveJourney));
     }
 
     final mapLocation = journey.currentLocation ?? journey.startLocation;
     final destinationLocation = journey.destinationLocation;
     final statusColor = switch (journey.status) {
-      'sos' => AppColors.alert,
-      'safe' => AppColors.success,
-      _ => AppColors.secondary,
+      'sos' => Theme.of(context).amica.terracotta,
+      'safe' => Theme.of(context).amica.sage,
+      _ => Theme.of(context).amica.sage,
     };
 
     return ListView(
@@ -646,7 +682,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
                 border: Border.all(color: statusColor.withValues(alpha: 0.5)),
               ),
               child: Text(
-                journey.status.toUpperCase(),
+                _statusLabel(journey.status),
                 style: TextStyle(
                   color: statusColor,
                   fontWeight: FontWeight.w700,
@@ -658,15 +694,17 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
           ],
         ),
         const SizedBox(height: 4),
-        Text('Estimated duration: ${journey.estimatedDurationMinutes} minutes'),
+        Text(_loc.journeyTimerEstimatedDuration(
+            journey.estimatedDurationMinutes)),
         if (journey.metadata['vehiclePlate'] is String)
-          Text('Vehicle: ${journey.metadata['vehiclePlate']}'),
+          Text(_loc
+              .startJourneyVehicleLabel(journey.metadata['vehiclePlate'] as String)),
         const SizedBox(height: 20),
         GlassCard(
           child: Column(
             children: [
               Text(
-                'TIME REMAINING',
+                _loc.journeyTimerTimeRemaining,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       letterSpacing: 1.4,
                     ),
@@ -675,17 +713,12 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
               ValueListenableBuilder<Duration>(
                 valueListenable: _remainingNotifier,
                 builder: (context, remaining, _) {
-                  return ShaderMask(
-                    shaderCallback: (bounds) =>
-                        AppColors.primaryButtonGradient.createShader(bounds),
-                    child: Text(
-                      DateTimeUtils.formatDuration(remaining),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 44,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
+                  return Text(
+                    DateTimeUtils.formatDuration(remaining),
+                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                          fontSize: 44,
+                          height: 1.05,
+                        ),
                   );
                 },
               ),
@@ -697,7 +730,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
           AmicaMapView(
             latitude: mapLocation.latitude,
             longitude: mapLocation.longitude,
-            markerTitle: 'Journey location',
+            markerTitle: _loc.journeyTimerMapMarkerTitle,
             destinationLatitude: destinationLocation?.latitude,
             destinationLongitude: destinationLocation?.longitude,
             destinationTitle: journey.destinationName,
@@ -705,7 +738,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
         ],
         const SizedBox(height: 24),
         PrimaryButton(
-          label: _isSaving ? 'Saving...' : 'I am safe',
+          label: _isSaving ? _loc.journeyTimerSaving : _loc.safetyCheckImSafe,
           icon: Icons.check_circle_rounded,
           onPressed: _isSaving ? null : () => _markSafe(journey),
         ),
@@ -713,7 +746,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
         OutlinedButton.icon(
           onPressed: _isSaving ? null : () => _sendSos(journey),
           icon: const Icon(Icons.sos_rounded),
-          label: const Text('Trigger test SOS'),
+          label: Text(_loc.journeyTimerTriggerTestSos),
         ),
       ],
     );
