@@ -464,7 +464,11 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
                   destinationLatitude: destinationLocation?.latitude,
                   destinationLongitude: destinationLocation?.longitude,
                   destinationTitle: destinationTitle,
+                  height: 320,
+                  captureGestures: true,
                   onTap: _isStartingJourney ? null : _pinDestination,
+                  onDestinationDragged:
+                      _isStartingJourney ? null : _pinDestination,
                 ),
                 const SizedBox(height: 8),
                 Text(

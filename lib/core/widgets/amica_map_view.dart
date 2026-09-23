@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -13,6 +15,8 @@ class AmicaMapView extends StatefulWidget {
     this.destinationTitle = 'Destination',
     this.showStartMarker = true,
     this.onTap,
+    this.onDestinationDragged,
+    this.captureGestures = false,
   });
 
   final double latitude;
@@ -25,12 +29,29 @@ class AmicaMapView extends StatefulWidget {
   final bool showStartMarker;
   final void Function(double latitude, double longitude)? onTap;
 
+  /// When set, the destination marker becomes draggable and this is called
+  /// with its new position once the drag ends.
+  final void Function(double latitude, double longitude)? onDestinationDragged;
+
+  /// When true the map claims all touch gestures (pan, pinch, rotate) so it
+  /// stays movable even when placed inside a scrolling parent like ListView.
+  final bool captureGestures;
+
   @override
   State<AmicaMapView> createState() => _AmicaMapViewState();
 }
 
 class _AmicaMapViewState extends State<AmicaMapView> {
   GoogleMapController? _controller;
+
+  /// The last destination the user picked directly on the map (tap or drag).
+  /// The camera is not re-fitted for these, so the view stays where the
+  /// user was looking instead of jumping away mid-selection.
+  LatLng? _userPickedDestination;
+
+  static final Set<Factory<OneSequenceGestureRecognizer>> _eagerGestures = {
+    Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer()),
+  };
 
   LatLng get _centerPosition => LatLng(widget.latitude, widget.longitude);
 
@@ -50,8 +71,28 @@ class _AmicaMapViewState extends State<AmicaMapView> {
         oldWidget.longitude != widget.longitude ||
         oldWidget.destinationLatitude != widget.destinationLatitude ||
         oldWidget.destinationLongitude != widget.destinationLongitude) {
+      final destination = _destinationPosition;
+      final pickedOnMap = destination != null &&
+          _userPickedDestination != null &&
+          _samePosition(destination, _userPickedDestination!);
+      final centerUnchangedOrPicked =
+          (oldWidget.latitude == widget.latitude &&
+                  oldWidget.longitude == widget.longitude) ||
+              (_userPickedDestination != null &&
+                  _samePosition(_centerPosition, _userPickedDestination!));
+      if (pickedOnMap && centerUnchangedOrPicked) {
+        return;
+      }
       _moveCameraToMarkers();
     }
+  }
+
+  void _handleUserPick(
+    LatLng position,
+    void Function(double latitude, double longitude) callback,
+  ) {
+    _userPickedDestination = position;
+    callback(position.latitude, position.longitude);
   }
 
   @override
@@ -74,6 +115,11 @@ class _AmicaMapViewState extends State<AmicaMapView> {
           markerId: const MarkerId('amica-destination-marker'),
           position: destination,
           infoWindow: InfoWindow(title: widget.destinationTitle),
+          draggable: widget.onDestinationDragged != null,
+          onDragEnd: widget.onDestinationDragged == null
+              ? null
+              : (position) =>
+                  _handleUserPick(position, widget.onDestinationDragged!),
           icon: BitmapDescriptor.defaultMarkerWithHue(
             BitmapDescriptor.hueRose,
           ),
@@ -144,12 +190,16 @@ class _AmicaMapViewState extends State<AmicaMapView> {
             _controller = controller;
             _moveCameraToMarkers();
           },
+          gestureRecognizers: widget.captureGestures
+              ? _eagerGestures
+              : const <Factory<OneSequenceGestureRecognizer>>{},
+          scrollGesturesEnabled: true,
+          zoomGesturesEnabled: true,
+          rotateGesturesEnabled: true,
+          tiltGesturesEnabled: false,
           onTap: widget.onTap == null
               ? null
-              : (position) => widget.onTap!(
-                    position.latitude,
-                    position.longitude,
-                  ),
+              : (position) => _handleUserPick(position, widget.onTap!),
           myLocationButtonEnabled: false,
           myLocationEnabled: false,
           zoomControlsEnabled: true,
