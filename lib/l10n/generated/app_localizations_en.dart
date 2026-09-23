@@ -1,0 +1,1409 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for English (`en`).
+class AppLocalizationsEn extends AppLocalizations {
+  AppLocalizationsEn([String locale = 'en']) : super(locale);
+
+  @override
+  String get appName => 'Amica';
+
+  @override
+  String get checkingLoginStatus => 'Checking login status';
+
+  @override
+  String get navHome => 'Home';
+
+  @override
+  String get navJourneys => 'Journeys';
+
+  @override
+  String get navCircle => 'Circle';
+
+  @override
+  String get navYou => 'You';
+
+  @override
+  String get commonCancel => 'Cancel';
+
+  @override
+  String get commonSave => 'Save';
+
+  @override
+  String get commonOk => 'OK';
+
+  @override
+  String get commonBack => 'Back';
+
+  @override
+  String get commonContinue => 'Continue';
+
+  @override
+  String get commonEmail => 'Email';
+
+  @override
+  String get commonPassword => 'Password';
+
+  @override
+  String get commonEnterValidEmail => 'Enter a valid email';
+
+  @override
+  String get commonYes => 'Yes';
+
+  @override
+  String get commonNo => 'No';
+
+  @override
+  String get commonEdit => 'Edit';
+
+  @override
+  String get commonDelete => 'Delete';
+
+  @override
+  String get commonAdd => 'Add';
+
+  @override
+  String get commonRemove => 'Remove';
+
+  @override
+  String get commonClose => 'Close';
+
+  @override
+  String get commonTryAgain => 'Please try again.';
+
+  @override
+  String get loginWelcomeBack => 'Welcome back';
+
+  @override
+  String get loginSubtitle => 'Sign in and your circle can reach you again.';
+
+  @override
+  String get loginPasswordRequired => 'Password is required';
+
+  @override
+  String get loginForgotPassword => 'Forgot password?';
+
+  @override
+  String get loginFailed => 'Login failed. Please try again.';
+
+  @override
+  String get googleSignInFailed => 'Google sign-in failed. Please try again.';
+
+  @override
+  String get loginButton => 'Log in';
+
+  @override
+  String get continueWithGoogle => 'Continue with Google';
+
+  @override
+  String get loginNewToAmica => 'New to Amica?';
+
+  @override
+  String get loginCreateAccount => 'Create an account';
+
+  @override
+  String get signupAppBarTitle => 'Create account';
+
+  @override
+  String get signupJoinAmica => 'Join Amica';
+
+  @override
+  String get signupSubtitle =>
+      'Create your profile for safety alerts and trusted contacts.';
+
+  @override
+  String get signupNameLabel => 'Name';
+
+  @override
+  String get signupPhoneLabel => 'Phone';
+
+  @override
+  String get signupSecretPhraseLabel => 'Secret phrase';
+
+  @override
+  String get signupSecretPhraseHelper =>
+      'Say this during a fake call to trigger stealth SOS.';
+
+  @override
+  String get signupConfirmPasswordLabel => 'Confirm password';
+
+  @override
+  String fieldRequired(String field) {
+    return '$field is required';
+  }
+
+  @override
+  String get signupEmailInvalid => 'Enter a valid email';
+
+  @override
+  String get signupPasswordTooShort => 'Password must be at least 6 characters';
+
+  @override
+  String get signupPasswordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get signupFailed => 'Signup failed. Please try again.';
+
+  @override
+  String get signupCreatingAccount => 'Creating account...';
+
+  @override
+  String get signupCreateAccountButton => 'Create account';
+
+  @override
+  String get connecting => 'Connecting...';
+
+  @override
+  String get signupAlreadyHaveAccount => 'Already have an account? Log in';
+
+  @override
+  String get forgotPasswordAppBarTitle => 'Reset password';
+
+  @override
+  String get forgotPasswordHeading => 'Forgot your password?';
+
+  @override
+  String get forgotPasswordSubtitle =>
+      'Enter your account email and Amica will send a password reset link.';
+
+  @override
+  String get forgotPasswordEmailInvalid => 'Enter a valid email address';
+
+  @override
+  String get forgotPasswordSuccess =>
+      'Password reset email sent. Check your inbox and follow the link.';
+
+  @override
+  String get forgotPasswordFailed =>
+      'Could not send reset email. Please try again.';
+
+  @override
+  String get forgotPasswordSending => 'Sending...';
+
+  @override
+  String get forgotPasswordSendButton => 'Send reset link';
+
+  @override
+  String get forgotPasswordBackToLogin => 'Back to login';
+
+  @override
+  String get greetingMorning => 'Good morning';
+
+  @override
+  String get greetingAfternoon => 'Good afternoon';
+
+  @override
+  String get greetingEvening => 'Good evening';
+
+  @override
+  String get discreetModeTurnOff => 'Turn off discreet mode';
+
+  @override
+  String get discreetModeTurnOn => 'Turn on discreet mode';
+
+  @override
+  String homeGreetingWithName(String greeting, String name) {
+    return '$greeting, $name.';
+  }
+
+  @override
+  String homeGreetingNoName(String greeting) {
+    return '$greeting.';
+  }
+
+  @override
+  String get homeNoGuardiansSubline =>
+      'No one can find you yet. Add someone to your circle so Amica has a person to reach.';
+
+  @override
+  String homeGuardianCountSubline(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'All calm. $count people can find you in seconds if you need them.',
+      two: 'All calm. Two people can find you in seconds if you need them.',
+      one: 'All calm. One person can find you in seconds if you need them.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeYouAreProtected => 'You\'re protected';
+
+  @override
+  String get homeFinishSettingUp => 'Finish setting up';
+
+  @override
+  String homeProtectionReadySubline(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'guardians',
+      one: 'guardian',
+    );
+    return 'Location on · Voice phrase armed · $count $_temp0';
+  }
+
+  @override
+  String get homeAddGuardianPrompt =>
+      'Add at least one guardian to your circle';
+
+  @override
+  String get homeSosHoldHint =>
+      'Hold 2 seconds. You get 5 more to cancel before your circle is alerted.';
+
+  @override
+  String get homeSectionQuieterOptions => 'Quieter options';
+
+  @override
+  String get homeTileWalkWithMe => 'Walk\nwith me';
+
+  @override
+  String get homeTileFakeCall => 'Fake\ncall';
+
+  @override
+  String get homeTileScanPlate => 'Scan\na plate';
+
+  @override
+  String get homeTileStopAlert => 'Stop\nalert';
+
+  @override
+  String get sosHoldSemanticLabel => 'Send an SOS alert';
+
+  @override
+  String get sosHoldSemanticHint => 'Press and hold for two seconds';
+
+  @override
+  String get sosHoldLabel => 'Hold';
+
+  @override
+  String get sosHoldReachingCircle => 'Reaching your circle…';
+
+  @override
+  String get sosHoldKeepHolding => 'Keep holding. Release to cancel.';
+
+  @override
+  String get sosHoldToSend => 'Hold to send an SOS';
+
+  @override
+  String get profileAppBarTitle => 'You';
+
+  @override
+  String get profileLoadingYourProfile => 'Loading your profile';
+
+  @override
+  String get profileVoicePhrase => 'Voice phrase';
+
+  @override
+  String profileVoicePhraseSet(String phrase) {
+    return '“$phrase”';
+  }
+
+  @override
+  String get profileVoicePhraseNotSet =>
+      'Not set — say it and Amica alerts silently';
+
+  @override
+  String get profilePrivacyTitle => 'Privacy & your data';
+
+  @override
+  String get profilePrivacySubtitle =>
+      'Where recordings and locations are kept';
+
+  @override
+  String get profileAllSettings => 'All settings';
+
+  @override
+  String get profileYourProfile => 'Your profile';
+
+  @override
+  String get profileSectionHowAmicaBehaves => 'How Amica behaves';
+
+  @override
+  String get profileSectionYourSafetySetup => 'Your safety setup';
+
+  @override
+  String profileSetupDoneCount(int done, int total) {
+    return '$done of $total done';
+  }
+
+  @override
+  String profileGuardiansInCircle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count guardians in your circle',
+      one: '$count guardian in your circle',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get profileNoGuardiansYet => 'No one in your circle yet';
+
+  @override
+  String get profileVoicePhraseRecorded => 'Voice phrase recorded';
+
+  @override
+  String get profilePhoneConfirmed => 'Phone number confirmed';
+
+  @override
+  String get profileMedicalNotes => 'Medical notes for responders';
+
+  @override
+  String get profileDiscreetModeTitle => 'Discreet mode';
+
+  @override
+  String get profileDiscreetModeSubtitle =>
+      'Dark, silent, no preview in notifications';
+
+  @override
+  String get profileLogOut => 'Log out';
+
+  @override
+  String get profileLogOutConfirmTitle => 'Log out of Amica?';
+
+  @override
+  String get profileLogOutConfirmBody =>
+      'Your circle will not be able to reach you through Amica until you log back in.';
+
+  @override
+  String get profileStayLoggedIn => 'Stay logged in';
+
+  @override
+  String get settingsAppBarTitle => 'Settings';
+
+  @override
+  String get settingsLoading => 'Loading settings';
+
+  @override
+  String get settingsCouldNotLoad => 'Could not load settings.';
+
+  @override
+  String get settingsSaved => 'Settings saved';
+
+  @override
+  String get settingsCouldNotSave =>
+      'Could not save settings. Please try again.';
+
+  @override
+  String get settingsFakeCallSection => 'Fake Call';
+
+  @override
+  String get settingsVolumeShortcutTitle => 'Volume-up shortcut';
+
+  @override
+  String get settingsVolumeShortcutSubtitle =>
+      'When enabled, Amica keeps a safety shortcut notification running. Press volume up three times to open the call screen.';
+
+  @override
+  String get settingsFakeCallerNameLabel => 'Fake caller name';
+
+  @override
+  String get settingsEnterCallerName => 'Enter a caller name.';
+
+  @override
+  String get settingsFakeCallerNumberLabel => 'Fake caller number';
+
+  @override
+  String get settingsEnterCallerNumber => 'Enter a caller number.';
+
+  @override
+  String get settingsVoiceSosSection => 'Stealth Voice SOS';
+
+  @override
+  String get settingsEnableVoiceSos => 'Enable voice SOS';
+
+  @override
+  String get settingsListenForPhrase =>
+      'Listen for the secret phrase during an active fake call.';
+
+  @override
+  String get settingsEnableSecretPhrase => 'Enable secret phrase';
+
+  @override
+  String get settingsUsePhraseBelow =>
+      'Use the phrase below to trigger Voice SOS.';
+
+  @override
+  String settingsSecretPhraseLabel(int number) {
+    return 'Secret phrase $number';
+  }
+
+  @override
+  String get settingsEnterPhrase => 'Enter a phrase.';
+
+  @override
+  String get settingsPhraseAlreadyListed =>
+      'This phrase is already in the list.';
+
+  @override
+  String get settingsRemovePhrase => 'Remove phrase';
+
+  @override
+  String get settingsAddPhrase => 'Add phrase';
+
+  @override
+  String get settingsSosMessageLabel => 'SOS message for emergency contact';
+
+  @override
+  String get settingsSosMessageHelper =>
+      'Saved with the Voice SOS alert when the phrase is spoken.';
+
+  @override
+  String get settingsEnterMessage => 'Enter the message to send.';
+
+  @override
+  String get settingsSaving => 'Saving...';
+
+  @override
+  String get settingsSaveButton => 'Save Settings';
+
+  @override
+  String get settingsLanguageSection => 'Language';
+
+  @override
+  String get settingsLanguageSubtitle =>
+      'Choose the language Amica is shown in.';
+
+  @override
+  String get contactsAppBarTitle => 'Your circle';
+
+  @override
+  String get contactsLoading => 'Loading emergency contacts';
+
+  @override
+  String contactsLoadError(String error) {
+    return 'Could not load emergency contacts.\n$error';
+  }
+
+  @override
+  String get contactsEmptyTitle => 'No one yet';
+
+  @override
+  String get contactsEmptyMessage =>
+      'Your circle are the people Amica reaches the moment you send an alert. Add one person you trust and the app starts working.';
+
+  @override
+  String get contactsAddFirstGuardian => 'Add your first guardian';
+
+  @override
+  String get contactsAlertedTogetherNote =>
+      'Everyone switched on here is contacted at the same time when you send an alert.';
+
+  @override
+  String get contactsAddGuardianFab => 'Add guardian';
+
+  @override
+  String get contactsDeleteConfirmTitle => 'Delete contact?';
+
+  @override
+  String contactsDeleteConfirmBody(String name) {
+    return 'Remove $name from emergency contacts?';
+  }
+
+  @override
+  String get contactsDeleted => 'Contact deleted';
+
+  @override
+  String get contactsCouldNotDelete => 'Could not delete contact';
+
+  @override
+  String get contactsCouldNotUpdate => 'Could not update contact';
+
+  @override
+  String get contactsAlertedOnSos => 'Alerted when you send an SOS';
+
+  @override
+  String get contactsMuted => 'Muted — will not be alerted';
+
+  @override
+  String contactsRemoveTooltip(String name) {
+    return 'Remove $name';
+  }
+
+  @override
+  String get addContactCouldNotSave =>
+      'Could not save contact. Please try again.';
+
+  @override
+  String get addContactPermissionRequired =>
+      'Contacts permission is required to import a contact.';
+
+  @override
+  String get addContactNoPhoneNumber =>
+      'That contact has no phone number saved. Enter one manually.';
+
+  @override
+  String get addContactCouldNotImport => 'Could not import that contact.';
+
+  @override
+  String get addContactPriorityInvalid => 'Priority must be a positive number';
+
+  @override
+  String get addContactEditTitle => 'Edit contact';
+
+  @override
+  String get addContactAddTitle => 'Add contact';
+
+  @override
+  String get addContactOpeningContacts => 'Opening contacts...';
+
+  @override
+  String get addContactImportFromPhone => 'Import from phone contacts';
+
+  @override
+  String get addContactNameLabel => 'Name';
+
+  @override
+  String get addContactPhoneLabel => 'Phone number';
+
+  @override
+  String get addContactRelationshipLabel => 'Relationship';
+
+  @override
+  String get addContactPriorityLabel => 'Priority';
+
+  @override
+  String get addContactPriorityHelper => 'Lower numbers are contacted first.';
+
+  @override
+  String get addContactSaving => 'Saving...';
+
+  @override
+  String get addContactSaveButton => 'Save Contact';
+
+  @override
+  String get sosArmingSendingLabel => 'SENDING AN ALERT';
+
+  @override
+  String get sosArmingAlertingLabel => 'ALERTING YOUR CIRCLE';
+
+  @override
+  String get sosArmingReachingNow => 'Reaching them now.';
+
+  @override
+  String get sosArmingCancelIfMeant => 'Cancel if you meant to.';
+
+  @override
+  String get sosArmingStaySafe => 'Stay where you are if it is safe to.';
+
+  @override
+  String get sosArmingStopNow =>
+      'Stop now and nothing is sent. No one is told you nearly called.';
+
+  @override
+  String get sosArmingSendFailed =>
+      'Could not send your alert. Try again, or call 119 directly.';
+
+  @override
+  String get sosArmingWhenZero => 'WHEN THE COUNT REACHES ZERO';
+
+  @override
+  String get sosArmingGuardianNone => 'Your circle gets your live location';
+
+  @override
+  String sosArmingGuardianOne(String name) {
+    return '$name gets your live location';
+  }
+
+  @override
+  String sosArmingGuardianTwo(String first, String second) {
+    return '$first and $second get your live location';
+  }
+
+  @override
+  String sosArmingGuardianMany(String names, String last) {
+    return '$names and $last get your live location';
+  }
+
+  @override
+  String get sosArmingRecordingAudio => 'Your phone starts recording audio';
+
+  @override
+  String get sosArmingCallReady => '119 is one tap away, already dialled';
+
+  @override
+  String get sosArmingCancelSendNothing => 'Cancel — send nothing';
+
+  @override
+  String get sosArmingBackToHome => 'Back to home';
+
+  @override
+  String get sosActiveTriggerVoice => 'Triggered by your voice phrase';
+
+  @override
+  String get sosActiveTriggerTimer => 'Your journey timer ran out';
+
+  @override
+  String get sosActiveTriggerManual => 'You sent this alert';
+
+  @override
+  String get sosActiveLive => 'ALERT LIVE';
+
+  @override
+  String get sosActiveYourLocation => 'Your location';
+
+  @override
+  String get sosActiveUpdatingEvery10s => 'Updating every 10 seconds';
+
+  @override
+  String get sosActiveNoOneInCircle =>
+      'No one is in your circle, so only emergency services can help. Call 119.';
+
+  @override
+  String sosActiveCircleReachedHeader(int count) {
+    return 'Your circle · $count reached';
+  }
+
+  @override
+  String get sosActiveNotified => 'Notified';
+
+  @override
+  String get sosActiveWhatAmicaIsDoing => 'What Amica is doing';
+
+  @override
+  String get sosActiveSharingLocation => 'Sharing your live location';
+
+  @override
+  String get sosActiveRecordingAudio => 'Recording audio';
+
+  @override
+  String get sosActiveSirenSounding => 'Siren — sounding';
+
+  @override
+  String get sosActiveSirenSilent => 'Siren — silent, tap to sound';
+
+  @override
+  String get sosActiveOn => 'ON';
+
+  @override
+  String get sosActiveOff => 'OFF';
+
+  @override
+  String get sosActiveImSafe => 'I\'m safe — stand down';
+
+  @override
+  String get sosActiveCall119 => 'Call 119';
+
+  @override
+  String get sosActiveStandDownNote =>
+      'Standing down tells your circle you are okay. It does not delete the recording.';
+
+  @override
+  String get sosActiveConfirmTitle => 'Tell your circle you are safe?';
+
+  @override
+  String get sosActiveConfirmBody =>
+      'They will stop seeing your live location and the alert will close.';
+
+  @override
+  String get sosActiveKeepLive => 'Keep it live';
+
+  @override
+  String get sosActiveYesImSafe => 'Yes, I\'m safe';
+
+  @override
+  String get fakeCallPreparingCall => 'Preparing call';
+
+  @override
+  String get fakeCallAppBarTitle => 'Fake call';
+
+  @override
+  String get fakeCallHeroTitle => 'Make it look like someone is expecting you';
+
+  @override
+  String get fakeCallHeroSubtitle =>
+      'Ring now, or schedule a call for the moment you get into a vehicle. Amica keeps the countdown running even if you close the app or lock your phone.';
+
+  @override
+  String get fakeCallRingNowInstead => 'Ring now instead';
+
+  @override
+  String get fakeCallCancelScheduled => 'Cancel scheduled call';
+
+  @override
+  String get fakeCallScheduling => 'Scheduling...';
+
+  @override
+  String fakeCallScheduleIn(String delay) {
+    return 'Schedule in $delay';
+  }
+
+  @override
+  String get fakeCallRingNow => 'Ring now';
+
+  @override
+  String get fakeCallDisclaimer =>
+      'No real call is placed. During the call, Amica can listen for your secret phrase and send a silent SOS.';
+
+  @override
+  String get fakeCallEditCallerTooltip => 'Edit caller';
+
+  @override
+  String get fakeCallMeIn => 'Call me in';
+
+  @override
+  String get fakeCallCallingIn => 'CALLING IN';
+
+  @override
+  String get fakeCallKeepNotificationVisible =>
+      'Keep the \"Call scheduled\" notification visible. You can close Amica now.';
+
+  @override
+  String fakeCallScheduledSnackbar(String name, String delay) {
+    return '$name will call in $delay. You can close Amica.';
+  }
+
+  @override
+  String get fakeCallCouldNotSchedule =>
+      'Could not schedule the call on this device.';
+
+  @override
+  String get fakeCallScheduleCancelled => 'Scheduled call cancelled';
+
+  @override
+  String get fakeCallCouldNotCancel => 'Could not cancel the scheduled call.';
+
+  @override
+  String get fakeCallIncoming => 'Incoming call';
+
+  @override
+  String get fakeCallMobile => 'Mobile';
+
+  @override
+  String get fakeCallDecline => 'Decline';
+
+  @override
+  String get fakeCallAccept => 'Accept';
+
+  @override
+  String get fakeCallActiveCouldNotCompleteVoiceSos =>
+      'Could not complete Voice SOS. Use manual SOS if needed.';
+
+  @override
+  String get fakeCallActiveConnected => 'Call connected';
+
+  @override
+  String get fakeCallActiveMute => 'Mute';
+
+  @override
+  String get fakeCallActiveKeypad => 'Keypad';
+
+  @override
+  String get fakeCallActiveSpeaker => 'Speaker';
+
+  @override
+  String get fakeCallActiveAddCall => 'Add call';
+
+  @override
+  String get fakeCallActiveHold => 'Hold';
+
+  @override
+  String get fakeCallActiveBluetooth => 'Bluetooth';
+
+  @override
+  String get journeysScreenCheckingJourneys => 'Checking your journeys';
+
+  @override
+  String get safetyCheckDefaultTrip => 'your trip';
+
+  @override
+  String get safetyCheckAreYouSafe => 'Are you safe?';
+
+  @override
+  String safetyCheckTimerEnded(String destination) {
+    return 'Your journey timer for $destination has ended.';
+  }
+
+  @override
+  String get safetyCheckImSafe => 'I am safe';
+
+  @override
+  String get safetyCheckSendSosNow => 'Send SOS now';
+
+  @override
+  String get safetyCheckSafeClosesNote =>
+      'Tapping \"I am safe\" closes this journey. Amica will stop watching and will not contact anyone.';
+
+  @override
+  String get safetyCheckAnswerPrompt =>
+      'Answer so Amica knows whether to alert your emergency contact.';
+
+  @override
+  String get safetyCheckContactAlerted =>
+      'Amica has alerted your emergency contact';
+
+  @override
+  String get safetyCheckAutoAlertIn => 'Auto-alert in';
+
+  @override
+  String get safetyCheckEscalationExplain =>
+      'If you do not answer, Amica messages your primary emergency contact with your live location, then calls them.';
+
+  @override
+  String get safetyCheckAfterEscalationNote =>
+      'You can still confirm you are safe, or escalate to a full SOS with your live location.';
+
+  @override
+  String get startJourneyFindingOnMap => 'Finding destination on map...';
+
+  @override
+  String get startJourneyDestinationFound => 'Destination found on map.';
+
+  @override
+  String get startJourneyDestinationNotFound =>
+      'Destination not found. Pin it on the map.';
+
+  @override
+  String get startJourneyCouldNotGetLocation =>
+      'Could not get current location.';
+
+  @override
+  String get startJourneyGetLocationFirst => 'Get your current location first.';
+
+  @override
+  String get startJourneyChooseDestination =>
+      'Choose the destination on the map.';
+
+  @override
+  String get startJourneyCouldNotStart => 'Could not start journey.';
+
+  @override
+  String get startJourneyDestinationPinSelected => 'Destination pin selected.';
+
+  @override
+  String get startJourneyDestinationLabel => 'Destination';
+
+  @override
+  String get startJourneyWalkWithMeTitle => 'Walk with me';
+
+  @override
+  String get startJourneyRideWithMeTitle => 'Ride with me';
+
+  @override
+  String startJourneyVehicleLabel(String plate) {
+    return 'Vehicle: $plate';
+  }
+
+  @override
+  String get startJourneyGettingLocation => 'Getting location...';
+
+  @override
+  String get startJourneyGetCurrentLocation => 'Get current location';
+
+  @override
+  String get startJourneyCurrentLocationNotSelected =>
+      'Current location: not selected yet';
+
+  @override
+  String startJourneyCurrentLocationValue(String lat, String lng) {
+    return 'Current location: $lat, $lng';
+  }
+
+  @override
+  String get startJourneyDestinationNameLabel => 'Destination name or address';
+
+  @override
+  String get startJourneyMapStartMarker => 'Journey start';
+
+  @override
+  String get startJourneyTapMapToPin => 'Tap map to pin destination.';
+
+  @override
+  String startJourneyDestinationPinValue(String lat, String lng) {
+    return 'Destination pin: $lat, $lng';
+  }
+
+  @override
+  String get startJourneyTypeLabel => 'Journey type';
+
+  @override
+  String get startJourneyTypeWalk => 'Walk';
+
+  @override
+  String get startJourneyTypeTaxi => 'Taxi';
+
+  @override
+  String get startJourneyTypeBus => 'Bus';
+
+  @override
+  String get startJourneyTypeTrain => 'Train';
+
+  @override
+  String get startJourneyTypeOther => 'Other';
+
+  @override
+  String get startJourneyDurationLabel => 'Estimated duration in minutes';
+
+  @override
+  String get startJourneyDurationInvalid => 'Enter a positive duration';
+
+  @override
+  String startJourneySuggestedDuration(int minutes) {
+    return 'Suggested duration: $minutes minutes (approximate; no traffic data)';
+  }
+
+  @override
+  String get startJourneyStarting => 'Starting...';
+
+  @override
+  String get startJourneyStartButton => 'Start Journey';
+
+  @override
+  String get startJourneyStartVehicleButton => 'Start Vehicle Journey';
+
+  @override
+  String get journeyTimerMarkedSafe => 'Journey marked safe';
+
+  @override
+  String get journeyTimerMarkSafeFailed => 'Could not mark journey safe';
+
+  @override
+  String get journeyTimerSendingSos => 'Sending SOS alert...';
+
+  @override
+  String get journeyTimerSosCreateFailed => 'Could not create SOS alert';
+
+  @override
+  String get journeyTimerNoContactFound => 'No active emergency contact found.';
+
+  @override
+  String journeyTimerSmsSubmitted(int count) {
+    return 'Emergency SMS submitted for $count contacts.';
+  }
+
+  @override
+  String get journeyTimerMessagePrepFailed =>
+      'Could not prepare emergency message.';
+
+  @override
+  String get journeyTimerNoContactFoundCall =>
+      'No active emergency contact found for call.';
+
+  @override
+  String journeyTimerCalling(String name) {
+    return 'Calling $name.';
+  }
+
+  @override
+  String get journeyTimerCallOpenFailed => 'Could not open emergency call.';
+
+  @override
+  String get journeyTimerEmergencyLocationUnavailable =>
+      'Location not available.';
+
+  @override
+  String journeyTimerEmergencyLocationLine(String url) {
+    return 'Location: $url';
+  }
+
+  @override
+  String get journeyTimerEmergencyAlertIntro =>
+      'Amica safety alert: I did not respond to my journey safety check.';
+
+  @override
+  String journeyTimerEmergencyVehicleLine(String plate) {
+    return 'Vehicle: $plate.';
+  }
+
+  @override
+  String journeyTimerEmergencyDestinationLine(String name) {
+    return 'Destination: $name.';
+  }
+
+  @override
+  String get journeyTimerTitle => 'Journey';
+
+  @override
+  String get journeyTimerLoading => 'Loading journey';
+
+  @override
+  String journeyTimerLoadError(String error) {
+    return 'Could not load journey: $error';
+  }
+
+  @override
+  String get journeyTimerNoActiveJourney => 'No active journey found.';
+
+  @override
+  String get journeyTimerStatusActive => 'ACTIVE';
+
+  @override
+  String get journeyTimerStatusSafe => 'SAFE';
+
+  @override
+  String get journeyTimerStatusSos => 'SOS';
+
+  @override
+  String journeyTimerEstimatedDuration(int minutes) {
+    return 'Estimated duration: $minutes minutes';
+  }
+
+  @override
+  String get journeyTimerTimeRemaining => 'TIME REMAINING';
+
+  @override
+  String get journeyTimerMapMarkerTitle => 'Journey location';
+
+  @override
+  String get journeyTimerSaving => 'Saving...';
+
+  @override
+  String get journeyTimerTriggerTestSos => 'Trigger test SOS';
+
+  @override
+  String get stopAlertSetupFindingStop => 'Finding your stop on the map...';
+
+  @override
+  String get stopAlertSetupStopFound => 'Stop found on the map.';
+
+  @override
+  String get stopAlertSetupStopNotFound =>
+      'Stop not found. Tap the map to pin it.';
+
+  @override
+  String get stopAlertSetupStopPinned => 'Stop pinned on the map.';
+
+  @override
+  String get stopAlertSetupLocationError =>
+      'Could not get your current location.';
+
+  @override
+  String get stopAlertSetupNeedLocation => 'Get your current location first.';
+
+  @override
+  String get stopAlertSetupNeedStop =>
+      'Search for your stop or tap the map to pin it.';
+
+  @override
+  String get stopAlertSetupStartFailed => 'Could not start the bus ride.';
+
+  @override
+  String get stopAlertSetupValidateDropOff =>
+      'Name your stop so the alert can tell you where you are going';
+
+  @override
+  String get stopAlertSetupTitle => 'Bus stop alert';
+
+  @override
+  String get stopAlertSetupHeadline => 'Never miss your stop';
+
+  @override
+  String get stopAlertSetupIntro =>
+      'Pick where you are getting off. Amica watches the distance and sounds an alarm before you arrive, so you can rest on the bus without missing your stop.';
+
+  @override
+  String get stopAlertSetupGettingLocation => 'Getting location...';
+
+  @override
+  String get stopAlertSetupUpdateLocation => 'Update current location';
+
+  @override
+  String get stopAlertSetupLocationUnavailable =>
+      'Current location: not available yet';
+
+  @override
+  String stopAlertSetupLocationKnown(String lat, String lng) {
+    return 'Current location: $lat, $lng';
+  }
+
+  @override
+  String get stopAlertSetupDropOffLabel => 'Where are you getting off?';
+
+  @override
+  String get stopAlertSetupYouAreHereMarker => 'You are here';
+
+  @override
+  String get stopAlertSetupYourStopDefault => 'Your stop';
+
+  @override
+  String get stopAlertSetupTapToPin => 'Tap the map to pin your stop.';
+
+  @override
+  String stopAlertSetupStopPinnedAt(String lat, String lng) {
+    return 'Stop pinned at $lat, $lng';
+  }
+
+  @override
+  String get stopAlertSetupStartButton => 'Start bus ride';
+
+  @override
+  String get stopAlertSetupKeepNotificationNote =>
+      'Keep the Amica tracking notification visible. The alarm still sounds with the app closed and the screen off.';
+
+  @override
+  String get stopAlertSetupAlertDistanceLabel =>
+      'Alert me this far from the stop';
+
+  @override
+  String get stopAlertSetupCheckingRoadDistance =>
+      'Checking the road distance to your stop...';
+
+  @override
+  String stopAlertSetupDistanceStraightLine(String distance) {
+    return 'Your stop is $distance away in a straight line.';
+  }
+
+  @override
+  String stopAlertSetupDistanceByRoad(String distance) {
+    return 'Your stop is about $distance away by road.';
+  }
+
+  @override
+  String stopAlertSetupTooClose(String alertDistance) {
+    return 'You are already within $alertDistance of this stop, so the alarm would sound straight away. Pick a shorter alert distance.';
+  }
+
+  @override
+  String get stopAlertActiveLocationPaused =>
+      'Live location paused. Amica keeps watching in the background.';
+
+  @override
+  String get stopAlertActiveCloseFailed => 'Could not close the ride record';
+
+  @override
+  String get stopAlertActiveLoading => 'Loading your ride';
+
+  @override
+  String stopAlertActiveLoadError(String error) {
+    return 'Could not load the ride: $error';
+  }
+
+  @override
+  String get stopAlertActiveNoRide => 'No active bus ride found.';
+
+  @override
+  String get stopAlertActiveGettingOffAt => 'Getting off at';
+
+  @override
+  String get stopAlertActiveAlertDistance => 'Alert distance';
+
+  @override
+  String get stopAlertActiveBackgroundAlarm => 'Background alarm';
+
+  @override
+  String get stopAlertActiveStatusActive => 'Active';
+
+  @override
+  String get stopAlertActiveStatusAppOnly => 'App only';
+
+  @override
+  String get stopAlertActiveDistanceMeasured => 'Distance measured';
+
+  @override
+  String get stopAlertActiveByRoad => 'By road';
+
+  @override
+  String get stopAlertActiveStraightLine => 'Straight line';
+
+  @override
+  String get stopAlertActiveEnding => 'Ending...';
+
+  @override
+  String get stopAlertActiveGetOffButton => 'I am getting off here';
+
+  @override
+  String get stopAlertActiveCanLockPhone =>
+      'You can lock your phone. Amica will alarm before your stop.';
+
+  @override
+  String get stopAlertActiveKeepScreenOpen =>
+      'Keep this screen open so Amica can watch your stop.';
+
+  @override
+  String get stopAlertActiveComingUp => 'YOUR STOP IS COMING UP';
+
+  @override
+  String get stopAlertActiveDistanceLabel => 'DISTANCE TO YOUR STOP';
+
+  @override
+  String stopAlertActiveGetReady(String name) {
+    return 'Get ready to get off at $name.';
+  }
+
+  @override
+  String stopAlertActiveWillAlarmAt(String distance) {
+    return 'Amica will alarm at $distance.';
+  }
+
+  @override
+  String get plateScanStartingCamera => 'Starting camera...';
+
+  @override
+  String get plateScanAlignPrompt =>
+      'Align the plate in the frame and tap the shutter';
+
+  @override
+  String get plateScanNoCamera => 'No camera was found on this device.';
+
+  @override
+  String get plateScanPermissionRequired =>
+      'Camera permission is required to scan a plate. Enable it in system settings.';
+
+  @override
+  String get plateScanCameraStartFailed => 'Could not start the camera.';
+
+  @override
+  String get plateScanReading => 'Reading plate...';
+
+  @override
+  String plateScanDetected(String plate) {
+    return 'Detected $plate';
+  }
+
+  @override
+  String get plateScanNotDetected =>
+      'No plate detected. Align it inside the frame and try again.';
+
+  @override
+  String plateScanChecking(String plate) {
+    return 'Checking $plate...';
+  }
+
+  @override
+  String get plateScanGalleryNoPlate =>
+      'No single plate detected. Try another image or enter the plate.';
+
+  @override
+  String get plateScanGalleryFailed =>
+      'Could not scan the plate. Please try again.';
+
+  @override
+  String get plateScanEnterTitle => 'Enter plate number';
+
+  @override
+  String get plateScanCheckButton => 'Check';
+
+  @override
+  String get plateScanInvalidPlate =>
+      'Enter two or three letters and four digits.';
+
+  @override
+  String get plateScanTitle => 'Scan before you ride';
+
+  @override
+  String get plateScanRetry => 'Retry';
+
+  @override
+  String get plateScanChooseGallery => 'Choose from gallery instead';
+
+  @override
+  String plateResultDialogTitle(String plate) {
+    return 'Traveling in $plate?';
+  }
+
+  @override
+  String get plateResultDialogBody =>
+      'Check the plate matches the vehicle. This sends a boarding SMS to your active emergency contacts. SIM charges may apply.';
+
+  @override
+  String get plateResultConfirmButton => 'Confirm and notify';
+
+  @override
+  String get plateResultBoardingFailed =>
+      'Could not load contacts. Check your connection and retry.';
+
+  @override
+  String get plateResultStatusSafe => 'Safe';
+
+  @override
+  String get plateResultStatusReported => 'Reported';
+
+  @override
+  String get plateResultStatusUnknown => 'Unknown';
+
+  @override
+  String get plateResultTitle => 'Vehicle status';
+
+  @override
+  String get plateResultDemoPassengerRating => 'Demo passenger rating';
+
+  @override
+  String get plateResultPassengerRating => 'Passenger rating';
+
+  @override
+  String get plateResultNotRated => 'Not rated';
+
+  @override
+  String plateResultRatingValue(String average, int count) {
+    return '$average/5 ($count)';
+  }
+
+  @override
+  String get plateResultUnverifiedChecks => 'Unverified missed checks';
+
+  @override
+  String get plateResultReportsOnFile => 'Reports on file';
+
+  @override
+  String get plateResultRiskLevel => 'Risk level';
+
+  @override
+  String get plateResultDbNote =>
+      'Vehicle checks use the shared Amica safety database. When in doubt, share your trip with a trusted contact before riding.';
+
+  @override
+  String get plateResultDemoNote => 'Demo data. These ratings are fictional.';
+
+  @override
+  String get plateResultFeedbackNote =>
+      'Passenger feedback is associated with this plate, not a verified driver identity or safety guarantee.';
+
+  @override
+  String get plateResultNotifying => 'Notifying contacts...';
+
+  @override
+  String get plateResultTravelingButton => 'I am traveling in this vehicle';
+
+  @override
+  String get plateResultScanAnotherButton => 'Scan another plate';
+
+  @override
+  String get plateResultRateButton => 'Rate a completed ride';
+
+  @override
+  String get vehicleRatingCompletedTitle => 'Completed vehicle rides';
+
+  @override
+  String get vehicleRatingLoadError =>
+      'Could not load your rides. Please reconnect.';
+
+  @override
+  String get vehicleRatingNoRides => 'No completed rides for this vehicle yet.';
+
+  @override
+  String get vehicleRatingTitle => 'Rate your journey';
+
+  @override
+  String get vehicleRatingPrompt =>
+      'How was your experience traveling in this vehicle?';
+
+  @override
+  String vehicleRatingStarsTooltip(int count) {
+    return '$count stars';
+  }
+
+  @override
+  String get vehicleRatingSaveFailed =>
+      'Could not save your rating. Please retry.';
+
+  @override
+  String get vehicleRatingSubmitted => 'Rating submitted';
+
+  @override
+  String get vehicleRatingSaving => 'Saving...';
+
+  @override
+  String get vehicleRatingSubmitButton => 'Submit rating';
+
+  @override
+  String get vehicleRatingSkipButton => 'Skip';
+
+  @override
+  String get zzzArbEnd => 'do not translate; internal append anchor';
+}

@@ -82,7 +82,7 @@
     }
   },
   "homeNoGuardiansSubline": "No one can find you yet. Add someone to your circle so Amica has a person to reach.",
-  "homeGuardianCountSubline": "{count, plural, =1{All calm. One person can find you in seconds if you need them.} =2{All calm. Two people can find you in seconds if you need them.} =3{All calm. Three people can find you in seconds if you need them.} other{All calm. {count} people can find you in seconds if you need them.}}",
+  "homeGuardianCountSubline": "{count, plural, =1{All calm. One person can find you in seconds if you need them.} =2{All calm. Two people can find you in seconds if you need them.} other{All calm. {count} people can find you in seconds if you need them.}}",
   "@homeGuardianCountSubline": {
     "placeholders": {
       "count": {"type": "int"}

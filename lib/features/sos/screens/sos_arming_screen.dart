@@ -227,7 +227,7 @@ class _SosArmingScreenState extends State<SosArmingScreen> {
                       child: InkWell(
                         onTap: _cancel,
                         borderRadius: BorderRadius.circular(16),
-                        child: const Center(
+                        child: Center(
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
