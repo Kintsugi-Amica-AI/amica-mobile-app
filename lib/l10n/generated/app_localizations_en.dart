@@ -683,6 +683,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sosCircleStatusFailed => 'Failed';
 
   @override
+  String get mapTypeTitle => 'Map type';
+
+  @override
+  String get mapTypeDefault => 'Default';
+
+  @override
+  String get mapTypeSatellite => 'Satellite';
+
+  @override
+  String get mapTypeTerrain => 'Terrain';
+
+  @override
   String get profileLogOut => 'Log out';
 
   @override

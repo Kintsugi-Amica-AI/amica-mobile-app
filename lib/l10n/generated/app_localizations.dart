@@ -1240,6 +1240,30 @@ abstract class AppLocalizations {
   /// **'Failed'**
   String get sosCircleStatusFailed;
 
+  /// No description provided for @mapTypeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Map type'**
+  String get mapTypeTitle;
+
+  /// No description provided for @mapTypeDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get mapTypeDefault;
+
+  /// No description provided for @mapTypeSatellite.
+  ///
+  /// In en, this message translates to:
+  /// **'Satellite'**
+  String get mapTypeSatellite;
+
+  /// No description provided for @mapTypeTerrain.
+  ///
+  /// In en, this message translates to:
+  /// **'Terrain'**
+  String get mapTypeTerrain;
+
   /// No description provided for @profileLogOut.
   ///
   /// In en, this message translates to:

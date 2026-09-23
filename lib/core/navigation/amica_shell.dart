@@ -81,10 +81,16 @@ class _AmicaShellState extends State<AmicaShell> {
         minimum: const EdgeInsets.only(bottom: 12),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-          // Frosted-glass pill (translucent fill + rim, no live blur).
+          // The same glass as the cards (e.g. "Your location"): a milky
+          // white fill with a top-left sheen and a light-catching rim — plus
+          // a live blur, since this pill floats over maps and scrolling
+          // content rather than a flat panel.
           child: AmicaGlass(
             borderRadius: radius,
-            blur: 0, // Live blur here stuttered over the map; the glass fill + rim stay.
+            blur: 20,
+            opacity: Theme.of(context).brightness == Brightness.dark
+                ? 0.8
+                : 0.72,
             child: NavigationBar(
                 backgroundColor: Colors.transparent,
                 // The selection pill slides and stretches between tabs.

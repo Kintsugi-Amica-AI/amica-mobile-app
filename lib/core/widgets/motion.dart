@@ -136,10 +136,14 @@ class _PressableScaleState extends State<PressableScale> {
   }
 }
 
-/// Keeps every tab alive (like IndexedStack) but cross-fades between them
-/// instead of cutting. Hidden tabs stop ticking, are
-/// not painted, and are hidden from screen readers and taps.
-class AnimatedTabStack extends StatelessWidget {
+/// Keeps every tab alive (it *is* an IndexedStack underneath) and fades
+/// the newly selected tab in.
+///
+/// Only the selected tab is ever painted. An earlier version stacked all
+/// tabs and faded their opacity, but a live Google Map is a platform view,
+/// which ignores opacity — so the Journeys map showed through on top of
+/// the other tabs.
+class AnimatedTabStack extends StatefulWidget {
   const AnimatedTabStack({
     required this.index,
     required this.children,
@@ -150,54 +154,53 @@ class AnimatedTabStack extends StatelessWidget {
   final List<Widget> children;
 
   @override
-  Widget build(BuildContext context) {
-    final reduced = AmicaMotion.reduced(context);
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        for (var i = 0; i < children.length; i++)
-          _Tab(
-            key: ValueKey(i),
-            active: i == index,
-            reduced: reduced,
-            child: children[i],
-          ),
-      ],
-    );
-  }
+  State<AnimatedTabStack> createState() => _AnimatedTabStackState();
 }
 
-class _Tab extends StatelessWidget {
-  const _Tab({
-    required this.active,
-    required this.reduced,
-    required this.child,
-    super.key,
-  });
+class _AnimatedTabStackState extends State<AnimatedTabStack>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _fade = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 200),
+    value: 1,
+  );
+  late final Animation<double> _opacity = CurvedAnimation(
+    parent: _fade,
+    curve: AmicaMotion.enter,
+  );
 
-  final bool active;
-  final bool reduced;
-  final Widget child;
+  @override
+  void didUpdateWidget(AnimatedTabStack oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.index != widget.index) {
+      if (AmicaMotion.reduced(context)) {
+        _fade.value = 1;
+      } else {
+        _fade.forward(from: 0);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _fade.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final duration =
-        reduced ? Duration.zero : const Duration(milliseconds: 220);
-    return IgnorePointer(
-      ignoring: !active,
-      child: ExcludeSemantics(
-        excluding: !active,
-        child: TickerMode(
-          enabled: active,
-          // Fade only: sliding a tab that holds a live map (a platform
-          // view) is expensive and made tab switches stutter.
-          child: AnimatedOpacity(
-            opacity: active ? 1 : 0,
-            duration: duration,
-            curve: active ? AmicaMotion.enter : AmicaMotion.exit,
-            child: RepaintBoundary(child: child),
-          ),
-        ),
+    return FadeTransition(
+      opacity: _opacity,
+      child: IndexedStack(
+        index: widget.index,
+        sizing: StackFit.expand,
+        children: [
+          for (var i = 0; i < widget.children.length; i++)
+            TickerMode(
+              enabled: i == widget.index,
+              child: widget.children[i],
+            ),
+        ],
       ),
     );
   }

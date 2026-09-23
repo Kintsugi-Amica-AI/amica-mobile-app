@@ -121,6 +121,7 @@ class AmicaGlass extends StatelessWidget {
     this.blur = 22,
     this.strong = false,
     this.shape = BoxShape.rectangle,
+    this.opacity,
   });
 
   final Widget child;
@@ -130,12 +131,15 @@ class AmicaGlass extends StatelessWidget {
   final bool strong;
   final BoxShape shape;
 
+  /// Overrides the fill's opacity (0–1) for a strong glass surface.
+  final double? opacity;
+
   @override
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
-    final fill = strong
+    final fill = strong || opacity != null
         ? Color.lerp(c.glassFill, c.card, 0.65)!.withValues(
-            alpha: c.shadow.isEmpty ? 0.86 : 0.82,
+            alpha: opacity ?? (c.shadow.isEmpty ? 0.86 : 0.82),
           )
         : c.glassFill;
     return _Glass(

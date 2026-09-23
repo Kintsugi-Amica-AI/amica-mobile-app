@@ -694,6 +694,18 @@ class AppLocalizationsTa extends AppLocalizations {
   String get sosCircleStatusFailed => 'தோல்வி';
 
   @override
+  String get mapTypeTitle => 'வரைபட வகை';
+
+  @override
+  String get mapTypeDefault => 'இயல்புநிலை';
+
+  @override
+  String get mapTypeSatellite => 'செயற்கைக்கோள்';
+
+  @override
+  String get mapTypeTerrain => 'நிலப்பரப்பு';
+
+  @override
   String get profileLogOut => 'வெளியேறு';
 
   @override

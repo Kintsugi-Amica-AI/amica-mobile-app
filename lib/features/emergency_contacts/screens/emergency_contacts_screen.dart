@@ -119,7 +119,8 @@ class EmergencyContactsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
+        // Shows a back arrow only when opened as its own screen (not as a
+        // tab), so it is never a dead end.
         title: Text(loc.contactsAppBarTitle),
       ),
       body: SafeArea(

@@ -61,6 +61,9 @@ class TransitLeg {
     this.fromName = '',
     this.toName = '',
     this.lineName = '',
+    this.vehicle = '',
+    this.from,
+    this.to,
   });
 
   final bool isWalk;
@@ -72,6 +75,16 @@ class TransitLeg {
 
   /// Bus route number / train line, when known.
   final String lineName;
+
+  /// For rides: `bus` or `train` (a train trip can start or end with a bus
+  /// to the station). Empty for walks.
+  final String vehicle;
+
+  /// Where the leg starts / ends, when known.
+  final LatLng? from;
+  final LatLng? to;
+
+  bool get isBus => !isWalk && vehicle == 'bus';
 
   List<LatLng> get points => [
         for (final encoded in polylines) ...decodePolyline(encoded),
@@ -86,6 +99,15 @@ class TransitLeg {
       return null;
     }
     String s(Object? v) => v is String ? v : '';
+    LatLng? p(Object? v) {
+      if (v is! Map) return null;
+      final lat = v['latitude'];
+      final lng = v['longitude'];
+      return lat is num && lng is num
+          ? LatLng(lat.toDouble(), lng.toDouble())
+          : null;
+    }
+
     return TransitLeg(
       isWalk: value['kind'] == 'walk',
       distanceMeters: distance.toDouble(),
@@ -94,6 +116,9 @@ class TransitLeg {
       fromName: s(value['fromName']),
       toName: s(value['toName']),
       lineName: s(value['lineName']),
+      vehicle: s(value['vehicle']),
+      from: p(value['from']),
+      to: p(value['to']),
     );
   }
 
@@ -105,6 +130,11 @@ class TransitLeg {
         'fromName': fromName,
         'toName': toName,
         'lineName': lineName,
+        'vehicle': vehicle,
+        if (from != null)
+          'from': {'latitude': from!.latitude, 'longitude': from!.longitude},
+        if (to != null)
+          'to': {'latitude': to!.latitude, 'longitude': to!.longitude},
       };
 }
 

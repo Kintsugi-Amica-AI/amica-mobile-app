@@ -691,6 +691,18 @@ class AppLocalizationsSi extends AppLocalizations {
   String get sosCircleStatusFailed => 'අසාර්ථකයි';
 
   @override
+  String get mapTypeTitle => 'සිතියම් වර්ගය';
+
+  @override
+  String get mapTypeDefault => 'සාමාන්‍ය';
+
+  @override
+  String get mapTypeSatellite => 'චන්ද්‍රිකා';
+
+  @override
+  String get mapTypeTerrain => 'භූ දර්ශනය';
+
+  @override
   String get profileLogOut => 'පිටවන්න';
 
   @override

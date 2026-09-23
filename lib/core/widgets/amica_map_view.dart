@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../constants/app_colors.dart';
@@ -96,6 +97,41 @@ class AmicaMapView extends StatefulWidget {
 class _AmicaMapViewState extends State<AmicaMapView> {
   GoogleMapController? _controller;
 
+  /// The map style she picked (Default / Satellite / Terrain), shared by
+  /// every map in the app and remembered between launches.
+  static final ValueNotifier<MapType> mapType = ValueNotifier(MapType.normal);
+  static const String _mapTypePrefsKey = 'amica_map_type';
+  static bool _mapTypeLoaded = false;
+
+  static Future<void> _loadMapType() async {
+    if (_mapTypeLoaded) return;
+    _mapTypeLoaded = true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString(_mapTypePrefsKey);
+      for (final type in MapType.values) {
+        if (type.name == saved) mapType.value = type;
+      }
+    } catch (_) {/* Default map it is. */}
+  }
+
+  static Future<void> _saveMapType(MapType type) async {
+    mapType.value = type;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_mapTypePrefsKey, type.name);
+    } catch (_) {/* Still applied for this session. */}
+  }
+
+  Future<void> _chooseMapType() async {
+    final chosen = await showModalBottomSheet<MapType>(
+      context: context,
+      showDragHandle: true,
+      builder: (_) => _MapTypeSheet(selected: mapType.value),
+    );
+    if (chosen != null) await _saveMapType(chosen);
+  }
+
   BitmapDescriptor? _startIcon;
   BitmapDescriptor? _destinationIcon;
 
@@ -121,6 +157,17 @@ class _AmicaMapViewState extends State<AmicaMapView> {
       return null;
     }
     return LatLng(latitude, longitude);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    mapType.addListener(_onMapTypeChanged);
+    _loadMapType();
+  }
+
+  void _onMapTypeChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -208,6 +255,7 @@ class _AmicaMapViewState extends State<AmicaMapView> {
 
   @override
   void dispose() {
+    mapType.removeListener(_onMapTypeChanged);
     _controller?.dispose();
     super.dispose();
   }
@@ -438,7 +486,11 @@ class _AmicaMapViewState extends State<AmicaMapView> {
         target: _destinationPosition ?? _centerPosition,
         zoom: 15,
       ),
-      style: isDark ? _nightMapStyle : _dayMapStyle,
+      mapType: mapType.value,
+      // The pastel / night styling only applies to the default map.
+      style: mapType.value == MapType.normal
+          ? (isDark ? _nightMapStyle : _dayMapStyle)
+          : null,
       markers: _markers(),
       polylines: _polylines(c),
       padding: widget.mapPadding,
@@ -468,11 +520,18 @@ class _AmicaMapViewState extends State<AmicaMapView> {
     final controls = !widget.showControls
         ? null
         : Positioned(
-            top: widget.mapPadding.top + 12,
+            // Clear of the app bar and its fade, with a little breathing room.
+            top: widget.mapPadding.top + 36,
             right: 12,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                _MapButton(
+                  icon: Icons.layers_rounded,
+                  tooltip: loc.mapTypeTitle,
+                  onTap: _chooseMapType,
+                ),
+                const SizedBox(height: 8),
                 _MapButton(
                   icon: Icons.my_location_rounded,
                   tooltip: loc.mapRecenter,
@@ -556,6 +615,141 @@ class MapTransitStop {
   final LatLng position;
   final MapStopRole role;
   final bool train;
+}
+
+/// "Map type": Default · Satellite · Terrain, as three picture-like tiles.
+class _MapTypeSheet extends StatelessWidget {
+  const _MapTypeSheet({required this.selected});
+
+  final MapType selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final options = <(MapType, IconData, String, List<Color>)>[
+      (
+        MapType.normal,
+        Icons.map_outlined,
+        loc.mapTypeDefault,
+        const [Color(0xFFF7F2F7), Color(0xFFE6DCFF)],
+      ),
+      (
+        MapType.hybrid,
+        Icons.satellite_alt_outlined,
+        loc.mapTypeSatellite,
+        const [Color(0xFF3B5B3A), Color(0xFF1F3A4F)],
+      ),
+      (
+        MapType.terrain,
+        Icons.terrain_outlined,
+        loc.mapTypeTerrain,
+        const [Color(0xFFE3EDD8), Color(0xFFCBD9B8)],
+      ),
+    ];
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(loc.mapTypeTitle, style: theme.textTheme.titleLarge),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                for (final (type, icon, label, colors) in options) ...[
+                  if (type != MapType.normal) const SizedBox(width: 10),
+                  Expanded(
+                    child: _MapTypeTile(
+                      icon: icon,
+                      label: label,
+                      colors: colors,
+                      selected: type == selected,
+                      onTap: () => Navigator.pop(context, type),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MapTypeTile extends StatelessWidget {
+  const _MapTypeTile({
+    required this.icon,
+    required this.label,
+    required this.colors,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final List<Color> colors;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Theme.of(context).amica;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      excludeSemantics: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Column(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              height: 76,
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                gradient: selected ? c.accentGradient : null,
+                color: selected ? null : c.line,
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: colors,
+                  ),
+                ),
+                child: Center(
+                  child: Icon(
+                    icon,
+                    size: 28,
+                    color: colors.first.computeLuminance() > 0.4
+                        ? const Color(0xFF3F4A5A)
+                        : Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: selected ? c.accentInk : c.plum70,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// A frosted-glass round map button.

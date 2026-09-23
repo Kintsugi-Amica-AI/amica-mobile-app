@@ -77,10 +77,7 @@ class HomeScreen extends StatelessWidget {
                             FadeSlideIn(
                               child: _Header(
                                 initial: firstName,
-                                onProfile: () => Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.profile,
-                                ),
+                                onProfile: () => _openYouTab(context),
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -274,7 +271,7 @@ class _HeroCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(18),
               child: InkWell(
                 borderRadius: BorderRadius.circular(18),
-                onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
+                onTap: () => _openYouTab(context),
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(10, 10, 8, 10),
                   child: Row(
@@ -516,5 +513,17 @@ class _SafetyTip extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Opens the "You" tab. Pushing the profile as a separate screen left it
+/// with no way back (it is built as a tab, without a back arrow); switching
+/// tabs keeps the bottom bar, so getting back is one tap.
+void _openYouTab(BuildContext context) {
+  final shell = AmicaShellScope.maybeOf(context);
+  if (shell != null) {
+    shell.selectTab(AmicaShellScope.youTab);
+  } else {
+    Navigator.pushNamed(context, AppRoutes.profile);
   }
 }

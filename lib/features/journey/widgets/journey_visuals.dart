@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/widgets/glass_card.dart';
 
 /// Shared visual pieces for the two journey screens (start + live timer).
 
@@ -31,17 +30,33 @@ class JourneyGlassSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
-    return AmicaGlass(
-      strong: true,
-      // No live blur over the map: blurring a platform view every frame
-      // (while dragging the sheet or panning) was a major cause of jank,
-      // and at this fill strength it was barely visible anyway.
-      blur: 0,
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-      // No SafeArea here: that left an empty strip of glass under the
-      // floating nav pill. The list itself pads its end instead, so its
-      // content scrolls under the pill like Home does.
-      child: ListView(
+    // A solid lavender-tinted surface — deliberately a different colour
+    // from the white glass nav pill that floats over its lower edge, so the
+    // two never blur into one another.
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sheetColor = Color.alphaBlend(
+      c.accentSoft.withValues(alpha: isDark ? 0.7 : 0.8),
+      c.card,
+    );
+    const radius = BorderRadius.vertical(top: Radius.circular(30));
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: sheetColor,
+        borderRadius: radius,
+        // Uniform (a top-only border can't have rounded corners); only the
+        // top edge is ever on screen anyway.
+        border: Border.all(color: c.glassBorder, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.10),
+            blurRadius: 24,
+            offset: const Offset(0, -6),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: ListView(
           controller: scrollController,
           padding: EdgeInsets.fromLTRB(
             20,
@@ -64,6 +79,7 @@ class JourneyGlassSheet extends StatelessWidget {
             ...children,
           ],
         ),
+      ),
     );
   }
 }
