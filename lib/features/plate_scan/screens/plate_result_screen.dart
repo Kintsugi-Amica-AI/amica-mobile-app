@@ -4,9 +4,11 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/amica_background.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
+import '../models/plate_scan_outcome.dart';
 import '../models/vehicle_status.dart';
 import '../services/vehicle_journey_service.dart';
 import '../../journey/screens/start_journey_screen.dart';
+import '../widgets/vehicle_match_card.dart';
 import 'vehicle_rating_screen.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
@@ -89,12 +91,14 @@ class _PlateResultScreenState extends State<PlateResultScreen> {
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)?.settings.arguments;
-    final status = args is VehicleStatus
-        ? args
-        : const VehicleStatus(
-            plateNumber: 'UNKNOWN',
-            status: VehicleRiskStatus.unknown,
-          );
+    final outcome = args is PlateScanOutcome ? args : null;
+    final status = outcome?.status ??
+        (args is VehicleStatus
+            ? args
+            : const VehicleStatus(
+                plateNumber: 'UNKNOWN',
+                status: VehicleRiskStatus.unknown,
+              ));
 
     final (color, icon, label) = _presentation(status.status);
 
@@ -181,6 +185,10 @@ class _PlateResultScreenState extends State<PlateResultScreen> {
                   ),
                 ),
               ),
+              if (outcome != null) ...[
+                const SizedBox(height: 20),
+                VehicleMatchCard(outcome: outcome),
+              ],
               const SizedBox(height: 24),
               // Four figures as a 2 × 2 grid of soft tiles.
               Row(

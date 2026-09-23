@@ -1882,19 +1882,22 @@ class AppLocalizationsSi extends AppLocalizations {
   String get liveShareToggleTitle => 'මගේ කවය සමඟ සජීවීව බෙදාගන්න';
 
   @override
-  String get liveShareToggleSubtitle => 'ඔබගේ සම්බන්ධතාවලට මෙම ගමන සිතියමක බැලීමට සබැඳියක් ලැබේ — යෙදුමක් අවශ්‍ය නැත.';
+  String get liveShareToggleSubtitle =>
+      'ඔබගේ සම්බන්ධතාවලට මෙම ගමන සිතියමක බැලීමට සබැඳියක් ලැබේ — යෙදුමක් අවශ්‍ය නැත.';
 
   @override
   String get liveShareOnTitle => 'ඔබගේ කවය සමඟ සජීවීව බෙදාගනිමින්';
 
   @override
-  String get liveShareOnSubtitle => 'ඔබගේ සම්බන්ධතාවලට මෙම ගමන සිතියමක බැලිය හැක.';
+  String get liveShareOnSubtitle =>
+      'ඔබගේ සම්බන්ධතාවලට මෙම ගමන සිතියමක බැලිය හැක.';
 
   @override
   String get liveShareOffTitle => 'ඔබගේ කවයට සජීවීව බැලීමට ඉඩ දෙන්න';
 
   @override
-  String get liveShareOffSubtitle => 'ඔබ ළඟා වන තුරු ඔබ සිටින තැන පෙන්වන සබැඳියක් යවන්න.';
+  String get liveShareOffSubtitle =>
+      'ඔබ ළඟා වන තුරු ඔබ සිටින තැන පෙන්වන සබැඳියක් යවන්න.';
 
   @override
   String get liveShareSending => 'සජීවී සබැඳිය යවමින්…';
@@ -1922,10 +1925,12 @@ class AppLocalizationsSi extends AppLocalizations {
   String get liveShareLinkCopied => 'සජීවී සබැඳිය පිටපත් කළා.';
 
   @override
-  String get liveShareCreateFailed => 'සජීවී සබැඳිය සෑදිය නොහැකි විය. ඔබගේ සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
+  String get liveShareCreateFailed =>
+      'සජීවී සබැඳිය සෑදිය නොහැකි විය. ඔබගේ සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
 
   @override
-  String get liveShareContactsFailed => 'සබැඳිය සූදානම්, නමුත් එය යැවීමට ඔබගේ සම්බන්ධතා පූරණය කළ නොහැකි විය.';
+  String get liveShareContactsFailed =>
+      'සබැඳිය සූදානම්, නමුත් එය යැවීමට ඔබගේ සම්බන්ධතා පූරණය කළ නොහැකි විය.';
 
   @override
   String liveShareSmsWithName(String name, String destination, String url) {
@@ -1946,10 +1951,12 @@ class AppLocalizationsSi extends AppLocalizations {
   String get liveShareTrackingTitle => 'ඔබගේ සජීවී ස්ථානය බෙදාගනිමින්';
 
   @override
-  String get liveShareTrackingText => 'ඔබ ළඟා වන තුරු ඔබගේ කවයට මෙම ගමන අනුගමනය කළ හැක.';
+  String get liveShareTrackingText =>
+      'ඔබ ළඟා වන තුරු ඔබගේ කවයට මෙම ගමන අනුගමනය කළ හැක.';
 
   @override
-  String get contactsConnectInAmica => 'ක්ෂණික ඇඟවීම් සඳහා Amica හි සම්බන්ධ කරන්න';
+  String get contactsConnectInAmica =>
+      'ක්ෂණික ඇඟවීම් සඳහා Amica හි සම්බන්ධ කරන්න';
 
   @override
   String get contactsLinkedInAmica => 'Amica හි ක්ෂණික ඇඟවීම් ලැබේ';
@@ -2012,7 +2019,8 @@ class AppLocalizationsSi extends AppLocalizations {
   String get circleLinkRowSubtitle => 'මිතුරෙකු ඔබට SMS කළ කේතයක් ඇතුළත් කරන්න';
 
   @override
-  String get circleLinkIntro => 'යමෙකු ඔබව ඔවුන්ගේ කවයට එක් කළ විට, Amica ඔබට අක්ෂර 6ක කේතයක් SMS කරයි. එය මෙහි ඇතුළත් කරන්න, එවිට ඔවුන්ගේ SOS ඇඟවීම් සහ සජීවී ගමන් එක් තට්ටුවකින් පිළිතුරු දිය හැකි දැනුම්දීම් ලෙස මෙම දුරකථනයට ලැබේ.';
+  String get circleLinkIntro =>
+      'යමෙකු ඔබව ඔවුන්ගේ කවයට එක් කළ විට, Amica ඔබට අක්ෂර 6ක කේතයක් SMS කරයි. එය මෙහි ඇතුළත් කරන්න, එවිට ඔවුන්ගේ SOS ඇඟවීම් සහ සජීවී ගමන් එක් තට්ටුවකින් පිළිතුරු දිය හැකි දැනුම්දීම් ලෙස මෙම දුරකථනයට ලැබේ.';
 
   @override
   String get circleLinkCodeLabel => 'SMS හි ඇති කේතය';
@@ -2029,16 +2037,20 @@ class AppLocalizationsSi extends AppLocalizations {
   }
 
   @override
-  String get circleLinkErrorNotFound => 'එම කේතය කිසිදු ආරාධනාවකට නොගැළපේ. SMS පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
+  String get circleLinkErrorNotFound =>
+      'එම කේතය කිසිදු ආරාධනාවකට නොගැළපේ. SMS පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
 
   @override
-  String get circleLinkErrorExpired => 'එම කේතය කල් ඉකුත් වී ඇත. අලුත් එකක් ඉල්ලන්න.';
+  String get circleLinkErrorExpired =>
+      'එම කේතය කල් ඉකුත් වී ඇත. අලුත් එකක් ඉල්ලන්න.';
 
   @override
-  String get circleLinkErrorUsed => 'එම කේතය දැනටමත් භාවිත කර ඇත. අලුත් එකක් ඉල්ලන්න.';
+  String get circleLinkErrorUsed =>
+      'එම කේතය දැනටමත් භාවිත කර ඇත. අලුත් එකක් ඉල්ලන්න.';
 
   @override
-  String get circleLinkErrorOwn => 'එය ඔබගේම ආරාධනාවයි — එය ඔබගේ සම්බන්ධතාව ඔවුන්ගේ දුරකථනයේ ඇතුළත් කළ යුතුය.';
+  String get circleLinkErrorOwn =>
+      'එය ඔබගේම ආරාධනාවයි — එය ඔබගේ සම්බන්ධතාව ඔවුන්ගේ දුරකථනයේ ඇතුළත් කළ යුතුය.';
 
   @override
   String get circleLinkGuardingTitle => 'ඔබට ඇඟවීම් ලැබෙන්නේ';
@@ -2050,7 +2062,8 @@ class AppLocalizationsSi extends AppLocalizations {
   String get circleLinkGuardingSubtitle => 'SOS ඇඟවීම් සහ සජීවී ගමන්';
 
   @override
-  String get circleLinkLoadFailed => 'මෙම ලැයිස්තුව පූරණය කළ නොහැකි විය. ඔබගේ සම්බන්ධතාවය පරීක්ෂා කරන්න.';
+  String get circleLinkLoadFailed =>
+      'මෙම ලැයිස්තුව පූරණය කළ නොහැකි විය. ඔබගේ සම්බන්ධතාවය පරීක්ෂා කරන්න.';
 
   @override
   String get circleLinkStop => 'නවත්වන්න';
@@ -2112,7 +2125,8 @@ class AppLocalizationsSi extends AppLocalizations {
   }
 
   @override
-  String get guardianReplyFailed => 'ඔබගේ පිළිතුර යැවිය නොහැකි විය. ඇයට කෙලින්ම කතා කරන්න.';
+  String get guardianReplyFailed =>
+      'ඔබගේ පිළිතුර යැවිය නොහැකි විය. ඇයට කෙලින්ම කතා කරන්න.';
 
   @override
   String get pushSomeone => 'ඔබගේ කවයේ කෙනෙක්';
@@ -2124,13 +2138,15 @@ class AppLocalizationsSi extends AppLocalizations {
   String get pushChannelSosName => 'ඔබගේ කවයෙන් SOS';
 
   @override
-  String get pushChannelSosDescription => 'ඔබව ඔවුන්ගේ කවයට එක් කළ අයෙකුට උදව් අවශ්‍ය වූ විට.';
+  String get pushChannelSosDescription =>
+      'ඔබව ඔවුන්ගේ කවයට එක් කළ අයෙකුට උදව් අවශ්‍ය වූ විට.';
 
   @override
   String get pushChannelUpdatesName => 'කව යාවත්කාලීන';
 
   @override
-  String get pushChannelUpdatesDescription => 'සජීවී ගමන්, ආරක්ෂිතව ළඟාවීම් සහ ඔබගේ ඇඟවීම්වලට පිළිතුරු.';
+  String get pushChannelUpdatesDescription =>
+      'සජීවී ගමන්, ආරක්ෂිතව ළඟාවීම් සහ ඔබගේ ඇඟවීම්වලට පිළිතුරු.';
 
   @override
   String pushSosTitle(String name) {
@@ -2138,10 +2154,12 @@ class AppLocalizationsSi extends AppLocalizations {
   }
 
   @override
-  String get pushSosBody => 'Amica වෙතින් SOS. ඇය සිටින තැන බලා පිළිතුරු දීමට තට්ටු කරන්න.';
+  String get pushSosBody =>
+      'Amica වෙතින් SOS. ඇය සිටින තැන බලා පිළිතුරු දීමට තට්ටු කරන්න.';
 
   @override
-  String get pushSosBodyNoLocation => 'Amica වෙතින් SOS. පිළිතුරු දීමට තට්ටු කරන්න.';
+  String get pushSosBodyNoLocation =>
+      'Amica වෙතින් SOS. පිළිතුරු දීමට තට්ටු කරන්න.';
 
   @override
   String get pushActionCallingNow => 'දැන් කතා කරනවා';
@@ -2200,7 +2218,8 @@ class AppLocalizationsSi extends AppLocalizations {
   }
 
   @override
-  String get pushLinkedBody => 'ඔවුන්ට දැන් ඔබගේ ඇඟවීම් SMS මෙන්ම දැනුම්දීම් ලෙසද ලැබේ.';
+  String get pushLinkedBody =>
+      'ඔවුන්ට දැන් ඔබගේ ඇඟවීම් SMS මෙන්ම දැනුම්දීම් ලෙසද ලැබේ.';
 
   @override
   String get pushResponseSentTitle => 'පිළිතුර යැව්වා';
@@ -2214,12 +2233,156 @@ class AppLocalizationsSi extends AppLocalizations {
   String get pushResponseFailedTitle => 'පිළිතුර නොයැවිණි';
 
   @override
-  String get pushResponseFailedBody => 'Amica විවෘත කරන්න හෝ ඇයට කෙලින්ම කතා කරන්න.';
+  String get pushResponseFailedBody =>
+      'Amica විවෘත කරන්න හෝ ඇයට කෙලින්ම කතා කරන්න.';
 
   @override
   String sosActivePushedCount(int count) {
     return 'ඔබගේ කවයේ $count දෙනෙකුට Amica දැනුම්දීම ලැබුණා';
   }
+
+  @override
+  String get vehicleToldButton => 'මට කිව්වේ කුමක්ද?';
+
+  @override
+  String vehicleToldButtonSet(String description) {
+    return 'බලාපොරොත්තුව: $description';
+  }
+
+  @override
+  String get vehicleToldSheetTitle => 'ඔබට කිව්වේ කුමක්ද?';
+
+  @override
+  String get vehicleToldSheetBody =>
+      'රයිඩ් ඇප් වාහනය පෙන්වයි, උදා. \"සුදු Toyota Axio, CAB-1234\". ඔබට කී දේ තෝරන්න; Amica එය කැමරාව දකින දේ සමඟ සසඳයි.';
+
+  @override
+  String get vehicleToldTypeLabel => 'වාහන වර්ගය';
+
+  @override
+  String get vehicleToldColourLabel => 'වර්ණය';
+
+  @override
+  String get vehicleToldClear => 'ඉවත් කරන්න';
+
+  @override
+  String get vehicleToldDone => 'හරි';
+
+  @override
+  String get vehicleKindCar => 'කාර් රථය';
+
+  @override
+  String get vehicleKindVan => 'වෑන් රථය';
+
+  @override
+  String get vehicleKindBus => 'බස් රථය';
+
+  @override
+  String get vehicleKindLorry => 'ලොරිය';
+
+  @override
+  String get vehicleKindMotorbike => 'යතුරුපැදිය';
+
+  @override
+  String get vehicleKindThreeWheeler => 'ත්‍රිරෝද රථය';
+
+  @override
+  String get vehicleColourWhite => 'සුදු';
+
+  @override
+  String get vehicleColourSilver => 'රිදී';
+
+  @override
+  String get vehicleColourGrey => 'අළු';
+
+  @override
+  String get vehicleColourBlack => 'කළු';
+
+  @override
+  String get vehicleColourRed => 'රතු';
+
+  @override
+  String get vehicleColourMaroon => 'තද රතු';
+
+  @override
+  String get vehicleColourOrange => 'තැඹිලි';
+
+  @override
+  String get vehicleColourYellow => 'කහ';
+
+  @override
+  String get vehicleColourGreen => 'කොළ';
+
+  @override
+  String get vehicleColourBlue => 'නිල්';
+
+  @override
+  String get vehicleColourBrown => 'දුඹුරු';
+
+  @override
+  String vehicleDescription(String colour, String kind) {
+    return '$colour $kind';
+  }
+
+  @override
+  String get vehicleMatchTitleMatch => 'වාහනය ගැළපේ';
+
+  @override
+  String get vehicleMatchTitleMismatch => 'වාහනය නොගැළපේ';
+
+  @override
+  String get vehicleMatchTitleNotSure => 'වාහනය පරීක්ෂා කළ නොහැකි විය';
+
+  @override
+  String get vehicleMatchBodyMatch =>
+      'කැමරාවට පෙනුණු දේ බලාපොරොත්තු වූ දේට ගැළපේ.';
+
+  @override
+  String vehicleMatchMismatchTold(String expected, String seen) {
+    return 'ඔබට කිව්වේ: $expected. කැමරාව දකින්නේ: $seen.';
+  }
+
+  @override
+  String vehicleMatchMismatchCommunity(String expected, String seen) {
+    return 'වෙනත් Amica ස්කෑන්වල මෙම අංකය සාමාන්‍යයෙන් දුටුවේ: $expected. කැමරාව දකින්නේ: $seen.';
+  }
+
+  @override
+  String get vehicleMatchAdvice =>
+      'නැගීමට පෙර වාහනය සහ රියදුරු නැවත පරීක්ෂා කරන්න. තීරණය ඔබගේයි.';
+
+  @override
+  String get vehicleMatchNotSureLowLight =>
+      'වර්ණය විශ්වාසදායක ලෙස හඳුනා ගැනීමට ආලෝකය මදියි.';
+
+  @override
+  String get vehicleMatchNotSureColourCast =>
+      'වීදි ආලෝකය වර්ණ වෙනස් කරන නිසා වර්ණය සසඳා නැත.';
+
+  @override
+  String get vehicleMatchNotSureNoVehicle =>
+      'වාහනයක් පැහැදිලිව නොපෙනුණි. වාහනය වැඩිපුර ඡායාරූපයට අසු වන සේ පසුපසට යන්න.';
+
+  @override
+  String get vehicleMatchNotSureNothing =>
+      'ස්කෑන් කිරීමට පෙර, රයිඩ් ඇප් එකේ පෙන්වූ දේ සමඟ සැසඳීමට \"මට කිව්වේ කුමක්ද?\" තට්ටු කරන්න.';
+
+  @override
+  String vehicleMatchSeen(String description) {
+    return 'කැමරාව දකින්නේ: $description';
+  }
+
+  @override
+  String get vehicleMatchSeenNothing => 'කැමරාවට වාහනය හඳුනා ගත නොහැකි විය.';
+
+  @override
+  String vehicleMatchCommunity(String description, int count) {
+    return 'සාමාන්‍යයෙන් දකින්නේ: $description (ස්කෑන් $count)';
+  }
+
+  @override
+  String get vehicleMatchPrivacy =>
+      'ඔබගේ දුරකථනයේම පරීක්ෂා කළා. ඡායාරූප කිසිවිටෙක උඩුගත නොකෙරේ.';
 
   @override
   String get zzzArbEnd => 'do not translate; internal append anchor';

@@ -4,15 +4,24 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
+import '../../../core/constants/feature_flags.dart';
 import '../../../core/navigation/amica_route_observer.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../journey/widgets/journey_visuals.dart';
+import '../models/detection.dart';
+import '../models/plate_scan_outcome.dart';
+import '../models/vehicle_profile.dart';
 import '../services/plate_scan_service.dart';
+import '../services/vehicle_inspector.dart';
+import '../services/vehicle_observation_service.dart';
+import '../widgets/vehicle_labels.dart';
+import '../widgets/vehicle_told_sheet.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
 class PlateScanScreen extends StatefulWidget {
@@ -20,11 +29,18 @@ class PlateScanScreen extends StatefulWidget {
     super.key,
     PlateScanService? plateScanService,
     ImagePicker? imagePicker,
+    VehicleInspector? vehicleInspector,
+    VehicleObservationService? observationService,
   })  : plateScanService = plateScanService ?? const PlateScanService(),
-        imagePicker = imagePicker ?? ImagePicker();
+        imagePicker = imagePicker ?? ImagePicker(),
+        vehicleInspector = vehicleInspector ?? const VehicleInspector(),
+        observationService =
+            observationService ?? const VehicleObservationService();
 
   final PlateScanService plateScanService;
   final ImagePicker imagePicker;
+  final VehicleInspector vehicleInspector;
+  final VehicleObservationService observationService;
 
   @override
   State<PlateScanScreen> createState() => _PlateScanScreenState();
@@ -50,6 +66,14 @@ class _PlateScanScreenState extends State<PlateScanScreen>
   String _statusMessage = '';
   late AppLocalizations _loc;
   bool _didInitCamera = false;
+
+  /// What the ride app said the vehicle looks like ("What was I told?").
+  VehicleExpectation _told = const VehicleExpectation();
+
+  /// Whether a photo needs decoding for the on-device vision features.
+  /// Both are off until their models are trained (see [FeatureFlags]).
+  static const bool _visionEnabled =
+      FeatureFlags.plateFinder || FeatureFlags.vehicleCheck;
 
   @override
   void initState() {
@@ -204,7 +228,8 @@ class _PlateScanScreenState extends State<PlateScanScreen>
     );
   }
 
-  /// Takes a photo, crops it to the guide frame, and reads the plate.
+  /// Takes a photo, finds the plate in it (or falls back to the guide
+  /// frame crop), and reads the plate.
   ///
   /// Automatic scans run quietly in the background and never block the
   /// shutter. A shutter tap always ends with a lookup or a confirmation
@@ -241,27 +266,51 @@ class _PlateScanScreenState extends State<PlateScanScreen>
 
     XFile? photo;
     String? analyzedPath;
+    String? plateCropPath;
     try {
       photo = await controller.takePicture();
-      final cropFraction = _computeCropFraction();
-      analyzedPath = cropFraction == null
-          ? photo.path
-          : await widget.plateScanService.cropToFractionalRegion(
-              photo.path,
-              left: cropFraction.left,
-              top: cropFraction.top,
-              width: cropFraction.width,
-              height: cropFraction.height,
-            );
+      final image = _visionEnabled
+          ? await widget.vehicleInspector.loadUpright(photo.path)
+          : null;
 
-      // Camera photos are already upright, so rotations only waste time.
-      var read = await widget.plateScanService
-          .readPlate(analyzedPath, tryRotations: false);
-      if (!automatic && !read.found && analyzedPath != photo.path) {
-        // The plate may sit partly outside the guide frame.
-        final full = await widget.plateScanService
-            .readPlate(photo.path, tryRotations: false);
-        if (full.found || read.suggestion.isEmpty) read = full;
+      // 1. The plate finder looks at the whole photo, so the plate does
+      //    not have to sit inside the guide frame.
+      final plateBox = image == null || !FeatureFlags.plateFinder
+          ? null
+          : await widget.vehicleInspector.findPlate(image);
+      var read = const PlateRead();
+      if (image != null && plateBox != null) {
+        plateCropPath = await widget.vehicleInspector
+            .writeCrop(image, plateBox, photo.path);
+        if (plateCropPath != null) {
+          // Camera photos are already upright, so rotations only waste time.
+          read = await widget.plateScanService
+              .readPlate(plateCropPath, tryRotations: false);
+        }
+      }
+
+      // 2. No plate found, or it did not read: the guide-frame crop, as
+      //    before the plate finder existed.
+      if (!read.found) {
+        final cropFraction = _computeCropFraction();
+        analyzedPath = cropFraction == null
+            ? photo.path
+            : await widget.plateScanService.cropToFractionalRegion(
+                photo.path,
+                left: cropFraction.left,
+                top: cropFraction.top,
+                width: cropFraction.width,
+                height: cropFraction.height,
+              );
+        final framed = await widget.plateScanService
+            .readPlate(analyzedPath, tryRotations: false);
+        if (framed.found || read.suggestion.isEmpty) read = framed;
+        if (!automatic && !read.found && analyzedPath != photo.path) {
+          // The plate may sit partly outside the guide frame.
+          final full = await widget.plateScanService
+              .readPlate(photo.path, tryRotations: false);
+          if (full.found || read.suggestion.isEmpty) read = full;
+        }
       }
 
       if (!mounted) return;
@@ -272,7 +321,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
               read.plate == _lastCandidate ? _candidateCount + 1 : 1;
           _lastCandidate = read.plate;
           if (_candidateCount >= 2) {
-            await _lockAndLookUp(read.plate);
+            await _lockAndLookUp(read.plate, image: image, plateBox: plateBox);
           } else {
             setState(() => _statusMessage = _loc.plateScanDetected(read.plate));
           }
@@ -282,9 +331,10 @@ class _PlateScanScreenState extends State<PlateScanScreen>
         }
       } else if (read.found) {
         // A shutter tap: one exact read is enough.
-        await _lockAndLookUp(read.plate);
+        await _lockAndLookUp(read.plate, image: image, plateBox: plateBox);
       } else if (!automatic) {
-        await _confirmAndLookUp(read.suggestion);
+        await _confirmAndLookUp(read.suggestion,
+            image: image, plateBox: plateBox);
       }
       // automatic && _manualRequested && nothing found: the queued tap
       // takes its own photo in `finally`.
@@ -316,6 +366,11 @@ class _PlateScanScreenState extends State<PlateScanScreen>
           File(analyzedPath).delete().catchError((_) => File(analyzedPath!)),
         );
       }
+      if (plateCropPath != null) {
+        unawaited(
+          File(plateCropPath).delete().catchError((_) => File(plateCropPath!)),
+        );
+      }
       if (mounted && _manualRequested && !_isPausedByRoute) {
         _manualRequested = false;
         unawaited(_captureAndAnalyze());
@@ -328,7 +383,17 @@ class _PlateScanScreenState extends State<PlateScanScreen>
     }
   }
 
-  Future<void> _lockAndLookUp(String plateText) async {
+  /// Looks the plate up and, when the photo is at hand, checks the
+  /// vehicle's type and colour against what she was told and what the
+  /// community has seen. Typed plates have no photo: the result screen
+  /// then shows the plate result alone.
+  Future<void> _lockAndLookUp(
+    String plateText, {
+    img.Image? image,
+    PixelBox? plateBox,
+  }) async {
+    // Without the vehicle check the photo is not needed past OCR.
+    if (!FeatureFlags.vehicleCheck) image = null;
     _manualRequested = false;
     setState(() {
       _state = _ScanState.locked;
@@ -336,12 +401,28 @@ class _PlateScanScreenState extends State<PlateScanScreen>
     });
 
     try {
+      final inspectionFuture = image == null
+          ? Future.value(VehicleInspection.empty)
+          : widget.vehicleInspector
+              .inspect(image, plate: plateBox)
+              .catchError((Object _) => VehicleInspection.empty);
       final status = await widget.plateScanService.checkVehicle(plateText);
+      final inspection = await inspectionFuture;
       if (!mounted) {
         return;
       }
+      Object arguments = status;
+      if (image != null) {
+        arguments = PlateScanOutcome.evaluate(
+          status: status,
+          told: _told,
+          inspection: inspection,
+        );
+        unawaited(widget.observationService
+            .record(status.normalizedPlateNumber, inspection));
+      }
       await Navigator.pushNamed(context, AppRoutes.plateResult,
-          arguments: status);
+          arguments: arguments);
     } on PlateScanException catch (error) {
       if (!mounted) {
         return;
@@ -356,7 +437,11 @@ class _PlateScanScreenState extends State<PlateScanScreen>
 
   /// Shows what OCR could make out (possibly nothing) so the officer can
   /// confirm or type the plate, then looks it up.
-  Future<void> _confirmAndLookUp(String suggestion) async {
+  Future<void> _confirmAndLookUp(
+    String suggestion, {
+    img.Image? image,
+    PixelBox? plateBox,
+  }) async {
     final plate = await _promptForPlate(
       title: _loc.plateScanConfirmTitle,
       message: suggestion.isEmpty
@@ -372,7 +457,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
       });
       return;
     }
-    await _lockAndLookUp(plate);
+    await _lockAndLookUp(plate, image: image, plateBox: plateBox);
   }
 
   Future<void> _scanFromGallery() async {
@@ -396,12 +481,36 @@ class _PlateScanScreenState extends State<PlateScanScreen>
         return;
       }
 
-      final read = await widget.plateScanService.readPlate(photo.path);
+      final image = _visionEnabled
+          ? await widget.vehicleInspector.loadUpright(photo.path)
+          : null;
+      final plateBox = image == null || !FeatureFlags.plateFinder
+          ? null
+          : await widget.vehicleInspector.findPlate(image);
+      var read = const PlateRead();
+      if (image != null && plateBox != null) {
+        final cropPath = await widget.vehicleInspector
+            .writeCrop(image, plateBox, photo.path);
+        if (cropPath != null) {
+          try {
+            read = await widget.plateScanService
+                .readPlate(cropPath, tryRotations: false);
+          } finally {
+            unawaited(
+                File(cropPath).delete().catchError((_) => File(cropPath)));
+          }
+        }
+      }
+      if (!read.found) {
+        final whole = await widget.plateScanService.readPlate(photo.path);
+        if (whole.found || read.suggestion.isEmpty) read = whole;
+      }
       if (!mounted) return;
       if (read.found) {
-        await _lockAndLookUp(read.plate);
+        await _lockAndLookUp(read.plate, image: image, plateBox: plateBox);
       } else {
-        await _confirmAndLookUp(read.suggestion);
+        await _confirmAndLookUp(read.suggestion,
+            image: image, plateBox: plateBox);
       }
     } on PlateScanException catch (error) {
       if (!mounted) return;
@@ -479,6 +588,13 @@ class _PlateScanScreenState extends State<PlateScanScreen>
       return null;
     }
     return plate;
+  }
+
+  Future<void> _editTold() async {
+    _isPausedByRoute = true;
+    final told = await showVehicleToldSheet(context, _told);
+    _isPausedByRoute = false;
+    if (told != null && mounted) setState(() => _told = told);
   }
 
   @override
@@ -578,6 +694,17 @@ class _PlateScanScreenState extends State<PlateScanScreen>
     return SafeArea(
       child: Column(
         children: [
+          if (FeatureFlags.vehicleCheck) ...[
+            const SizedBox(height: kToolbarHeight + 8),
+            _ToldChip(
+              label: _told.isEmpty
+                  ? _loc.vehicleToldButton
+                  : _loc.vehicleToldButtonSet(
+                      _loc.describeVehicle(_told.kind, _told.colour)),
+              isSet: !_told.isEmpty,
+              onPressed: _state == _ScanState.scanning ? _editTold : null,
+            ),
+          ],
           const Spacer(),
           Container(
             key: _frameBoxKey,
@@ -671,6 +798,66 @@ class _PlateScanScreenState extends State<PlateScanScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Frosted "What was I told?" pill at the top of the viewfinder.
+class _ToldChip extends StatelessWidget {
+  const _ToldChip({
+    required this.label,
+    required this.isSet,
+    required this.onPressed,
+  });
+
+  final String label;
+  final bool isSet;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Theme.of(context).amica;
+    return AmicaGlass(
+      strong: true,
+      blur: 16,
+      borderRadius: BorderRadius.circular(999),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(999),
+          onTap: onPressed,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isSet
+                      ? Icons.directions_car_filled_rounded
+                      : Icons.help_outline_rounded,
+                  size: 18,
+                  color: c.accentInk,
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    label,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: c.plum,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+                if (isSet) ...[
+                  const SizedBox(width: 6),
+                  Icon(Icons.edit_rounded, size: 14, color: c.plum45),
+                ],
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -1920,19 +1920,22 @@ class AppLocalizationsTa extends AppLocalizations {
   String get liveShareToggleTitle => 'என் வட்டத்துடன் நேரலையில் பகிர்';
 
   @override
-  String get liveShareToggleSubtitle => 'இந்தப் பயணத்தை வரைபடத்தில் பார்க்க உங்கள் தொடர்புகளுக்கு ஒரு இணைப்பு கிடைக்கும் — செயலி தேவையில்லை.';
+  String get liveShareToggleSubtitle =>
+      'இந்தப் பயணத்தை வரைபடத்தில் பார்க்க உங்கள் தொடர்புகளுக்கு ஒரு இணைப்பு கிடைக்கும் — செயலி தேவையில்லை.';
 
   @override
   String get liveShareOnTitle => 'உங்கள் வட்டத்துடன் நேரலையில் பகிரப்படுகிறது';
 
   @override
-  String get liveShareOnSubtitle => 'உங்கள் தொடர்புகள் இந்தப் பயணத்தை வரைபடத்தில் பார்க்கலாம்.';
+  String get liveShareOnSubtitle =>
+      'உங்கள் தொடர்புகள் இந்தப் பயணத்தை வரைபடத்தில் பார்க்கலாம்.';
 
   @override
   String get liveShareOffTitle => 'உங்கள் வட்டம் நேரலையில் பார்க்கட்டும்';
 
   @override
-  String get liveShareOffSubtitle => 'நீங்கள் சென்றடையும் வரை நீங்கள் இருக்கும் இடத்தைக் காட்டும் இணைப்பை அனுப்பு.';
+  String get liveShareOffSubtitle =>
+      'நீங்கள் சென்றடையும் வரை நீங்கள் இருக்கும் இடத்தைக் காட்டும் இணைப்பை அனுப்பு.';
 
   @override
   String get liveShareSending => 'நேரலை இணைப்பை அனுப்புகிறது…';
@@ -1960,10 +1963,12 @@ class AppLocalizationsTa extends AppLocalizations {
   String get liveShareLinkCopied => 'நேரலை இணைப்பு நகலெடுக்கப்பட்டது.';
 
   @override
-  String get liveShareCreateFailed => 'நேரலை இணைப்பை உருவாக்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.';
+  String get liveShareCreateFailed =>
+      'நேரலை இணைப்பை உருவாக்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.';
 
   @override
-  String get liveShareContactsFailed => 'இணைப்பு தயார், ஆனால் அனுப்ப உங்கள் தொடர்புகளை ஏற்ற முடியவில்லை.';
+  String get liveShareContactsFailed =>
+      'இணைப்பு தயார், ஆனால் அனுப்ப உங்கள் தொடர்புகளை ஏற்ற முடியவில்லை.';
 
   @override
   String liveShareSmsWithName(String name, String destination, String url) {
@@ -1984,13 +1989,15 @@ class AppLocalizationsTa extends AppLocalizations {
   String get liveShareTrackingTitle => 'உங்கள் நேரலை இருப்பிடம் பகிரப்படுகிறது';
 
   @override
-  String get liveShareTrackingText => 'நீங்கள் சென்றடையும் வரை உங்கள் வட்டம் இந்தப் பயணத்தைப் பின்தொடரலாம்.';
+  String get liveShareTrackingText =>
+      'நீங்கள் சென்றடையும் வரை உங்கள் வட்டம் இந்தப் பயணத்தைப் பின்தொடரலாம்.';
 
   @override
   String get contactsConnectInAmica => 'உடனடி எச்சரிக்கைகளுக்கு Amica இல் இணை';
 
   @override
-  String get contactsLinkedInAmica => 'Amica இல் உடனடி எச்சரிக்கைகள் பெறுகிறார்';
+  String get contactsLinkedInAmica =>
+      'Amica இல் உடனடி எச்சரிக்கைகள் பெறுகிறார்';
 
   @override
   String circleConnectTitle(String name) {
@@ -2031,7 +2038,8 @@ class AppLocalizationsTa extends AppLocalizations {
   }
 
   @override
-  String get circleConnectDisconnect => 'இந்தத் தொடர்புக்கு Amica எச்சரிக்கைகளை நிறுத்து';
+  String get circleConnectDisconnect =>
+      'இந்தத் தொடர்புக்கு Amica எச்சரிக்கைகளை நிறுத்து';
 
   @override
   String circleInviteSms(String name, String code) {
@@ -2050,7 +2058,8 @@ class AppLocalizationsTa extends AppLocalizations {
   String get circleLinkRowSubtitle => 'நண்பர் SMS செய்த குறியீட்டை உள்ளிடு';
 
   @override
-  String get circleLinkIntro => 'யாராவது உங்களைத் தங்கள் வட்டத்தில் சேர்க்கும்போது, Amica உங்களுக்கு 6 எழுத்துக் குறியீட்டை SMS செய்யும். அதை இங்கே உள்ளிடுங்கள், அவர்களின் SOS எச்சரிக்கைகளும் நேரலை பயணங்களும் ஒரே தட்டலில் பதிலளிக்கக்கூடிய அறிவிப்புகளாக இந்தத் தொலைபேசிக்கு வரும்.';
+  String get circleLinkIntro =>
+      'யாராவது உங்களைத் தங்கள் வட்டத்தில் சேர்க்கும்போது, Amica உங்களுக்கு 6 எழுத்துக் குறியீட்டை SMS செய்யும். அதை இங்கே உள்ளிடுங்கள், அவர்களின் SOS எச்சரிக்கைகளும் நேரலை பயணங்களும் ஒரே தட்டலில் பதிலளிக்கக்கூடிய அறிவிப்புகளாக இந்தத் தொலைபேசிக்கு வரும்.';
 
   @override
   String get circleLinkCodeLabel => 'SMS இல் உள்ள குறியீடு';
@@ -2059,7 +2068,8 @@ class AppLocalizationsTa extends AppLocalizations {
   String get circleLinkButton => 'இணை';
 
   @override
-  String get circleLinkCodeInvalid => 'குறியீடுகளில் 6 எழுத்துகளும் எண்களும் உள்ளன.';
+  String get circleLinkCodeInvalid =>
+      'குறியீடுகளில் 6 எழுத்துகளும் எண்களும் உள்ளன.';
 
   @override
   String circleLinkLinked(String name) {
@@ -2067,16 +2077,20 @@ class AppLocalizationsTa extends AppLocalizations {
   }
 
   @override
-  String get circleLinkErrorNotFound => 'அந்தக் குறியீடு எந்த அழைப்புடனும் பொருந்தவில்லை. SMS ஐச் சரிபார்த்து மீண்டும் முயலவும்.';
+  String get circleLinkErrorNotFound =>
+      'அந்தக் குறியீடு எந்த அழைப்புடனும் பொருந்தவில்லை. SMS ஐச் சரிபார்த்து மீண்டும் முயலவும்.';
 
   @override
-  String get circleLinkErrorExpired => 'அந்தக் குறியீடு காலாவதியானது. புதியதைக் கேளுங்கள்.';
+  String get circleLinkErrorExpired =>
+      'அந்தக் குறியீடு காலாவதியானது. புதியதைக் கேளுங்கள்.';
 
   @override
-  String get circleLinkErrorUsed => 'அந்தக் குறியீடு ஏற்கனவே பயன்படுத்தப்பட்டது. புதியதைக் கேளுங்கள்.';
+  String get circleLinkErrorUsed =>
+      'அந்தக் குறியீடு ஏற்கனவே பயன்படுத்தப்பட்டது. புதியதைக் கேளுங்கள்.';
 
   @override
-  String get circleLinkErrorOwn => 'அது உங்கள் சொந்த அழைப்பு — உங்கள் தொடர்பு தனது தொலைபேசியில் உள்ளிட வேண்டியது.';
+  String get circleLinkErrorOwn =>
+      'அது உங்கள் சொந்த அழைப்பு — உங்கள் தொடர்பு தனது தொலைபேசியில் உள்ளிட வேண்டியது.';
 
   @override
   String get circleLinkGuardingTitle => 'நீங்கள் எச்சரிக்கைகள் பெறுவது';
@@ -2085,10 +2099,12 @@ class AppLocalizationsTa extends AppLocalizations {
   String get circleLinkGuardingEmpty => 'இதுவரை யாரும் இல்லை.';
 
   @override
-  String get circleLinkGuardingSubtitle => 'SOS எச்சரிக்கைகளும் நேரலை பயணங்களும்';
+  String get circleLinkGuardingSubtitle =>
+      'SOS எச்சரிக்கைகளும் நேரலை பயணங்களும்';
 
   @override
-  String get circleLinkLoadFailed => 'இந்தப் பட்டியலை ஏற்ற முடியவில்லை. இணைப்பைச் சரிபார்க்கவும்.';
+  String get circleLinkLoadFailed =>
+      'இந்தப் பட்டியலை ஏற்ற முடியவில்லை. இணைப்பைச் சரிபார்க்கவும்.';
 
   @override
   String get circleLinkStop => 'நிறுத்து';
@@ -2129,7 +2145,8 @@ class AppLocalizationsTa extends AppLocalizations {
   String get guardianAlertOpenMaps => 'Google Maps இல் திற';
 
   @override
-  String get guardianAlertLetHerKnow => 'உதவி வருகிறது என்று அவருக்குத் தெரியப்படுத்து';
+  String get guardianAlertLetHerKnow =>
+      'உதவி வருகிறது என்று அவருக்குத் தெரியப்படுத்து';
 
   @override
   String guardianAlertCallHer(String name) {
@@ -2142,7 +2159,8 @@ class AppLocalizationsTa extends AppLocalizations {
   }
 
   @override
-  String get guardianAlertAlertedSent => 'நீங்கள் மற்றவர்களுக்குத் தெரிவித்தது அவருக்குத் தெரியும்';
+  String get guardianAlertAlertedSent =>
+      'நீங்கள் மற்றவர்களுக்குத் தெரிவித்தது அவருக்குத் தெரியும்';
 
   @override
   String guardianAlertRepliesNote(String name) {
@@ -2150,7 +2168,8 @@ class AppLocalizationsTa extends AppLocalizations {
   }
 
   @override
-  String get guardianReplyFailed => 'உங்கள் பதிலை அனுப்ப முடியவில்லை. அவரை நேரடியாக அழையுங்கள்.';
+  String get guardianReplyFailed =>
+      'உங்கள் பதிலை அனுப்ப முடியவில்லை. அவரை நேரடியாக அழையுங்கள்.';
 
   @override
   String get pushSomeone => 'உங்கள் வட்டத்தில் ஒருவர்';
@@ -2162,13 +2181,15 @@ class AppLocalizationsTa extends AppLocalizations {
   String get pushChannelSosName => 'உங்கள் வட்டத்திலிருந்து SOS';
 
   @override
-  String get pushChannelSosDescription => 'உங்களைத் தங்கள் வட்டத்தில் சேர்த்த ஒருவருக்கு உதவி தேவைப்படும்போது.';
+  String get pushChannelSosDescription =>
+      'உங்களைத் தங்கள் வட்டத்தில் சேர்த்த ஒருவருக்கு உதவி தேவைப்படும்போது.';
 
   @override
   String get pushChannelUpdatesName => 'வட்டப் புதுப்பிப்புகள்';
 
   @override
-  String get pushChannelUpdatesDescription => 'நேரலை பயணங்கள், பாதுகாப்பான வருகைகள் மற்றும் உங்கள் எச்சரிக்கைகளுக்கான பதில்கள்.';
+  String get pushChannelUpdatesDescription =>
+      'நேரலை பயணங்கள், பாதுகாப்பான வருகைகள் மற்றும் உங்கள் எச்சரிக்கைகளுக்கான பதில்கள்.';
 
   @override
   String pushSosTitle(String name) {
@@ -2176,10 +2197,12 @@ class AppLocalizationsTa extends AppLocalizations {
   }
 
   @override
-  String get pushSosBody => 'Amica இலிருந்து SOS. அவர் எங்கே இருக்கிறார் என்று பார்த்து பதிலளிக்கத் தட்டவும்.';
+  String get pushSosBody =>
+      'Amica இலிருந்து SOS. அவர் எங்கே இருக்கிறார் என்று பார்த்து பதிலளிக்கத் தட்டவும்.';
 
   @override
-  String get pushSosBodyNoLocation => 'Amica இலிருந்து SOS. பதிலளிக்கத் தட்டவும்.';
+  String get pushSosBodyNoLocation =>
+      'Amica இலிருந்து SOS. பதிலளிக்கத் தட்டவும்.';
 
   @override
   String get pushActionCallingNow => 'இப்போது அழைக்கிறேன்';
@@ -2222,7 +2245,8 @@ class AppLocalizationsTa extends AppLocalizations {
   }
 
   @override
-  String get pushResponseCallingBody => 'உங்கள் தொலைபேசியை அருகில் வைத்திருங்கள்.';
+  String get pushResponseCallingBody =>
+      'உங்கள் தொலைபேசியை அருகில் வைத்திருங்கள்.';
 
   @override
   String pushResponseAlertedTitle(String name) {
@@ -2230,7 +2254,8 @@ class AppLocalizationsTa extends AppLocalizations {
   }
 
   @override
-  String get pushResponseAlertedBody => 'உங்களுக்கு உதவி தேவை என்பது மேலும் பலருக்குத் தெரியும்.';
+  String get pushResponseAlertedBody =>
+      'உங்களுக்கு உதவி தேவை என்பது மேலும் பலருக்குத் தெரியும்.';
 
   @override
   String pushLinkedTitle(String name) {
@@ -2238,7 +2263,8 @@ class AppLocalizationsTa extends AppLocalizations {
   }
 
   @override
-  String get pushLinkedBody => 'இனி உங்கள் எச்சரிக்கைகள் SMS உடன் அறிவிப்புகளாகவும் அவருக்கு வரும்.';
+  String get pushLinkedBody =>
+      'இனி உங்கள் எச்சரிக்கைகள் SMS உடன் அறிவிப்புகளாகவும் அவருக்கு வரும்.';
 
   @override
   String get pushResponseSentTitle => 'பதில் அனுப்பப்பட்டது';
@@ -2252,12 +2278,157 @@ class AppLocalizationsTa extends AppLocalizations {
   String get pushResponseFailedTitle => 'பதில் அனுப்பப்படவில்லை';
 
   @override
-  String get pushResponseFailedBody => 'Amica ஐத் திறக்கவும் அல்லது அவரை நேரடியாக அழைக்கவும்.';
+  String get pushResponseFailedBody =>
+      'Amica ஐத் திறக்கவும் அல்லது அவரை நேரடியாக அழைக்கவும்.';
 
   @override
   String sosActivePushedCount(int count) {
     return 'உங்கள் வட்டத்தில் $count பேருக்கு Amica அறிவிப்பு சென்றது';
   }
+
+  @override
+  String get vehicleToldButton => 'எனக்கு என்ன சொன்னார்கள்?';
+
+  @override
+  String vehicleToldButtonSet(String description) {
+    return 'எதிர்பார்ப்பது: $description';
+  }
+
+  @override
+  String get vehicleToldSheetTitle => 'உங்களுக்கு என்ன சொன்னார்கள்?';
+
+  @override
+  String get vehicleToldSheetBody =>
+      'சவாரி செயலிகள் வாகனத்தைக் காட்டும், எ.கா. \"வெள்ளை Toyota Axio, CAB-1234\". சொன்னதைத் தேர்ந்தெடுங்கள்; Amica அதைக் கேமரா பார்ப்பதுடன் ஒப்பிடும்.';
+
+  @override
+  String get vehicleToldTypeLabel => 'வாகன வகை';
+
+  @override
+  String get vehicleToldColourLabel => 'நிறம்';
+
+  @override
+  String get vehicleToldClear => 'அழி';
+
+  @override
+  String get vehicleToldDone => 'முடிந்தது';
+
+  @override
+  String get vehicleKindCar => 'கார்';
+
+  @override
+  String get vehicleKindVan => 'வேன்';
+
+  @override
+  String get vehicleKindBus => 'பேருந்து';
+
+  @override
+  String get vehicleKindLorry => 'லாரி';
+
+  @override
+  String get vehicleKindMotorbike => 'மோட்டார் சைக்கிள்';
+
+  @override
+  String get vehicleKindThreeWheeler => 'முச்சக்கர வண்டி';
+
+  @override
+  String get vehicleColourWhite => 'வெள்ளை';
+
+  @override
+  String get vehicleColourSilver => 'வெள்ளி';
+
+  @override
+  String get vehicleColourGrey => 'சாம்பல்';
+
+  @override
+  String get vehicleColourBlack => 'கருப்பு';
+
+  @override
+  String get vehicleColourRed => 'சிவப்பு';
+
+  @override
+  String get vehicleColourMaroon => 'அடர் சிவப்பு';
+
+  @override
+  String get vehicleColourOrange => 'ஆரஞ்சு';
+
+  @override
+  String get vehicleColourYellow => 'மஞ்சள்';
+
+  @override
+  String get vehicleColourGreen => 'பச்சை';
+
+  @override
+  String get vehicleColourBlue => 'நீலம்';
+
+  @override
+  String get vehicleColourBrown => 'பழுப்பு';
+
+  @override
+  String vehicleDescription(String colour, String kind) {
+    return '$colour $kind';
+  }
+
+  @override
+  String get vehicleMatchTitleMatch => 'வாகனம் பொருந்துகிறது';
+
+  @override
+  String get vehicleMatchTitleMismatch => 'வாகனம் பொருந்தவில்லை';
+
+  @override
+  String get vehicleMatchTitleNotSure => 'வாகனத்தைச் சரிபார்க்க முடியவில்லை';
+
+  @override
+  String get vehicleMatchBodyMatch =>
+      'கேமரா பார்த்தது எதிர்பார்த்ததுடன் பொருந்துகிறது.';
+
+  @override
+  String vehicleMatchMismatchTold(String expected, String seen) {
+    return 'உங்களுக்குச் சொன்னது: $expected. கேமரா பார்ப்பது: $seen.';
+  }
+
+  @override
+  String vehicleMatchMismatchCommunity(String expected, String seen) {
+    return 'பிற Amica ஸ்கேன்களில் இந்த எண் வழக்கமாகக் காணப்பட்டது: $expected. கேமரா பார்ப்பது: $seen.';
+  }
+
+  @override
+  String get vehicleMatchAdvice =>
+      'ஏறும் முன் வாகனத்தையும் ஓட்டுநரையும் மீண்டும் சரிபாருங்கள். முடிவு உங்களுடையது.';
+
+  @override
+  String get vehicleMatchNotSureLowLight =>
+      'நிறத்தை நம்பகமாகக் கணிக்க வெளிச்சம் போதவில்லை.';
+
+  @override
+  String get vehicleMatchNotSureColourCast =>
+      'தெரு விளக்குகள் நிறங்களை மாற்றுவதால் நிறம் ஒப்பிடப்படவில்லை.';
+
+  @override
+  String get vehicleMatchNotSureNoVehicle =>
+      'வாகனம் தெளிவாகத் தெரியவில்லை. வாகனம் அதிகமாகப் படத்தில் வர சற்றுப் பின்னால் செல்லுங்கள்.';
+
+  @override
+  String get vehicleMatchNotSureNothing =>
+      'ஸ்கேன் செய்யும் முன், சவாரி செயலி காட்டியதுடன் ஒப்பிட \"எனக்கு என்ன சொன்னார்கள்?\" என்பதைத் தட்டுங்கள்.';
+
+  @override
+  String vehicleMatchSeen(String description) {
+    return 'கேமரா பார்ப்பது: $description';
+  }
+
+  @override
+  String get vehicleMatchSeenNothing =>
+      'கேமராவால் வாகனத்தை அடையாளம் காண முடியவில்லை.';
+
+  @override
+  String vehicleMatchCommunity(String description, int count) {
+    return 'வழக்கமாகப் பார்க்கப்படுவது: $description ($count ஸ்கேன்கள்)';
+  }
+
+  @override
+  String get vehicleMatchPrivacy =>
+      'உங்கள் தொலைபேசியிலேயே சரிபார்க்கப்பட்டது. படங்கள் ஒருபோதும் பதிவேற்றப்படாது.';
 
   @override
   String get zzzArbEnd => 'do not translate; internal append anchor';

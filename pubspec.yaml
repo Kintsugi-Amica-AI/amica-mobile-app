@@ -30,6 +30,8 @@ dependencies:
   intl: 0.20.2
   shared_preferences: ^2.3.3
   speech_to_text: ^7.4.0
+  # On-device plate finder and vehicle type detector (YOLO, TFLite).
+  tflite_flutter: ^0.12.1
   url_launcher: ^6.3.1
 
 dev_dependencies:
@@ -43,6 +45,8 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    # Detector models; see assets/models/README.md.
+    - assets/models/
 
   # Bundled, not fetched at runtime: Amica has to render correctly with no
   # network. Both families are SIL Open Font Licence 1.1 — see

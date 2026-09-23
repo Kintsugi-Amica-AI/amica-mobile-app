@@ -1868,19 +1868,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveShareToggleTitle => 'Share live with my circle';
 
   @override
-  String get liveShareToggleSubtitle => 'Your contacts get a link to watch this journey on a map — no app needed.';
+  String get liveShareToggleSubtitle =>
+      'Your contacts get a link to watch this journey on a map — no app needed.';
 
   @override
   String get liveShareOnTitle => 'Sharing live with your circle';
 
   @override
-  String get liveShareOnSubtitle => 'Your contacts can watch this journey on a map.';
+  String get liveShareOnSubtitle =>
+      'Your contacts can watch this journey on a map.';
 
   @override
   String get liveShareOffTitle => 'Let your circle watch live';
 
   @override
-  String get liveShareOffSubtitle => 'Send a link that shows where you are until you arrive.';
+  String get liveShareOffSubtitle =>
+      'Send a link that shows where you are until you arrive.';
 
   @override
   String get liveShareSending => 'Sending the live link…';
@@ -1908,10 +1911,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveShareLinkCopied => 'Live link copied.';
 
   @override
-  String get liveShareCreateFailed => 'Couldn\'t create the live link. Check your connection and try again.';
+  String get liveShareCreateFailed =>
+      'Couldn\'t create the live link. Check your connection and try again.';
 
   @override
-  String get liveShareContactsFailed => 'Link ready, but your contacts couldn\'t be loaded to send it.';
+  String get liveShareContactsFailed =>
+      'Link ready, but your contacts couldn\'t be loaded to send it.';
 
   @override
   String liveShareSmsWithName(String name, String destination, String url) {
@@ -1932,7 +1937,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveShareTrackingTitle => 'Sharing your live location';
 
   @override
-  String get liveShareTrackingText => 'Your circle can follow this journey until you arrive.';
+  String get liveShareTrackingText =>
+      'Your circle can follow this journey until you arrive.';
 
   @override
   String get contactsConnectInAmica => 'Connect in Amica for instant alerts';
@@ -1998,7 +2004,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get circleLinkRowSubtitle => 'Enter a code a friend texted you';
 
   @override
-  String get circleLinkIntro => 'When someone adds you to their circle, Amica texts you a 6-character code. Enter it here and their SOS alerts and live journeys will reach this phone as notifications you can answer with one tap.';
+  String get circleLinkIntro =>
+      'When someone adds you to their circle, Amica texts you a 6-character code. Enter it here and their SOS alerts and live journeys will reach this phone as notifications you can answer with one tap.';
 
   @override
   String get circleLinkCodeLabel => 'Code from the SMS';
@@ -2015,16 +2022,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get circleLinkErrorNotFound => 'That code doesn\'t match any invite. Check the SMS and try again.';
+  String get circleLinkErrorNotFound =>
+      'That code doesn\'t match any invite. Check the SMS and try again.';
 
   @override
-  String get circleLinkErrorExpired => 'That code has expired. Ask for a new one.';
+  String get circleLinkErrorExpired =>
+      'That code has expired. Ask for a new one.';
 
   @override
-  String get circleLinkErrorUsed => 'That code has already been used. Ask for a new one.';
+  String get circleLinkErrorUsed =>
+      'That code has already been used. Ask for a new one.';
 
   @override
-  String get circleLinkErrorOwn => 'That\'s your own invite — it\'s for your contact to enter on their phone.';
+  String get circleLinkErrorOwn =>
+      'That\'s your own invite — it\'s for your contact to enter on their phone.';
 
   @override
   String get circleLinkGuardingTitle => 'You get alerts for';
@@ -2036,7 +2047,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get circleLinkGuardingSubtitle => 'SOS alerts and live journeys';
 
   @override
-  String get circleLinkLoadFailed => 'Couldn\'t load this list. Check your connection.';
+  String get circleLinkLoadFailed =>
+      'Couldn\'t load this list. Check your connection.';
 
   @override
   String get circleLinkStop => 'Stop';
@@ -2098,7 +2110,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get guardianReplyFailed => 'Couldn\'t send your reply. Call her directly.';
+  String get guardianReplyFailed =>
+      'Couldn\'t send your reply. Call her directly.';
 
   @override
   String get pushSomeone => 'Someone in your circle';
@@ -2110,13 +2123,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pushChannelSosName => 'SOS from your circle';
 
   @override
-  String get pushChannelSosDescription => 'When someone who added you to their circle needs help.';
+  String get pushChannelSosDescription =>
+      'When someone who added you to their circle needs help.';
 
   @override
   String get pushChannelUpdatesName => 'Circle updates';
 
   @override
-  String get pushChannelUpdatesDescription => 'Live journeys, safe arrivals and replies to your alerts.';
+  String get pushChannelUpdatesDescription =>
+      'Live journeys, safe arrivals and replies to your alerts.';
 
   @override
   String pushSosTitle(String name) {
@@ -2124,7 +2139,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get pushSosBody => 'SOS from Amica. Tap to see where she is and reply.';
+  String get pushSosBody =>
+      'SOS from Amica. Tap to see where she is and reply.';
 
   @override
   String get pushSosBodyNoLocation => 'SOS from Amica. Tap to reply.';
@@ -2186,7 +2202,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get pushLinkedBody => 'They\'ll now get your alerts as notifications as well as texts.';
+  String get pushLinkedBody =>
+      'They\'ll now get your alerts as notifications as well as texts.';
 
   @override
   String get pushResponseSentTitle => 'Reply sent';
@@ -2206,6 +2223,150 @@ class AppLocalizationsEn extends AppLocalizations {
   String sosActivePushedCount(int count) {
     return 'Amica notification delivered to $count in your circle';
   }
+
+  @override
+  String get vehicleToldButton => 'What was I told?';
+
+  @override
+  String vehicleToldButtonSet(String description) {
+    return 'Expecting $description';
+  }
+
+  @override
+  String get vehicleToldSheetTitle => 'What were you told?';
+
+  @override
+  String get vehicleToldSheetBody =>
+      'Ride apps show the vehicle, for example \"White Toyota Axio, CAB-1234\". Pick what you were told and Amica compares it with what the camera sees.';
+
+  @override
+  String get vehicleToldTypeLabel => 'Vehicle type';
+
+  @override
+  String get vehicleToldColourLabel => 'Colour';
+
+  @override
+  String get vehicleToldClear => 'Clear';
+
+  @override
+  String get vehicleToldDone => 'Done';
+
+  @override
+  String get vehicleKindCar => 'car';
+
+  @override
+  String get vehicleKindVan => 'van';
+
+  @override
+  String get vehicleKindBus => 'bus';
+
+  @override
+  String get vehicleKindLorry => 'lorry';
+
+  @override
+  String get vehicleKindMotorbike => 'motorbike';
+
+  @override
+  String get vehicleKindThreeWheeler => 'three-wheeler';
+
+  @override
+  String get vehicleColourWhite => 'white';
+
+  @override
+  String get vehicleColourSilver => 'silver';
+
+  @override
+  String get vehicleColourGrey => 'grey';
+
+  @override
+  String get vehicleColourBlack => 'black';
+
+  @override
+  String get vehicleColourRed => 'red';
+
+  @override
+  String get vehicleColourMaroon => 'maroon';
+
+  @override
+  String get vehicleColourOrange => 'orange';
+
+  @override
+  String get vehicleColourYellow => 'yellow';
+
+  @override
+  String get vehicleColourGreen => 'green';
+
+  @override
+  String get vehicleColourBlue => 'blue';
+
+  @override
+  String get vehicleColourBrown => 'brown';
+
+  @override
+  String vehicleDescription(String colour, String kind) {
+    return '$colour $kind';
+  }
+
+  @override
+  String get vehicleMatchTitleMatch => 'Vehicle matches';
+
+  @override
+  String get vehicleMatchTitleMismatch => 'Vehicle doesn\'t match';
+
+  @override
+  String get vehicleMatchTitleNotSure => 'Couldn\'t check the vehicle';
+
+  @override
+  String get vehicleMatchBodyMatch =>
+      'What the camera could see fits what was expected.';
+
+  @override
+  String vehicleMatchMismatchTold(String expected, String seen) {
+    return 'You were told: $expected. The camera sees: $seen.';
+  }
+
+  @override
+  String vehicleMatchMismatchCommunity(String expected, String seen) {
+    return 'Other Amica scans usually saw this plate as: $expected. The camera sees: $seen.';
+  }
+
+  @override
+  String get vehicleMatchAdvice =>
+      'Double-check the vehicle and driver before you get in. The choice is yours.';
+
+  @override
+  String get vehicleMatchNotSureLowLight =>
+      'Too dark to judge colour reliably.';
+
+  @override
+  String get vehicleMatchNotSureColourCast =>
+      'Street lighting is changing colours, so colour was not compared.';
+
+  @override
+  String get vehicleMatchNotSureNoVehicle =>
+      'No vehicle was clearly in view. Step back so more of it is in the photo.';
+
+  @override
+  String get vehicleMatchNotSureNothing =>
+      'Before scanning, tap \"What was I told?\" to compare the vehicle with what the ride app showed.';
+
+  @override
+  String vehicleMatchSeen(String description) {
+    return 'Camera sees: $description';
+  }
+
+  @override
+  String get vehicleMatchSeenNothing =>
+      'The camera couldn\'t make out the vehicle.';
+
+  @override
+  String vehicleMatchCommunity(String description, int count) {
+    return 'Usually seen as: $description ($count scans)';
+  }
+
+  @override
+  String get vehicleMatchPrivacy =>
+      'Checked on your phone. Photos are never uploaded.';
 
   @override
   String get zzzArbEnd => 'do not translate; internal append anchor';

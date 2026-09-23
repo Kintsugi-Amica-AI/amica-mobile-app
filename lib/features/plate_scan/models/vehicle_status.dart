@@ -1,3 +1,5 @@
+import 'vehicle_profile.dart';
+
 enum VehicleRiskStatus {
   safe,
   reported,
@@ -16,6 +18,7 @@ class VehicleStatus {
     this.ratingCount = 0,
     this.isDemo = false,
     this.unverifiedSafetyCheckCount = 0,
+    this.community = CommunityVehicleProfile.empty,
   });
 
   final String plateNumber;
@@ -28,6 +31,9 @@ class VehicleStatus {
   final int ratingCount;
   final bool isDemo;
   final int unverifiedSafetyCheckCount;
+
+  /// The usual type and colour other Amica scans have seen on this plate.
+  final CommunityVehicleProfile community;
 
   factory VehicleStatus.fromFirestore(
     String normalizedPlateNumber,
@@ -49,6 +55,7 @@ class VehicleStatus {
           : 0,
       ratingCount: _readInt(data['ratingCount']),
       unverifiedSafetyCheckCount: _readInt(data['unverifiedSafetyCheckCount']),
+      community: CommunityVehicleProfile.fromMap(data['observedProfile']),
       isDemo: data['metadata'] is Map && data['metadata']['demo'] == true,
       plateNumber: _readString(
         data['plateNumber'],

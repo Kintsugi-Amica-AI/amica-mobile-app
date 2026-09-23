@@ -3379,13 +3379,13 @@ abstract class AppLocalizations {
   /// No description provided for @liveShareCreateFailed.
   ///
   /// In en, this message translates to:
-  /// **'Couldn't create the live link. Check your connection and try again.'**
+  /// **'Couldn\'t create the live link. Check your connection and try again.'**
   String get liveShareCreateFailed;
 
   /// No description provided for @liveShareContactsFailed.
   ///
   /// In en, this message translates to:
-  /// **'Link ready, but your contacts couldn't be loaded to send it.'**
+  /// **'Link ready, but your contacts couldn\'t be loaded to send it.'**
   String get liveShareContactsFailed;
 
   /// No description provided for @liveShareSmsWithName.
@@ -3397,7 +3397,7 @@ abstract class AppLocalizations {
   /// No description provided for @liveShareSmsNoName.
   ///
   /// In en, this message translates to:
-  /// **'Amica: I'm on my way to {destination}. Watch my journey live: {url}'**
+  /// **'Amica: I\'m on my way to {destination}. Watch my journey live: {url}'**
   String liveShareSmsNoName(String destination, String url);
 
   /// No description provided for @liveShareEmergencyLine.
@@ -3439,7 +3439,7 @@ abstract class AppLocalizations {
   /// No description provided for @circleConnectBody.
   ///
   /// In en, this message translates to:
-  /// **'If {name} has Amica, your SOS alerts and live journeys can reach them as instant notifications — free, and faster than SMS. They can reply with one tap. We'll text them a code to enter in their app.'**
+  /// **'If {name} has Amica, your SOS alerts and live journeys can reach them as instant notifications — free, and faster than SMS. They can reply with one tap. We\'ll text them a code to enter in their app.'**
   String circleConnectBody(String name);
 
   /// No description provided for @circleConnectLinkedTitle.
@@ -3475,7 +3475,7 @@ abstract class AppLocalizations {
   /// No description provided for @circleConnectTextFailed.
   ///
   /// In en, this message translates to:
-  /// **'The SMS couldn't be sent. Give {name} this code another way — it only works on their phone once.'**
+  /// **'The SMS couldn\'t be sent. Give {name} this code another way — it only works on their phone once.'**
   String circleConnectTextFailed(String name);
 
   /// No description provided for @circleConnectDisconnect.
@@ -3493,7 +3493,7 @@ abstract class AppLocalizations {
   /// No description provided for @circleInviteSmsNoName.
   ///
   /// In en, this message translates to:
-  /// **'You've been added to an Amica safety circle. If you have Amica, go to You → Get alerts for someone and enter {code} to get alerts instantly.'**
+  /// **'You\'ve been added to an Amica safety circle. If you have Amica, go to You → Get alerts for someone and enter {code} to get alerts instantly.'**
   String circleInviteSmsNoName(String code);
 
   /// No description provided for @circleLinkTitle.
@@ -3535,13 +3535,13 @@ abstract class AppLocalizations {
   /// No description provided for @circleLinkLinked.
   ///
   /// In en, this message translates to:
-  /// **'Connected. You'll now get {name}'s alerts.'**
+  /// **'Connected. You\'ll now get {name}\'s alerts.'**
   String circleLinkLinked(String name);
 
   /// No description provided for @circleLinkErrorNotFound.
   ///
   /// In en, this message translates to:
-  /// **'That code doesn't match any invite. Check the SMS and try again.'**
+  /// **'That code doesn\'t match any invite. Check the SMS and try again.'**
   String get circleLinkErrorNotFound;
 
   /// No description provided for @circleLinkErrorExpired.
@@ -3559,7 +3559,7 @@ abstract class AppLocalizations {
   /// No description provided for @circleLinkErrorOwn.
   ///
   /// In en, this message translates to:
-  /// **'That's your own invite — it's for your contact to enter on their phone.'**
+  /// **'That\'s your own invite — it\'s for your contact to enter on their phone.'**
   String get circleLinkErrorOwn;
 
   /// No description provided for @circleLinkGuardingTitle.
@@ -3583,7 +3583,7 @@ abstract class AppLocalizations {
   /// No description provided for @circleLinkLoadFailed.
   ///
   /// In en, this message translates to:
-  /// **'Couldn't load this list. Check your connection.'**
+  /// **'Couldn\'t load this list. Check your connection.'**
   String get circleLinkLoadFailed;
 
   /// No description provided for @circleLinkStop.
@@ -3595,13 +3595,13 @@ abstract class AppLocalizations {
   /// No description provided for @circleLinkStopTitle.
   ///
   /// In en, this message translates to:
-  /// **'Stop getting {name}'s alerts?'**
+  /// **'Stop getting {name}\'s alerts?'**
   String circleLinkStopTitle(String name);
 
   /// No description provided for @circleLinkStopBody.
   ///
   /// In en, this message translates to:
-  /// **'You'll still get {name}'s SMS alerts while you're in her circle, but not Amica notifications.'**
+  /// **'You\'ll still get {name}\'s SMS alerts while you\'re in her circle, but not Amica notifications.'**
   String circleLinkStopBody(String name);
 
   /// No description provided for @circleLinkStopConfirm.
@@ -3631,7 +3631,7 @@ abstract class AppLocalizations {
   /// No description provided for @guardianAlertHerLocation.
   ///
   /// In en, this message translates to:
-  /// **'{name}'s location'**
+  /// **'{name}\'s location'**
   String guardianAlertHerLocation(String name);
 
   /// No description provided for @guardianAlertWatchLive.
@@ -3661,25 +3661,25 @@ abstract class AppLocalizations {
   /// No description provided for @guardianAlertCallingSent.
   ///
   /// In en, this message translates to:
-  /// **'{name} knows you're calling'**
+  /// **'{name} knows you\'re calling'**
   String guardianAlertCallingSent(String name);
 
   /// No description provided for @guardianAlertAlertedSent.
   ///
   /// In en, this message translates to:
-  /// **'She knows you've alerted others'**
+  /// **'She knows you\'ve alerted others'**
   String get guardianAlertAlertedSent;
 
   /// No description provided for @guardianAlertRepliesNote.
   ///
   /// In en, this message translates to:
-  /// **'Your replies appear on {name}'s screen straight away.'**
+  /// **'Your replies appear on {name}\'s screen straight away.'**
   String guardianAlertRepliesNote(String name);
 
   /// No description provided for @guardianReplyFailed.
   ///
   /// In en, this message translates to:
-  /// **'Couldn't send your reply. Call her directly.'**
+  /// **'Couldn\'t send your reply. Call her directly.'**
   String get guardianReplyFailed;
 
   /// No description provided for @pushSomeone.
@@ -3745,7 +3745,7 @@ abstract class AppLocalizations {
   /// No description provided for @pushActionAlertedOthers.
   ///
   /// In en, this message translates to:
-  /// **'I've alerted others'**
+  /// **'I\'ve alerted others'**
   String get pushActionAlertedOthers;
 
   /// No description provided for @pushActionWatchLive.
@@ -3823,7 +3823,7 @@ abstract class AppLocalizations {
   /// No description provided for @pushLinkedBody.
   ///
   /// In en, this message translates to:
-  /// **'They'll now get your alerts as notifications as well as texts.'**
+  /// **'They\'ll now get your alerts as notifications as well as texts.'**
   String get pushLinkedBody;
 
   /// No description provided for @pushResponseSentTitle.
@@ -3835,7 +3835,7 @@ abstract class AppLocalizations {
   /// No description provided for @pushResponseSentAlertedBody.
   ///
   /// In en, this message translates to:
-  /// **'{name} knows you've alerted others.'**
+  /// **'{name} knows you\'ve alerted others.'**
   String pushResponseSentAlertedBody(String name);
 
   /// No description provided for @pushResponseFailedTitle.
@@ -3855,6 +3855,252 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Amica notification delivered to {count} in your circle'**
   String sosActivePushedCount(int count);
+
+  /// No description provided for @vehicleToldButton.
+  ///
+  /// In en, this message translates to:
+  /// **'What was I told?'**
+  String get vehicleToldButton;
+
+  /// No description provided for @vehicleToldButtonSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Expecting {description}'**
+  String vehicleToldButtonSet(String description);
+
+  /// No description provided for @vehicleToldSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What were you told?'**
+  String get vehicleToldSheetTitle;
+
+  /// No description provided for @vehicleToldSheetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride apps show the vehicle, for example \"White Toyota Axio, CAB-1234\". Pick what you were told and Amica compares it with what the camera sees.'**
+  String get vehicleToldSheetBody;
+
+  /// No description provided for @vehicleToldTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle type'**
+  String get vehicleToldTypeLabel;
+
+  /// No description provided for @vehicleToldColourLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Colour'**
+  String get vehicleToldColourLabel;
+
+  /// No description provided for @vehicleToldClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get vehicleToldClear;
+
+  /// No description provided for @vehicleToldDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get vehicleToldDone;
+
+  /// No description provided for @vehicleKindCar.
+  ///
+  /// In en, this message translates to:
+  /// **'car'**
+  String get vehicleKindCar;
+
+  /// No description provided for @vehicleKindVan.
+  ///
+  /// In en, this message translates to:
+  /// **'van'**
+  String get vehicleKindVan;
+
+  /// No description provided for @vehicleKindBus.
+  ///
+  /// In en, this message translates to:
+  /// **'bus'**
+  String get vehicleKindBus;
+
+  /// No description provided for @vehicleKindLorry.
+  ///
+  /// In en, this message translates to:
+  /// **'lorry'**
+  String get vehicleKindLorry;
+
+  /// No description provided for @vehicleKindMotorbike.
+  ///
+  /// In en, this message translates to:
+  /// **'motorbike'**
+  String get vehicleKindMotorbike;
+
+  /// No description provided for @vehicleKindThreeWheeler.
+  ///
+  /// In en, this message translates to:
+  /// **'three-wheeler'**
+  String get vehicleKindThreeWheeler;
+
+  /// No description provided for @vehicleColourWhite.
+  ///
+  /// In en, this message translates to:
+  /// **'white'**
+  String get vehicleColourWhite;
+
+  /// No description provided for @vehicleColourSilver.
+  ///
+  /// In en, this message translates to:
+  /// **'silver'**
+  String get vehicleColourSilver;
+
+  /// No description provided for @vehicleColourGrey.
+  ///
+  /// In en, this message translates to:
+  /// **'grey'**
+  String get vehicleColourGrey;
+
+  /// No description provided for @vehicleColourBlack.
+  ///
+  /// In en, this message translates to:
+  /// **'black'**
+  String get vehicleColourBlack;
+
+  /// No description provided for @vehicleColourRed.
+  ///
+  /// In en, this message translates to:
+  /// **'red'**
+  String get vehicleColourRed;
+
+  /// No description provided for @vehicleColourMaroon.
+  ///
+  /// In en, this message translates to:
+  /// **'maroon'**
+  String get vehicleColourMaroon;
+
+  /// No description provided for @vehicleColourOrange.
+  ///
+  /// In en, this message translates to:
+  /// **'orange'**
+  String get vehicleColourOrange;
+
+  /// No description provided for @vehicleColourYellow.
+  ///
+  /// In en, this message translates to:
+  /// **'yellow'**
+  String get vehicleColourYellow;
+
+  /// No description provided for @vehicleColourGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'green'**
+  String get vehicleColourGreen;
+
+  /// No description provided for @vehicleColourBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'blue'**
+  String get vehicleColourBlue;
+
+  /// No description provided for @vehicleColourBrown.
+  ///
+  /// In en, this message translates to:
+  /// **'brown'**
+  String get vehicleColourBrown;
+
+  /// No description provided for @vehicleDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'{colour} {kind}'**
+  String vehicleDescription(String colour, String kind);
+
+  /// No description provided for @vehicleMatchTitleMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle matches'**
+  String get vehicleMatchTitleMatch;
+
+  /// No description provided for @vehicleMatchTitleMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle doesn\'t match'**
+  String get vehicleMatchTitleMismatch;
+
+  /// No description provided for @vehicleMatchTitleNotSure.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check the vehicle'**
+  String get vehicleMatchTitleNotSure;
+
+  /// No description provided for @vehicleMatchBodyMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'What the camera could see fits what was expected.'**
+  String get vehicleMatchBodyMatch;
+
+  /// No description provided for @vehicleMatchMismatchTold.
+  ///
+  /// In en, this message translates to:
+  /// **'You were told: {expected}. The camera sees: {seen}.'**
+  String vehicleMatchMismatchTold(String expected, String seen);
+
+  /// No description provided for @vehicleMatchMismatchCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Other Amica scans usually saw this plate as: {expected}. The camera sees: {seen}.'**
+  String vehicleMatchMismatchCommunity(String expected, String seen);
+
+  /// No description provided for @vehicleMatchAdvice.
+  ///
+  /// In en, this message translates to:
+  /// **'Double-check the vehicle and driver before you get in. The choice is yours.'**
+  String get vehicleMatchAdvice;
+
+  /// No description provided for @vehicleMatchNotSureLowLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Too dark to judge colour reliably.'**
+  String get vehicleMatchNotSureLowLight;
+
+  /// No description provided for @vehicleMatchNotSureColourCast.
+  ///
+  /// In en, this message translates to:
+  /// **'Street lighting is changing colours, so colour was not compared.'**
+  String get vehicleMatchNotSureColourCast;
+
+  /// No description provided for @vehicleMatchNotSureNoVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'No vehicle was clearly in view. Step back so more of it is in the photo.'**
+  String get vehicleMatchNotSureNoVehicle;
+
+  /// No description provided for @vehicleMatchNotSureNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Before scanning, tap \"What was I told?\" to compare the vehicle with what the ride app showed.'**
+  String get vehicleMatchNotSureNothing;
+
+  /// No description provided for @vehicleMatchSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera sees: {description}'**
+  String vehicleMatchSeen(String description);
+
+  /// No description provided for @vehicleMatchSeenNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'The camera couldn\'t make out the vehicle.'**
+  String get vehicleMatchSeenNothing;
+
+  /// No description provided for @vehicleMatchCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Usually seen as: {description} ({count} scans)'**
+  String vehicleMatchCommunity(String description, int count);
+
+  /// No description provided for @vehicleMatchPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked on your phone. Photos are never uploaded.'**
+  String get vehicleMatchPrivacy;
 
   /// No description provided for @zzzArbEnd.
   ///
