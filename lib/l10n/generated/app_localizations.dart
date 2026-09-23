@@ -868,6 +868,156 @@ abstract class AppLocalizations {
   /// **'Set a secret voice phrase so you can alert your circle without touching your phone.'**
   String get homeSafetyTip6;
 
+  /// No description provided for @phoneVerifyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your phone number'**
+  String get phoneVerifyTitle;
+
+  /// No description provided for @phoneVerifySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We'll text you a 6-digit code to confirm this number is yours.'**
+  String get phoneVerifySubtitle;
+
+  /// No description provided for @phoneSendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send code'**
+  String get phoneSendCode;
+
+  /// No description provided for @phoneCodeSentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a code to {phone}'**
+  String phoneCodeSentTo(String phone);
+
+  /// No description provided for @phoneCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'6-digit code'**
+  String get phoneCodeLabel;
+
+  /// No description provided for @phoneVerifyButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get phoneVerifyButton;
+
+  /// No description provided for @phoneResendIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend in {seconds}s'**
+  String phoneResendIn(int seconds);
+
+  /// No description provided for @phoneResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code'**
+  String get phoneResend;
+
+  /// No description provided for @phoneChangeNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Change number'**
+  String get phoneChangeNumber;
+
+  /// No description provided for @phoneVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number verified'**
+  String get phoneVerified;
+
+  /// No description provided for @phoneVerifiedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get phoneVerifiedBadge;
+
+  /// No description provided for @phoneNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Not verified yet'**
+  String get phoneNotVerified;
+
+  /// No description provided for @phoneInvalidNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid phone number, e.g. +94 77 123 4567'**
+  String get phoneInvalidNumber;
+
+  /// No description provided for @phoneErrInvalidCode.
+  ///
+  /// In en, this message translates to:
+  /// **'That code isn't right. Check the SMS and try again.'**
+  String get phoneErrInvalidCode;
+
+  /// No description provided for @phoneErrExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This code has expired. Send a new one.'**
+  String get phoneErrExpired;
+
+  /// No description provided for @phoneErrTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Please wait a while and try again.'**
+  String get phoneErrTooMany;
+
+  /// No description provided for @phoneErrInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'This number is already linked to another Amica account.'**
+  String get phoneErrInUse;
+
+  /// No description provided for @phoneErrNotEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone verification isn't turned on for this app yet.'**
+  String get phoneErrNotEnabled;
+
+  /// No description provided for @phoneErrAppNotAuthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'This app build isn't registered for phone verification yet.'**
+  String get phoneErrAppNotAuthorized;
+
+  /// No description provided for @phoneErrGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn't verify your number. Check your connection and try again.'**
+  String get phoneErrGeneric;
+
+  /// No description provided for @profileVerifyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get profileVerifyAction;
+
+  /// No description provided for @profilePhoneNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your phone number'**
+  String get profilePhoneNotVerified;
+
+  /// No description provided for @profileSaveFailedWithCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn't save your profile ({code}). Check your connection and try again.'**
+  String profileSaveFailedWithCode(String code);
+
+  /// No description provided for @profileLoadFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn't load your profile'**
+  String get profileLoadFailedTitle;
+
+  /// No description provided for @profileLoadFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your details are safe. Check your connection — this page updates by itself once you're back online.'**
+  String get profileLoadFailedBody;
+
   /// No description provided for @profileLogOut.
   ///
   /// In en, this message translates to:

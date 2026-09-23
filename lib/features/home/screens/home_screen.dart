@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
+import '../../../core/navigation/amica_shell.dart';
 import '../../../core/theme/theme_controller.dart';
 import '../../../core/widgets/amica_primitives.dart';
 import '../../../core/widgets/glass_card.dart';
@@ -370,8 +371,16 @@ class _QuieterOptions extends StatelessWidget {
                   icon: Icons.location_on_outlined,
                   tint: c.sageSoft,
                   iconColor: c.sage,
-                  onTap: () =>
-                      Navigator.pushNamed(context, AppRoutes.startJourney),
+                  // Same feature as the Journeys tab, so open that tab
+                  // rather than a duplicate screen with its own state.
+                  onTap: () {
+                    final shell = AmicaShellScope.maybeOf(context);
+                    if (shell != null) {
+                      shell.selectTab(AmicaShellScope.journeysTab);
+                    } else {
+                      Navigator.pushNamed(context, AppRoutes.startJourney);
+                    }
+                  },
                 ),
               ),
               const SizedBox(width: 9),

@@ -12,6 +12,7 @@ import '../../auth/services/auth_service.dart';
 import '../../auth/services/user_profile_service.dart';
 import '../../emergency_contacts/models/emergency_contact.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../widgets/phone_verification_sheet.dart';
 import '../../emergency_contacts/services/emergency_contact_service.dart';
 
 /// The "You" tab.
@@ -43,17 +44,26 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late Future<AppUser?> _profile = widget.authService.currentUserProfile();
-
-  /// Re-reads the profile after an edit, a new voice phrase, etc., so the
-  /// checklist ticks over immediately.
-  void _reload() {
-    setState(() => _profile = widget.authService.currentUserProfile());
-  }
+  /// Live: follows the Firestore user document, so an edit, a verified
+  /// phone number or a new voice phrase shows up the moment it is saved —
+  /// no manual refresh, and no stale copy left behind in another tab.
+  late final Stream<AppUser?> _profile =
+      widget.authService.watchCurrentUserProfile();
 
   Future<void> _openSettings() async {
     await Navigator.pushNamed(context, AppRoutes.settings);
-    if (mounted) _reload();
+  }
+
+  Future<void> _verifyPhone(AppUser? user) async {
+    final verified = await showPhoneVerificationSheet(
+      context,
+      initialPhone: user?.phone ?? '',
+    );
+    if (verified && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).phoneVerified)),
+      );
+    }
   }
 
   Future<void> _editProfile(AppUser? user, {bool focusNotes = false}) async {
@@ -65,13 +75,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         user: user,
         focusNotes: focusNotes,
         service: widget.userProfileService,
+        onVerifyPhone: () => _verifyPhone(user),
       ),
     );
     if (saved == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).profileSaved)),
       );
-      _reload();
     }
   }
 
@@ -86,11 +96,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       body: SafeArea(
         top: false,
-        child: FutureBuilder<AppUser?>(
-          future: _profile,
+        child: StreamBuilder<AppUser?>(
+          stream: _profile,
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting &&
-                !snapshot.hasData) {
+            if (snapshot.hasError && !snapshot.hasData) {
+              // Say so, rather than showing an empty profile that looks as
+              // if her details were never saved.
+              debugPrint('Profile stream error: ${snapshot.error}');
+              return AmicaEmptyState(
+                icon: Icons.cloud_off_rounded,
+                title: loc.profileLoadFailedTitle,
+                message: loc.profileLoadFailedBody,
+              );
+            }
+            if (!snapshot.hasData) {
               return LoadingView(message: loc.profileLoadingYourProfile);
             }
 
@@ -118,7 +137,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         AppRoutes.addEmergencyContact,
                       ),
                       onAddVoicePhrase: _openSettings,
-                      onAddPhone: () => _editProfile(user),
+                      onAddPhone: () => _verifyPhone(user),
                       onAddMedicalNotes: () =>
                           _editProfile(user, focusNotes: true),
                     ),
@@ -261,15 +280,26 @@ class _Identity extends StatelessWidget {
                   style: theme.textTheme.headlineSmall?.copyWith(fontSize: 22),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  user?.phone.trim().isNotEmpty == true
-                      ? user!.phone
-                      : user?.email ?? '',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w500,
-                    color: c.plum45,
-                  ),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        user?.phone.trim().isNotEmpty == true
+                            ? user!.phone
+                            : user?.email ?? '',
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                          color: c.plum45,
+                        ),
+                      ),
+                    ),
+                    if (user?.phoneVerified == true) ...[
+                      const SizedBox(width: 4),
+                      Icon(Icons.verified_rounded, size: 14, color: c.sage),
+                    ],
+                  ],
                 ),
               ],
             ),
@@ -324,8 +354,10 @@ class _SetupChecklist extends StatelessWidget {
         onAdd: onAddVoicePhrase,
       ),
       (
-        label: loc.profilePhoneConfirmed,
-        done: user?.phone.trim().isNotEmpty == true,
+        label: user?.phoneVerified == true
+            ? loc.profilePhoneConfirmed
+            : loc.profilePhoneNotVerified,
+        done: user?.phoneVerified == true,
         icon: Icons.phone_outlined,
         onAdd: onAddPhone,
       ),
@@ -406,7 +438,9 @@ class _SetupChecklist extends StatelessWidget {
                       ),
                       if (!items[i].done)
                         _PillButton(
-                          label: loc.commonAdd,
+                          label: items[i].onAdd == onAddPhone
+                              ? loc.profileVerifyAction
+                              : loc.commonAdd,
                           icon: Icons.add_rounded,
                           warm: true,
                           onTap: items[i].onAdd,
@@ -429,11 +463,15 @@ class _EditProfileSheet extends StatefulWidget {
     required this.user,
     required this.focusNotes,
     required this.service,
+    required this.onVerifyPhone,
   });
 
   final AppUser? user;
   final bool focusNotes;
   final UserProfileService service;
+
+  /// Opens SMS verification. The number is never saved unverified.
+  final VoidCallback onVerifyPhone;
 
   @override
   State<_EditProfileSheet> createState() => _EditProfileSheetState();
@@ -442,7 +480,6 @@ class _EditProfileSheet extends StatefulWidget {
 class _EditProfileSheetState extends State<_EditProfileSheet> {
   final _formKey = GlobalKey<FormState>();
   late final _name = TextEditingController(text: widget.user?.name ?? '');
-  late final _phone = TextEditingController(text: widget.user?.phone ?? '');
   late final _notes =
       TextEditingController(text: widget.user?.medicalNotes ?? '');
   final _notesFocus = FocusNode();
@@ -462,7 +499,6 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
   @override
   void dispose() {
     _name.dispose();
-    _phone.dispose();
     _notes.dispose();
     _notesFocus.dispose();
     super.dispose();
@@ -477,11 +513,19 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
     try {
       await widget.service.updateProfile(
         name: _name.text,
-        phone: _phone.text,
         medicalNotes: _notes.text,
       );
       if (mounted) Navigator.pop(context, true);
-    } catch (_) {
+    } on UserProfileException catch (error) {
+      debugPrint('Profile save failed: ${error.message}');
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = AppLocalizations.of(context)
+            .profileSaveFailedWithCode(error.message);
+      });
+    } catch (error) {
+      debugPrint('Profile save failed: $error');
       if (!mounted) return;
       setState(() {
         _saving = false;
@@ -528,14 +572,60 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                       : null,
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _phone,
-                  keyboardType: TextInputType.phone,
-                  textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    labelText: loc.profilePhoneLabel,
-                    hintText: '+94 7X XXX XXXX',
-                    prefixIcon: const Icon(Icons.phone_outlined),
+                // Phone: shown read-only with its status; changing it goes
+                // through SMS verification.
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: c.card,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: c.line),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 8, 6, 8),
+                    child: Row(
+                      children: [
+                        Icon(Icons.phone_outlined, color: c.plum45),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.user?.phone.trim().isNotEmpty == true
+                                    ? widget.user!.phone
+                                    : loc.profilePhoneLabel,
+                                style: theme.textTheme.titleSmall,
+                              ),
+                              Text(
+                                widget.user?.phoneVerified == true
+                                    ? loc.phoneVerifiedBadge
+                                    : loc.phoneNotVerified,
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: widget.user?.phoneVerified == true
+                                      ? c.sage
+                                      : c.gold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: _saving
+                              ? null
+                              : () {
+                                  Navigator.pop(context);
+                                  widget.onVerifyPhone();
+                                },
+                          child: Text(
+                            widget.user?.phoneVerified == true
+                                ? loc.phoneChangeNumber
+                                : loc.profileVerifyAction,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),

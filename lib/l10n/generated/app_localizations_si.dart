@@ -458,6 +458,87 @@ class AppLocalizationsSi extends AppLocalizations {
       'දුරකථනය ස්පර්ශ නොකර ඔබේ කවයට දැනුම් දීමට රහස් හඬ වාක්‍යයක් සකසන්න.';
 
   @override
+  String get phoneVerifyTitle => 'ඔබේ දුරකථන අංකය තහවුරු කරන්න';
+
+  @override
+  String get phoneVerifySubtitle => 'මෙම අංකය ඔබේ බව තහවුරු කිරීමට අපි ඔබට ඉලක්කම් 6ක කේතයක් SMS කරන්නෙමු.';
+
+  @override
+  String get phoneSendCode => 'කේතය යවන්න';
+
+  @override
+  String phoneCodeSentTo(String phone) {
+    return 'අපි $phone වෙත කේතයක් යැව්වෙමු';
+  }
+
+  @override
+  String get phoneCodeLabel => 'ඉලක්කම් 6ක කේතය';
+
+  @override
+  String get phoneVerifyButton => 'තහවුරු කරන්න';
+
+  @override
+  String phoneResendIn(int seconds) {
+    return 'තත්පර $secondsකින් නැවත යවන්න';
+  }
+
+  @override
+  String get phoneResend => 'කේතය නැවත යවන්න';
+
+  @override
+  String get phoneChangeNumber => 'අංකය වෙනස් කරන්න';
+
+  @override
+  String get phoneVerified => 'දුරකථන අංකය තහවුරු කරන ලදී';
+
+  @override
+  String get phoneVerifiedBadge => 'තහවුරු කර ඇත';
+
+  @override
+  String get phoneNotVerified => 'තවම තහවුරු කර නැත';
+
+  @override
+  String get phoneInvalidNumber => 'වලංගු දුරකථන අංකයක් ඇතුළත් කරන්න, උදා: +94 77 123 4567';
+
+  @override
+  String get phoneErrInvalidCode => 'එම කේතය නිවැරදි නැත. SMS පණිවිඩය පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get phoneErrExpired => 'මෙම කේතය කල් ඉකුත් වී ඇත. නව කේතයක් යවන්න.';
+
+  @override
+  String get phoneErrTooMany => 'උත්සාහයන් වැඩියි. ටික වේලාවක් රැඳී නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get phoneErrInUse => 'මෙම අංකය දැනටමත් වෙනත් Amica ගිණුමකට සම්බන්ධ කර ඇත.';
+
+  @override
+  String get phoneErrNotEnabled => 'මෙම යෙදුම සඳහා දුරකථන තහවුරු කිරීම තවම සක්‍රිය කර නැත.';
+
+  @override
+  String get phoneErrAppNotAuthorized => 'මෙම යෙදුම් ගොනුව දුරකථන තහවුරු කිරීම සඳහා තවම ලියාපදිංචි කර නැත.';
+
+  @override
+  String get phoneErrGeneric => 'ඔබේ අංකය තහවුරු කළ නොහැකි විය. සම්බන්ධතාව පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get profileVerifyAction => 'තහවුරු කරන්න';
+
+  @override
+  String get profilePhoneNotVerified => 'ඔබේ දුරකථන අංකය තහවුරු කරන්න';
+
+  @override
+  String profileSaveFailedWithCode(String code) {
+    return 'ඔබේ පැතිකඩ සුරැකිය නොහැකි විය ($code). සම්බන්ධතාව පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
+  }
+
+  @override
+  String get profileLoadFailedTitle => 'ඔබේ පැතිකඩ පූරණය කළ නොහැකි විය';
+
+  @override
+  String get profileLoadFailedBody => 'ඔබේ විස්තර ආරක්ෂිතයි. සම්බන්ධතාව පරීක්ෂා කරන්න — නැවත සබැඳි වූ විට මෙම පිටුව ස්වයංක්‍රීයව යාවත්කාලීන වේ.';
+
+  @override
   String get profileLogOut => 'පිටවන්න';
 
   @override

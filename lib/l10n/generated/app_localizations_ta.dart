@@ -459,6 +459,87 @@ class AppLocalizationsTa extends AppLocalizations {
       'தொலைபேசியைத் தொடாமலே உங்கள் வட்டத்தை எச்சரிக்க ஒரு ரகசிய குரல் சொற்றொடரை அமையுங்கள்.';
 
   @override
+  String get phoneVerifyTitle => 'உங்கள் தொலைபேசி எண்ணைச் சரிபார்க்கவும்';
+
+  @override
+  String get phoneVerifySubtitle => 'இந்த எண் உங்களுடையது என்பதை உறுதிப்படுத்த 6 இலக்கக் குறியீட்டை SMS மூலம் அனுப்புவோம்.';
+
+  @override
+  String get phoneSendCode => 'குறியீட்டை அனுப்பு';
+
+  @override
+  String phoneCodeSentTo(String phone) {
+    return '$phone எண்ணுக்குக் குறியீடு அனுப்பப்பட்டது';
+  }
+
+  @override
+  String get phoneCodeLabel => '6 இலக்கக் குறியீடு';
+
+  @override
+  String get phoneVerifyButton => 'சரிபார்';
+
+  @override
+  String phoneResendIn(int seconds) {
+    return '$seconds வி.யில் மீண்டும் அனுப்பு';
+  }
+
+  @override
+  String get phoneResend => 'குறியீட்டை மீண்டும் அனுப்பு';
+
+  @override
+  String get phoneChangeNumber => 'எண்ணை மாற்று';
+
+  @override
+  String get phoneVerified => 'தொலைபேசி எண் சரிபார்க்கப்பட்டது';
+
+  @override
+  String get phoneVerifiedBadge => 'சரிபார்க்கப்பட்டது';
+
+  @override
+  String get phoneNotVerified => 'இன்னும் சரிபார்க்கப்படவில்லை';
+
+  @override
+  String get phoneInvalidNumber => 'சரியான தொலைபேசி எண்ணை உள்ளிடவும், எ.கா. +94 77 123 4567';
+
+  @override
+  String get phoneErrInvalidCode => 'அந்தக் குறியீடு சரியில்லை. SMS-ஐச் சரிபார்த்து மீண்டும் முயலவும்.';
+
+  @override
+  String get phoneErrExpired => 'இந்தக் குறியீடு காலாவதியாகிவிட்டது. புதியதை அனுப்பவும்.';
+
+  @override
+  String get phoneErrTooMany => 'அதிகமான முயற்சிகள். சிறிது நேரம் காத்திருந்து மீண்டும் முயலவும்.';
+
+  @override
+  String get phoneErrInUse => 'இந்த எண் ஏற்கனவே வேறொரு Amica கணக்குடன் இணைக்கப்பட்டுள்ளது.';
+
+  @override
+  String get phoneErrNotEnabled => 'இந்தச் செயலிக்குத் தொலைபேசி சரிபார்ப்பு இன்னும் இயக்கப்படவில்லை.';
+
+  @override
+  String get phoneErrAppNotAuthorized => 'இந்தச் செயலி பதிப்பு தொலைபேசி சரிபார்ப்புக்கு இன்னும் பதிவு செய்யப்படவில்லை.';
+
+  @override
+  String get phoneErrGeneric => 'உங்கள் எண்ணைச் சரிபார்க்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.';
+
+  @override
+  String get profileVerifyAction => 'சரிபார்';
+
+  @override
+  String get profilePhoneNotVerified => 'உங்கள் தொலைபேசி எண்ணை உறுதிப்படுத்தவும்';
+
+  @override
+  String profileSaveFailedWithCode(String code) {
+    return 'உங்கள் சுயவிவரத்தைச் சேமிக்க முடியவில்லை ($code). இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.';
+  }
+
+  @override
+  String get profileLoadFailedTitle => 'உங்கள் சுயவிவரத்தை ஏற்ற முடியவில்லை';
+
+  @override
+  String get profileLoadFailedBody => 'உங்கள் விவரங்கள் பாதுகாப்பாக உள்ளன. இணைப்பைச் சரிபார்க்கவும் — மீண்டும் இணைந்ததும் இந்தப் பக்கம் தானாகவே புதுப்பிக்கப்படும்.';
+
+  @override
   String get profileLogOut => 'வெளியேறு';
 
   @override

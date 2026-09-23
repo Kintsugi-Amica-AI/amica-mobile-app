@@ -46,7 +46,10 @@ class _AmicaShellState extends State<AmicaShell> {
     const radius = BorderRadius.all(Radius.circular(30));
 
     return Scaffold(
-      body: IndexedStack(index: _index, children: _tabs),
+      body: AmicaShellScope(
+        selectTab: (i) => setState(() => _index = i),
+        child: IndexedStack(index: _index, children: _tabs),
+      ),
       // A floating pill rather than an edge-to-edge bar, as in the
       // reference designs: it reads as part of the soft ground instead of
       // a hard slab across the bottom of every screen.
@@ -106,4 +109,28 @@ class _AmicaShellState extends State<AmicaShell> {
       ),
     );
   }
+}
+
+/// Lets a tab jump to another tab — e.g. Home's "Walk with me" tile opens
+/// the Journeys tab itself instead of pushing a second copy of the same
+/// screen on top of Home.
+class AmicaShellScope extends InheritedWidget {
+  const AmicaShellScope({
+    required this.selectTab,
+    required super.child,
+    super.key,
+  });
+
+  static const int homeTab = 0;
+  static const int journeysTab = 1;
+  static const int circleTab = 2;
+  static const int youTab = 3;
+
+  final void Function(int index) selectTab;
+
+  static AmicaShellScope? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<AmicaShellScope>();
+
+  @override
+  bool updateShouldNotify(AmicaShellScope oldWidget) => false;
 }

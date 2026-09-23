@@ -130,35 +130,40 @@ class UserProfileService {
     }, SetOptions(merge: true));
   }
 
-  /// Saves the editable parts of the profile: name, phone and the medical
-  /// notes shown to responders. Merged, so nothing else on the user
-  /// document is touched.
+  /// Saves the editable parts of the profile: the name and the medical
+  /// notes for responders. Merged, so nothing else on the user document is
+  /// touched. The phone number is not edited here — it only changes through
+  /// SMS verification (see `PhoneVerificationService`).
+  ///
+  /// Firestore failures are rethrown as [UserProfileException] carrying the
+  /// Firebase error code (e.g. `permission-denied`) instead of being
+  /// swallowed, so the screen can say what actually went wrong.
   Future<void> updateProfile({
     required String name,
-    required String phone,
     required String medicalNotes,
   }) async {
     final user = _auth.currentUser;
     if (user == null) {
-      throw const UserProfileException(
-          'Please log in before saving your profile.');
+      throw const UserProfileException('not-signed-in');
     }
     final trimmedName = name.trim();
     if (trimmedName.isEmpty || trimmedName.length > 80) {
-      throw const UserProfileException('Enter a name up to 80 characters.');
+      throw const UserProfileException('invalid-name');
     }
     final trimmedNotes = medicalNotes.trim();
     if (trimmedNotes.length > 500) {
-      throw const UserProfileException(
-          'Medical notes can be at most 500 characters.');
+      throw const UserProfileException('notes-too-long');
     }
 
-    await _firestore.collection('users').doc(user.uid).set({
-      'name': trimmedName,
-      'phone': phone.trim(),
-      'safetySettings': {'medicalNotes': trimmedNotes},
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    try {
+      await _firestore.collection('users').doc(user.uid).set({
+        'name': trimmedName,
+        'safetySettings': {'medicalNotes': trimmedNotes},
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } on FirebaseException catch (error) {
+      throw UserProfileException(error.code);
+    }
 
     if (trimmedName != user.displayName) {
       try {

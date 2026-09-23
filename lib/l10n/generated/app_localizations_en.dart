@@ -450,6 +450,87 @@ class AppLocalizationsEn extends AppLocalizations {
       'Set a secret voice phrase so you can alert your circle without touching your phone.';
 
   @override
+  String get phoneVerifyTitle => 'Verify your phone number';
+
+  @override
+  String get phoneVerifySubtitle => 'We\'ll text you a 6-digit code to confirm this number is yours.';
+
+  @override
+  String get phoneSendCode => 'Send code';
+
+  @override
+  String phoneCodeSentTo(String phone) {
+    return 'We sent a code to $phone';
+  }
+
+  @override
+  String get phoneCodeLabel => '6-digit code';
+
+  @override
+  String get phoneVerifyButton => 'Verify';
+
+  @override
+  String phoneResendIn(int seconds) {
+    return 'Resend in ${seconds}s';
+  }
+
+  @override
+  String get phoneResend => 'Resend code';
+
+  @override
+  String get phoneChangeNumber => 'Change number';
+
+  @override
+  String get phoneVerified => 'Phone number verified';
+
+  @override
+  String get phoneVerifiedBadge => 'Verified';
+
+  @override
+  String get phoneNotVerified => 'Not verified yet';
+
+  @override
+  String get phoneInvalidNumber => 'Enter a valid phone number, e.g. +94 77 123 4567';
+
+  @override
+  String get phoneErrInvalidCode => 'That code isn\'t right. Check the SMS and try again.';
+
+  @override
+  String get phoneErrExpired => 'This code has expired. Send a new one.';
+
+  @override
+  String get phoneErrTooMany => 'Too many attempts. Please wait a while and try again.';
+
+  @override
+  String get phoneErrInUse => 'This number is already linked to another Amica account.';
+
+  @override
+  String get phoneErrNotEnabled => 'Phone verification isn\'t turned on for this app yet.';
+
+  @override
+  String get phoneErrAppNotAuthorized => 'This app build isn\'t registered for phone verification yet.';
+
+  @override
+  String get phoneErrGeneric => 'Couldn\'t verify your number. Check your connection and try again.';
+
+  @override
+  String get profileVerifyAction => 'Verify';
+
+  @override
+  String get profilePhoneNotVerified => 'Confirm your phone number';
+
+  @override
+  String profileSaveFailedWithCode(String code) {
+    return 'Couldn\'t save your profile ($code). Check your connection and try again.';
+  }
+
+  @override
+  String get profileLoadFailedTitle => 'Couldn\'t load your profile';
+
+  @override
+  String get profileLoadFailedBody => 'Your details are safe. Check your connection — this page updates by itself once you\'re back online.';
+
+  @override
   String get profileLogOut => 'Log out';
 
   @override

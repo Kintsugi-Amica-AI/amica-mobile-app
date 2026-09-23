@@ -15,12 +15,17 @@ class AppUser {
     required this.createdAt,
     required this.updatedAt,
     this.secretPhrase,
+    this.phoneVerified = false,
   });
 
   final String uid;
   final String name;
   final String email;
   final String phone;
+
+  /// True once [phone] has been confirmed with an SMS code (Firebase phone
+  /// auth). Changing the number clears it.
+  final bool phoneVerified;
   final String? secretPhrase;
   final String role;
   final String status;
@@ -42,6 +47,7 @@ class AppUser {
           data['name'], _readString(data['displayName'], 'Amica User')),
       email: _readString(data['email']),
       phone: _readString(data['phone'], _readString(data['phoneNumber'])),
+      phoneVerified: data['phoneVerified'] == true,
       secretPhrase: _readString(data['secretPhrase']).isEmpty
           ? null
           : _readString(data['secretPhrase']),
