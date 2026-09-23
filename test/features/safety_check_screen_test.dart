@@ -1,4 +1,5 @@
 import 'package:amica_mobile_app/features/journey/screens/safety_check_screen.dart';
+import 'package:amica_mobile_app/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -15,6 +16,11 @@ Future<List<SafetyCheckResult?>> _pumpSafetyCheck(
 
   await tester.pumpWidget(
     MaterialApp(
+      // The screen reads its copy from AppLocalizations, so the test app
+      // needs the delegates (English, to match the expected strings).
+      locale: const Locale('en'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Builder(
         builder: (context) => ElevatedButton(
           onPressed: () async {

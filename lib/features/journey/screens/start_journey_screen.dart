@@ -14,6 +14,7 @@ import '../../../core/widgets/primary_button.dart';
 import '../../../services/journey_route_service.dart';
 import '../../../services/location_service.dart';
 import '../models/location_data_model.dart';
+import '../widgets/journey_visuals.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../services/journey_service.dart';
 
@@ -650,203 +651,206 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
     final currentLocation = _currentLocation;
     final destinationLocation = _destinationLocation;
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: c.shell,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border(top: BorderSide(color: c.lineSoft)),
-        boxShadow: c.shadow,
-      ),
-      child: SafeArea(
-        top: false,
-        child: ListView(
-          controller: scrollController,
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: c.line,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            if (widget.vehiclePlate != null) ...[
-              Text(loc.startJourneyVehicleLabel(widget.vehiclePlate!),
-                  style: textTheme.titleLarge),
-              if (widget.boardingStatus != null) Text(widget.boardingStatus!),
-              const SizedBox(height: 12),
-            ],
-            // Where the journey starts.
-            if (currentLocation == null)
-              PrimaryButton(
-                label: _isLoadingLocation
-                    ? loc.startJourneyGettingLocation
-                    : loc.startJourneyGetCurrentLocation,
-                icon: Icons.my_location_rounded,
-                onPressed: _isBusy ? null : _getCurrentLocation,
-              )
-            else
-              AmicaCard(
-                padding: const EdgeInsets.fromLTRB(16, 8, 4, 8),
-                child: Row(
+    final journeyTypes = <(String, String)>[
+      ('walk', loc.startJourneyTypeWalk),
+      ('taxi', loc.startJourneyTypeTaxi),
+      ('bus', loc.startJourneyTypeBus),
+      ('train', loc.startJourneyTypeTrain),
+      ('other', loc.startJourneyTypeOther),
+    ];
+
+    return JourneyGlassSheet(
+      scrollController: scrollController,
+      children: [
+        if (widget.vehiclePlate != null) ...[
+          Row(
+            children: [
+              GradientIconBadge(icon: journeyTypeIcon(_journeyType)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.my_location_rounded, color: c.sage),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        loc.startJourneyCurrentLocationValue(
-                          currentLocation.latitude.toStringAsFixed(5),
-                          currentLocation.longitude.toStringAsFixed(5),
-                        ),
-                        style: textTheme.bodySmall,
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: loc.startJourneyGetCurrentLocation,
-                      onPressed: _isBusy ? null : _getCurrentLocation,
-                      icon: _isLoadingLocation
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.refresh_rounded),
-                    ),
+                    Text(loc.startJourneyVehicleLabel(widget.vehiclePlate!),
+                        style: textTheme.titleLarge),
+                    if (widget.boardingStatus != null)
+                      Text(widget.boardingStatus!, style: textTheme.bodySmall),
                   ],
                 ),
               ),
-            const SizedBox(height: 16),
-            // Where it ends.
-            CustomTextField(
-              label: loc.startJourneyDestinationNameLabel,
-              controller: _destinationController,
-              prefixIcon: Icons.place_outlined,
-              validator: (value) =>
-                  _required(context, value, loc.startJourneyDestinationLabel),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _isResolvingDestination
-                  ? loc.startJourneyFindingOnMap
-                  : _destinationStatus ??
-                      (destinationLocation == null
-                          ? loc.startJourneyTapMapToPin
-                          : loc.startJourneyDestinationPinValue(
-                              destinationLocation.latitude.toStringAsFixed(5),
-                              destinationLocation.longitude.toStringAsFixed(5),
-                            )),
-              style: textTheme.bodySmall,
-            ),
-            if (_isLoadingRoute || _route != null || _routeUnavailable) ...[
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  Icon(
-                    _journeyType == 'walk'
-                        ? Icons.directions_walk_rounded
-                        : Icons.directions_car_rounded,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      _isLoadingRoute
-                          ? loc.startJourneyRouteLoading
-                          : _route != null
-                              ? loc.startJourneyRouteSummary(
-                                  formatDistance(_route!.distanceMeters),
-                                  (_route!.durationSeconds / 60).ceil(),
-                                )
-                              : loc.startJourneyRouteUnavailable,
-                      style: textTheme.bodySmall,
-                    ),
-                  ),
-                ],
-              ),
             ],
-            const SizedBox(height: 16),
-            // How, and for how long.
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          ),
+          const SizedBox(height: 14),
+        ],
+        // From — where the journey starts.
+        if (currentLocation == null)
+          PrimaryButton(
+            label: _isLoadingLocation
+                ? loc.startJourneyGettingLocation
+                : loc.startJourneyGetCurrentLocation,
+            icon: Icons.my_location_rounded,
+            onPressed: _isBusy ? null : _getCurrentLocation,
+          )
+        else
+          AmicaCard(
+            padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
+            child: Row(
               children: [
+                const GradientIconBadge(icon: Icons.near_me_rounded, size: 40),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                  // Same label style as CustomTextField, so both fields line up.
-                  Text(
-                    loc.startJourneyTypeLabel,
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: c.plum70,
-                    ),
-                  ),
-                  const SizedBox(height: 7),
-                  DropdownButtonFormField<String>(
-                    initialValue: _journeyType,
-                    isExpanded: true,
-                    items: [
-                      DropdownMenuItem(
-                          value: 'walk', child: Text(loc.startJourneyTypeWalk)),
-                      DropdownMenuItem(
-                          value: 'taxi', child: Text(loc.startJourneyTypeTaxi)),
-                      DropdownMenuItem(
-                          value: 'bus', child: Text(loc.startJourneyTypeBus)),
-                      DropdownMenuItem(
-                          value: 'train',
-                          child: Text(loc.startJourneyTypeTrain)),
-                      DropdownMenuItem(
-                          value: 'other',
-                          child: Text(loc.startJourneyTypeOther)),
-                    ],
-                    onChanged: _isBusy ? null : _onJourneyTypeChanged,
-                  ),
+                      Text(loc.startJourneyYourLocation,
+                          style: textTheme.titleSmall),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${currentLocation.latitude.toStringAsFixed(5)}, '
+                        '${currentLocation.longitude.toStringAsFixed(5)}',
+                        style: textTheme.bodySmall?.copyWith(color: c.plum45),
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: CustomTextField(
-                    label: loc.startJourneyDurationLabel,
-                    controller: _durationController,
-                    keyboardType: TextInputType.number,
-                    prefixIcon: Icons.hourglass_bottom_rounded,
-                    validator: (value) => _validateDuration(context, value),
-                  ),
+                IconButton(
+                  tooltip: loc.startJourneyGetCurrentLocation,
+                  onPressed: _isBusy ? null : _getCurrentLocation,
+                  color: c.accentInk,
+                  icon: _isLoadingLocation
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.refresh_rounded),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              loc.startJourneySuggestedDuration(_suggestedDurationMinutes),
-              style: textTheme.bodySmall,
+          ),
+        const SizedBox(height: 14),
+        // To — where it ends.
+        CustomTextField(
+          label: loc.startJourneyDestinationNameLabel,
+          controller: _destinationController,
+          prefixIcon: Icons.favorite_border_rounded,
+          validator: (value) =>
+              _required(context, value, loc.startJourneyDestinationLabel),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Icon(
+              destinationLocation == null
+                  ? Icons.touch_app_outlined
+                  : Icons.place_rounded,
+              size: 15,
+              color: c.plum45,
             ),
-            if (_errorMessage != null) ...[
-              const SizedBox(height: 16),
-              Text(
-                _errorMessage!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                _isResolvingDestination
+                    ? loc.startJourneyFindingOnMap
+                    : _destinationStatus ??
+                        (destinationLocation == null
+                            ? loc.startJourneyTapMapToPin
+                            : loc.startJourneyDestinationPinValue(
+                                destinationLocation.latitude
+                                    .toStringAsFixed(5),
+                                destinationLocation.longitude
+                                    .toStringAsFixed(5),
+                              )),
+                style: textTheme.bodySmall,
               ),
-            ],
-            const SizedBox(height: 20),
-            PrimaryButton(
-              label: _isStartingJourney
-                  ? loc.startJourneyStarting
-                  : widget.vehiclePlate == null
-                      ? loc.startJourneyStartButton
-                      : loc.startJourneyStartVehicleButton,
-              icon: Icons.play_arrow_rounded,
-              onPressed:
-                  (_isBusy || _isResolvingDestination) ? null : _startJourney,
             ),
           ],
         ),
-      ),
+        if (_isLoadingRoute || _route != null || _routeUnavailable) ...[
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: InfoPill(
+              icon: journeyTypeIcon(_journeyType),
+              label: _isLoadingRoute
+                  ? loc.startJourneyRouteLoading
+                  : _route != null
+                      ? loc.startJourneyRouteSummary(
+                          formatDistance(_route!.distanceMeters),
+                          (_route!.durationSeconds / 60).ceil(),
+                        )
+                      : loc.startJourneyRouteUnavailable,
+            ),
+          ),
+        ],
+        const SizedBox(height: 18),
+        // How — journey type as tappable icon chips.
+        Text(
+          loc.startJourneyTypeLabel,
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w600,
+            color: c.plum70,
+          ),
+        ),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final (type, label) in journeyTypes) ...[
+                JourneyTypeChip(
+                  type: type,
+                  label: label,
+                  selected: _journeyType == type,
+                  onTap: _isBusy ? null : () => _onJourneyTypeChanged(type),
+                ),
+                const SizedBox(width: 8),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        // For how long.
+        CustomTextField(
+          label: loc.startJourneyDurationLabel,
+          controller: _durationController,
+          keyboardType: TextInputType.number,
+          prefixIcon: Icons.timer_outlined,
+          validator: (value) => _validateDuration(context, value),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Icon(Icons.auto_awesome_rounded, size: 15, color: c.accentInk),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                loc.startJourneySuggestedDuration(_suggestedDurationMinutes),
+                style: textTheme.bodySmall,
+              ),
+            ),
+          ],
+        ),
+        if (_errorMessage != null) ...[
+          const SizedBox(height: 16),
+          Text(
+            _errorMessage!,
+            style: TextStyle(color: c.terracottaDeep),
+          ),
+        ],
+        const SizedBox(height: 22),
+        PrimaryButton(
+          label: _isStartingJourney
+              ? loc.startJourneyStarting
+              : widget.vehiclePlate == null
+                  ? loc.startJourneyStartButton
+                  : loc.startJourneyStartVehicleButton,
+          icon: Icons.play_arrow_rounded,
+          onPressed:
+              (_isBusy || _isResolvingDestination) ? null : _startJourney,
+        ),
+      ],
     );
   }
 }

@@ -42,8 +42,8 @@ class SosArmingScreen extends StatefulWidget {
 
 class _SosArmingScreenState extends State<SosArmingScreen> {
   static const Color _ground = AppColors.terracottaDeep;
-  static const Color _ink = Color(0xFFFDF1EC);
-  static const Color _inkDim = Color(0xFFF0B6A5);
+  static const Color _ink = Color(0xFFFFF1F5);
+  static const Color _inkDim = Color(0xFFFFD0DC);
 
   Timer? _ticker;
   late int _remaining = widget.countdown.inSeconds;
@@ -198,7 +198,7 @@ class _SosArmingScreenState extends State<SosArmingScreen> {
                   child: Text(
                     loc.sosArmingWhenZero,
                     style: theme.textTheme.labelSmall
-                        ?.copyWith(color: const Color(0xFFE09B86)),
+                        ?.copyWith(color: _inkDim),
                   ),
                 ),
                 const SizedBox(height: 11),
@@ -231,12 +231,12 @@ class _SosArmingScreenState extends State<SosArmingScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.close_rounded,
+                              const Icon(Icons.close_rounded,
                                   size: 19, color: _ground),
-                              SizedBox(width: 8),
+                              const SizedBox(width: 8),
                               Text(
                                 loc.sosArmingCancelSendNothing,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: _ground,
                                   fontSize: 15.5,
                                   fontWeight: FontWeight.w700,
@@ -265,7 +265,7 @@ class _SosArmingScreenState extends State<SosArmingScreen> {
                         child: Center(
                           child: Text(
                             loc.sosArmingBackToHome,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: _ground,
                               fontSize: 15.5,
                               fontWeight: FontWeight.w700,
@@ -298,7 +298,7 @@ class _Dial extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFFFDF1EC);
+    const ink = Color(0xFFFFF1F5);
 
     return SizedBox(
       width: 236,
@@ -373,7 +373,7 @@ class _Consequence extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFFFDF1EC);
+    const ink = Color(0xFFFFF1F5);
 
     return Row(
       children: [

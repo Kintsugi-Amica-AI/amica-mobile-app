@@ -118,7 +118,6 @@ class EmergencyContactsScreen extends StatelessWidget {
     final loc = AppLocalizations.of(context);
 
     return Scaffold(
-      backgroundColor: c.ivory,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Text(loc.contactsAppBarTitle),
@@ -196,9 +195,10 @@ class EmergencyContactsScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: c.plum,
-        foregroundColor: c.ivory,
+        backgroundColor: c.accent,
+        foregroundColor: AppColors.onAccent,
         elevation: 0,
+        shape: const StadiumBorder(),
         onPressed: () => Navigator.pushNamed(
           context,
           AppRoutes.addEmergencyContact,
@@ -239,8 +239,8 @@ class _EmergencyContactCard extends StatelessWidget {
           AmicaAvatar(
             initial: contact.name,
             size: 44,
-            background: contact.isActive ? c.blush : c.shell,
-            foreground: contact.isActive ? c.terracottaDeep : c.plum45,
+            background: contact.isActive ? c.accentSoft : c.shell,
+            foreground: contact.isActive ? c.accentInk : c.plum45,
           ),
           const SizedBox(width: 13),
           Expanded(

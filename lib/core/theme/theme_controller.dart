@@ -1,27 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-/// Drives day / night / follow-the-system for the whole app.
+/// Drives Light / Dark / follow-the-system for the whole app.
 ///
-/// Night mode is not a cosmetic preference here — it is the "discreet mode"
-/// switch on the profile screen. A bright ivory screen on a dark bus
-/// announces that you are using a safety app, so this is a safety control
-/// and lives one tap from the surface, not buried in settings.
+/// Light is the default look. Dark doubles as "discreet mode": a bright
+/// screen on a dark bus announces that you are using a safety app, so the
+/// quick moon toggle on Home stays one tap from the surface. The full
+/// three-way choice (Light · Dark · System) lives on the Profile tab.
 ///
-/// Deliberately a plain [ValueNotifier] rather than a state-management
-/// dependency: the app has no provider stack and this does not justify
-/// introducing one.
+/// The choice is remembered across launches, same pattern as
+/// [AmicaLocaleController]. A plain [ValueNotifier] rather than a
+/// state-management dependency: the app has no provider stack and this
+/// does not justify introducing one.
 class AmicaThemeController extends ValueNotifier<ThemeMode> {
-  AmicaThemeController([super.mode = ThemeMode.system]);
+  AmicaThemeController([super.mode = ThemeMode.light]);
 
   static final AmicaThemeController instance = AmicaThemeController();
 
-  bool get isDiscreet => value == ThemeMode.dark;
+  static const _prefsKey = 'amica_theme_mode';
 
-  void setDiscreet(bool on) {
-    value = on ? ThemeMode.dark : ThemeMode.light;
+  /// Reads the appearance the user picked last time. Call once before
+  /// [runApp]; with nothing saved the app stays on [ThemeMode.light].
+  static Future<void> loadSaved() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString(_prefsKey);
+      for (final mode in ThemeMode.values) {
+        if (mode.name == saved) {
+          instance.value = mode;
+          return;
+        }
+      }
+    } catch (_) {
+      // No storage yet; keep the default and carry on.
+    }
   }
 
-  void followSystem() => value = ThemeMode.system;
+  /// Switches appearance immediately and remembers the choice.
+  Future<void> setMode(ThemeMode mode) async {
+    value = mode;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_prefsKey, mode.name);
+    } catch (_) {
+      // Best effort: the UI has already switched for this session.
+    }
+  }
+
+  bool get isDiscreet => value == ThemeMode.dark;
+
+  void setDiscreet(bool on) => setMode(on ? ThemeMode.dark : ThemeMode.light);
+
+  void followSystem() => setMode(ThemeMode.system);
 
   /// Resolves what the user will actually see right now, taking
   /// [ThemeMode.system] into account.

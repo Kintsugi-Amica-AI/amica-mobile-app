@@ -1,8 +1,22 @@
+import 'dart:math' as math;
+import 'dart:ui' as ui;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../l10n/generated/app_localizations.dart';
+import '../constants/app_colors.dart';
+import 'glass_card.dart';
+
+/// Amica's map.
+///
+/// Restyled for Blossom: a soft pastel basemap by day and a deep aubergine
+/// one at night (following the app theme, not the old always-dark violet),
+/// hand-drawn markers instead of Google's default pins, a route drawn in
+/// the brand colour with a white casing, and frosted-glass zoom / recentre
+/// buttons in place of Google's grey +/- controls.
 class AmicaMapView extends StatefulWidget {
   const AmicaMapView({
     required this.latitude,
@@ -16,12 +30,13 @@ class AmicaMapView extends StatefulWidget {
     this.destinationTitle = 'Destination',
     this.showStartMarker = true,
     this.routePoints = const [],
-    this.routeColor = const Color(0xFF22D3EE),
+    this.routeColor,
     this.mapPadding = EdgeInsets.zero,
     this.showMyLocation = false,
     this.onTap,
     this.onDestinationDragged,
     this.captureGestures = false,
+    this.showControls = true,
   });
 
   final double latitude;
@@ -38,7 +53,9 @@ class AmicaMapView extends StatefulWidget {
 
   /// Suggested route drawn as a line between start and destination.
   final List<LatLng> routePoints;
-  final Color routeColor;
+
+  /// Defaults to the theme's brand accent.
+  final Color? routeColor;
 
   /// Space covered by overlays (for example a bottom sheet), so markers,
   /// the route and Google's own buttons are kept out from under them.
@@ -57,12 +74,19 @@ class AmicaMapView extends StatefulWidget {
   /// stays movable even when placed inside a scrolling parent like ListView.
   final bool captureGestures;
 
+  /// Shows the frosted zoom / recentre / fit-route buttons.
+  final bool showControls;
+
   @override
   State<AmicaMapView> createState() => _AmicaMapViewState();
 }
 
 class _AmicaMapViewState extends State<AmicaMapView> {
   GoogleMapController? _controller;
+
+  BitmapDescriptor? _startIcon;
+  BitmapDescriptor? _destinationIcon;
+  String? _iconsKey;
 
   /// The last destination the user picked directly on the map (tap or drag).
   /// The camera is not re-fitted for these, so the view stays where the
@@ -82,6 +106,33 @@ class _AmicaMapViewState extends State<AmicaMapView> {
       return null;
     }
     return LatLng(latitude, longitude);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadMarkerIcons();
+  }
+
+  Future<void> _loadMarkerIcons() async {
+    final c = Theme.of(context).amica;
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final key = '${c.accent.toARGB32()}-${c.card.toARGB32()}-$dpr';
+    if (key == _iconsKey) return;
+    _iconsKey = key;
+    try {
+      final icons = await Future.wait([
+        _AmicaMarkerPainter.you(c, dpr),
+        _AmicaMarkerPainter.destination(c, dpr),
+      ]);
+      if (!mounted || _iconsKey != key) return;
+      setState(() {
+        _startIcon = icons[0];
+        _destinationIcon = icons[1];
+      });
+    } catch (_) {
+      // Keep Google's default pins if drawing fails for any reason.
+    }
   }
 
   @override
@@ -140,6 +191,13 @@ class _AmicaMapViewState extends State<AmicaMapView> {
           markerId: const MarkerId('amica-start-location-marker'),
           position: _centerPosition,
           infoWindow: InfoWindow(title: widget.markerTitle),
+          icon: _startIcon ??
+              BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueViolet,
+              ),
+          anchor: _startIcon == null
+              ? const Offset(0.5, 1)
+              : const Offset(0.5, 0.5),
         ),
       if (destination != null)
         Marker(
@@ -151,28 +209,52 @@ class _AmicaMapViewState extends State<AmicaMapView> {
               ? null
               : (position) =>
                   _handleUserPick(position, widget.onDestinationDragged!),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueRose,
-          ),
+          icon: _destinationIcon ??
+              BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueMagenta,
+              ),
+          anchor: const Offset(0.5, 1),
         ),
     };
   }
 
-  Set<Polyline> _polylines() {
+  Set<Polyline> _polylines(AmicaColors c) {
     if (widget.routePoints.length < 2) {
       return const {};
     }
     return {
+      // White casing under the line, so the route reads on any street.
+      Polyline(
+        polylineId: const PolylineId('amica-route-casing'),
+        points: widget.routePoints,
+        color: c.card.withValues(alpha: 0.95),
+        width: 10,
+        zIndex: 0,
+        startCap: Cap.roundCap,
+        endCap: Cap.roundCap,
+        jointType: JointType.round,
+      ),
       Polyline(
         polylineId: const PolylineId('amica-route'),
         points: widget.routePoints,
-        color: widget.routeColor,
-        width: 5,
+        color: widget.routeColor ?? c.accent,
+        width: 6,
+        zIndex: 1,
         startCap: Cap.roundCap,
         endCap: Cap.roundCap,
         jointType: JointType.round,
       ),
     };
+  }
+
+  Future<void> _zoomBy(double delta) async {
+    await _controller?.animateCamera(CameraUpdate.zoomBy(delta));
+  }
+
+  Future<void> _recenter() async {
+    await _controller?.animateCamera(
+      CameraUpdate.newLatLngZoom(_centerPosition, 16),
+    );
   }
 
   /// Every point the camera should keep in view.
@@ -243,14 +325,17 @@ class _AmicaMapViewState extends State<AmicaMapView> {
 
   @override
   Widget build(BuildContext context) {
+    final c = Theme.of(context).amica;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final loc = AppLocalizations.of(context);
     final map = GoogleMap(
       initialCameraPosition: CameraPosition(
         target: _destinationPosition ?? _centerPosition,
         zoom: 15,
       ),
-      style: _nightMapStyle,
+      style: isDark ? _nightMapStyle : _dayMapStyle,
       markers: _markers(),
-      polylines: _polylines(),
+      polylines: _polylines(c),
       padding: widget.mapPadding,
       onMapCreated: (controller) {
         _controller = controller;
@@ -266,20 +351,69 @@ class _AmicaMapViewState extends State<AmicaMapView> {
       onTap: widget.onTap == null
           ? null
           : (position) => _handleUserPick(position, widget.onTap!),
-      myLocationButtonEnabled: widget.showMyLocation,
+      // Google's own buttons are replaced by the frosted ones below.
+      myLocationButtonEnabled: false,
       myLocationEnabled: widget.showMyLocation,
-      zoomControlsEnabled: true,
+      zoomControlsEnabled: false,
+      compassEnabled: false,
       mapToolbarEnabled: false,
+    );
+
+    final small = widget.height != null && widget.height! < 220;
+    final controls = !widget.showControls
+        ? null
+        : Positioned(
+            top: widget.mapPadding.top + 12,
+            right: 12,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _MapButton(
+                  icon: Icons.my_location_rounded,
+                  tooltip: loc.mapRecenter,
+                  onTap: _recenter,
+                ),
+                if (_destinationPosition != null) ...[
+                  const SizedBox(height: 8),
+                  _MapButton(
+                    icon: Icons.route_rounded,
+                    tooltip: loc.mapShowWholeRoute,
+                    onTap: _moveCameraToMarkers,
+                  ),
+                ],
+                if (!small) ...[
+                  const SizedBox(height: 8),
+                  _MapButton(
+                    icon: Icons.add_rounded,
+                    tooltip: loc.mapZoomIn,
+                    onTap: () => _zoomBy(1),
+                  ),
+                  const SizedBox(height: 8),
+                  _MapButton(
+                    icon: Icons.remove_rounded,
+                    tooltip: loc.mapZoomOut,
+                    onTap: () => _zoomBy(-1),
+                  ),
+                ],
+              ],
+            ),
+          );
+
+    final layered = Stack(
+      children: [
+        Positioned.fill(child: map),
+        if (controls != null) controls,
+      ],
     );
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(widget.borderRadius),
       child: widget.height == null
-          ? map
+          ? layered
           : SizedBox(
               height: widget.height,
               width: double.infinity,
-              child: map,
+              child: layered,
             ),
     );
   }
@@ -290,23 +424,222 @@ class _AmicaMapViewState extends State<AmicaMapView> {
   }
 }
 
-/// A violet-tinted night map style so the map blends into Amica's
-/// futuristic dark theme instead of showing the default light basemap.
+/// A frosted-glass round map button.
+class _MapButton extends StatelessWidget {
+  const _MapButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Theme.of(context).amica;
+    return Tooltip(
+      message: tooltip,
+      child: Semantics(
+        button: true,
+        label: tooltip,
+        excludeSemantics: true,
+        child: AmicaGlass(
+          shape: BoxShape.circle,
+          strong: true,
+          blur: 14,
+          child: Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: onTap,
+              child: SizedBox(
+                width: 44,
+                height: 44,
+                child: Icon(icon, size: 20, color: c.accentInk),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Draws Amica's map markers on a canvas, so no image assets are needed and
+/// they follow the theme.
+class _AmicaMarkerPainter {
+  const _AmicaMarkerPainter._();
+
+  static Future<BitmapDescriptor> _render(
+    Size logicalSize,
+    double dpr,
+    void Function(Canvas canvas) paint,
+  ) async {
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder)..scale(dpr);
+    paint(canvas);
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(
+      (logicalSize.width * dpr).ceil(),
+      (logicalSize.height * dpr).ceil(),
+    );
+    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+    picture.dispose();
+    image.dispose();
+    return BitmapDescriptor.bytes(
+      bytes!.buffer.asUint8List(),
+      imagePixelRatio: dpr,
+    );
+  }
+
+  /// "You are here": a soft lavender halo, white ring, gradient core.
+  static Future<BitmapDescriptor> you(AmicaColors c, double dpr) {
+    const size = Size(48, 48);
+    const center = Offset(24, 24);
+    return _render(size, dpr, (canvas) {
+      canvas.drawCircle(
+        center,
+        22,
+        Paint()..color = c.accent.withValues(alpha: 0.22),
+      );
+      canvas.drawCircle(
+        center.translate(0, 1.5),
+        12.5,
+        Paint()
+          ..color = Colors.black.withValues(alpha: 0.18)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.5),
+      );
+      canvas.drawCircle(center, 12.5, Paint()..color = Colors.white);
+      canvas.drawCircle(
+        center,
+        8.5,
+        Paint()
+          ..shader = ui.Gradient.linear(
+            center.translate(-8, -8),
+            center.translate(8, 8),
+            [c.accent, c.accentEnd],
+          ),
+      );
+    });
+  }
+
+  /// Destination: a gradient teardrop pin with a white heart.
+  static Future<BitmapDescriptor> destination(AmicaColors c, double dpr) {
+    const size = Size(46, 60);
+    return _render(size, dpr, (canvas) {
+      const head = Offset(23, 21);
+      const r = 17.0;
+      // Teardrop: circle head plus two tangents meeting at the tip.
+      const tip = Offset(23, 56);
+      final path = Path()..addOval(Rect.fromCircle(center: head, radius: r));
+      final angle = math.acos(r / (tip.dy - head.dy));
+      final left = Offset(
+        head.dx - r * math.sin(angle),
+        head.dy + r * math.cos(angle),
+      );
+      final right = Offset(
+        head.dx + r * math.sin(angle),
+        head.dy + r * math.cos(angle),
+      );
+      path
+        ..moveTo(left.dx, left.dy)
+        ..lineTo(tip.dx, tip.dy)
+        ..lineTo(right.dx, right.dy)
+        ..close();
+
+      // Ground shadow.
+      canvas.drawOval(
+        Rect.fromCenter(center: tip.translate(0, 1), width: 14, height: 5),
+        Paint()
+          ..color = Colors.black.withValues(alpha: 0.22)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+      );
+      canvas.drawPath(
+        path,
+        Paint()
+          ..shader = ui.Gradient.linear(
+            const Offset(6, 4),
+            const Offset(40, 50),
+            [c.accent, c.accentEnd],
+          ),
+      );
+      canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..color = Colors.white,
+      );
+      canvas.drawCircle(head, 10.5, Paint()..color = Colors.white);
+
+      final heart = TextPainter(
+        text: TextSpan(
+          text: String.fromCharCode(Icons.favorite_rounded.codePoint),
+          style: TextStyle(
+            fontSize: 13,
+            fontFamily: Icons.favorite_rounded.fontFamily,
+            package: Icons.favorite_rounded.fontPackage,
+            color: c.accentEnd,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      heart.paint(
+        canvas,
+        head - Offset(heart.width / 2, heart.height / 2),
+      );
+    });
+  }
+}
+
+/// Soft pastel day basemap: pale roads, lavender-grey land, powder-blue
+/// water, quiet labels. Keeps the route and pins as the loudest things.
+const String _dayMapStyle = '''
+[
+  {"elementType": "geometry", "stylers": [{"color": "#f7f2f7"}]},
+  {"elementType": "labels.icon", "stylers": [{"saturation": -60}, {"lightness": 20}]},
+  {"elementType": "labels.text.fill", "stylers": [{"color": "#6f6180"}]},
+  {"elementType": "labels.text.stroke", "stylers": [{"color": "#ffffff"}]},
+  {"featureType": "administrative", "elementType": "geometry.stroke", "stylers": [{"color": "#e3d8e6"}]},
+  {"featureType": "landscape.man_made", "elementType": "geometry", "stylers": [{"color": "#f3edf4"}]},
+  {"featureType": "poi", "elementType": "geometry", "stylers": [{"color": "#efe7f1"}]},
+  {"featureType": "poi.business", "stylers": [{"visibility": "off"}]},
+  {"featureType": "poi.park", "elementType": "geometry", "stylers": [{"color": "#dff0e4"}]},
+  {"featureType": "poi.park", "elementType": "labels.text.fill", "stylers": [{"color": "#5d8a6b"}]},
+  {"featureType": "road", "elementType": "geometry", "stylers": [{"color": "#ffffff"}]},
+  {"featureType": "road", "elementType": "geometry.stroke", "stylers": [{"color": "#ece3ee"}]},
+  {"featureType": "road.arterial", "elementType": "labels.text.fill", "stylers": [{"color": "#7d6f8c"}]},
+  {"featureType": "road.highway", "elementType": "geometry", "stylers": [{"color": "#fde7ef"}]},
+  {"featureType": "road.highway", "elementType": "geometry.stroke", "stylers": [{"color": "#f6cfdd"}]},
+  {"featureType": "transit.line", "elementType": "geometry", "stylers": [{"color": "#e6dcef"}]},
+  {"featureType": "transit.station", "elementType": "geometry", "stylers": [{"color": "#efe7f1"}]},
+  {"featureType": "water", "elementType": "geometry", "stylers": [{"color": "#d7e8f7"}]},
+  {"featureType": "water", "elementType": "labels.text.fill", "stylers": [{"color": "#6d8fb0"}]}
+]
+''';
+
+/// Deep aubergine night basemap — matte and low-glare, matching the
+/// discreet dark theme.
 const String _nightMapStyle = '''
 [
-  {"elementType": "geometry", "stylers": [{"color": "#170b2e"}]},
-  {"elementType": "labels.text.stroke", "stylers": [{"color": "#170b2e"}]},
-  {"elementType": "labels.text.fill", "stylers": [{"color": "#7b7299"}]},
-  {"featureType": "administrative", "elementType": "geometry", "stylers": [{"color": "#3d2c66"}]},
-  {"featureType": "poi", "elementType": "labels.text.fill", "stylers": [{"color": "#8f86ad"}]},
-  {"featureType": "poi.park", "elementType": "geometry", "stylers": [{"color": "#1c2b28"}]},
-  {"featureType": "road", "elementType": "geometry", "stylers": [{"color": "#241640"}]},
-  {"featureType": "road", "elementType": "geometry.stroke", "stylers": [{"color": "#1b1030"}]},
-  {"featureType": "road", "elementType": "labels.text.fill", "stylers": [{"color": "#b2a8d6"}]},
-  {"featureType": "road.highway", "elementType": "geometry", "stylers": [{"color": "#2c1f52"}]},
-  {"featureType": "road.highway", "elementType": "geometry.stroke", "stylers": [{"color": "#22d3ee"}, {"weight": 0.2}]},
-  {"featureType": "transit", "elementType": "geometry", "stylers": [{"color": "#241640"}]},
-  {"featureType": "water", "elementType": "geometry", "stylers": [{"color": "#0a0417"}]},
-  {"featureType": "water", "elementType": "labels.text.fill", "stylers": [{"color": "#5b21b6"}]}
+  {"elementType": "geometry", "stylers": [{"color": "#1a1324"}]},
+  {"elementType": "labels.icon", "stylers": [{"saturation": -70}, {"lightness": -30}]},
+  {"elementType": "labels.text.stroke", "stylers": [{"color": "#1a1324"}]},
+  {"elementType": "labels.text.fill", "stylers": [{"color": "#9d8dab"}]},
+  {"featureType": "administrative", "elementType": "geometry", "stylers": [{"color": "#33283f"}]},
+  {"featureType": "poi", "elementType": "geometry", "stylers": [{"color": "#211a2d"}]},
+  {"featureType": "poi.business", "stylers": [{"visibility": "off"}]},
+  {"featureType": "poi.park", "elementType": "geometry", "stylers": [{"color": "#1b2a22"}]},
+  {"featureType": "road", "elementType": "geometry", "stylers": [{"color": "#2b2238"}]},
+  {"featureType": "road", "elementType": "geometry.stroke", "stylers": [{"color": "#1a1324"}]},
+  {"featureType": "road", "elementType": "labels.text.fill", "stylers": [{"color": "#b5a6c4"}]},
+  {"featureType": "road.highway", "elementType": "geometry", "stylers": [{"color": "#3a2b4a"}]},
+  {"featureType": "road.highway", "elementType": "geometry.stroke", "stylers": [{"color": "#1a1324"}]},
+  {"featureType": "transit", "elementType": "geometry", "stylers": [{"color": "#2b2238"}]},
+  {"featureType": "water", "elementType": "geometry", "stylers": [{"color": "#101a2a"}]},
+  {"featureType": "water", "elementType": "labels.text.fill", "stylers": [{"color": "#5f7fa0"}]}
 ]
 ''';

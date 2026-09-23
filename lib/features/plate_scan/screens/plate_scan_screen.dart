@@ -41,6 +41,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
   int _candidateCount = 0;
   bool _appActive = true;
   bool _isCapturing = false;
+  bool _manualRequested = false;
   bool _isPausedByRoute = false;
   _ScanState _state = _ScanState.initializing;
   String? _errorMessage;
@@ -201,22 +202,40 @@ class _PlateScanScreenState extends State<PlateScanScreen>
     );
   }
 
-  /// Takes a single photo when the shutter button is tapped, crops it to
-  /// the guide frame, and looks up whatever plate was recognized.
+  /// Takes a photo, crops it to the guide frame, and reads the plate.
+  ///
+  /// Automatic scans run quietly in the background and never block the
+  /// shutter. A shutter tap always ends with a lookup or a confirmation
+  /// box, even when OCR could not read the plate exactly.
   Future<void> _captureAndAnalyze({bool automatic = false}) async {
     final controller = _controller;
-    if (_isCapturing ||
-        _isPausedByRoute ||
+    if (_isPausedByRoute ||
         controller == null ||
         !controller.value.isInitialized) {
       return;
     }
+    if (_isCapturing) {
+      // The camera is busy with a background scan. Queue the tap and run
+      // it as soon as that scan finishes.
+      if (!automatic) {
+        _manualRequested = true;
+        setState(() {
+          _state = _ScanState.capturing;
+          _statusMessage = _loc.plateScanReading;
+          _errorMessage = null;
+        });
+      }
+      return;
+    }
 
     _isCapturing = true;
-    setState(() {
-      _state = _ScanState.capturing;
-      _statusMessage = _loc.plateScanReading;
-    });
+    if (!automatic) {
+      setState(() {
+        _state = _ScanState.capturing;
+        _statusMessage = _loc.plateScanReading;
+        _errorMessage = null;
+      });
+    }
 
     XFile? photo;
     String? analyzedPath;
@@ -233,32 +252,40 @@ class _PlateScanScreenState extends State<PlateScanScreen>
               height: cropFraction.height,
             );
 
-      final plateText = await widget.plateScanService
-          .extractPlateText(analyzedPath, tryRotations: !automatic);
-      final isPlausible = widget.plateScanService.looksLikePlate(plateText);
-
-      if (!mounted) {
-        return;
+      // Camera photos are already upright, so rotations only waste time.
+      var read = await widget.plateScanService
+          .readPlate(analyzedPath, tryRotations: false);
+      if (!automatic && !read.found && analyzedPath != photo.path) {
+        // The plate may sit partly outside the guide frame.
+        final full = await widget.plateScanService
+            .readPlate(photo.path, tryRotations: false);
+        if (full.found || read.suggestion.isEmpty) read = full;
       }
 
-      if (isPlausible) {
-        _candidateCount = plateText == _lastCandidate ? _candidateCount + 1 : 1;
-        _lastCandidate = plateText;
-        if (!automatic || _candidateCount >= 2) {
-          await _lockAndLookUp(plateText);
+      if (!mounted) return;
+
+      if (automatic && !_manualRequested) {
+        if (read.found) {
+          _candidateCount =
+              read.plate == _lastCandidate ? _candidateCount + 1 : 1;
+          _lastCandidate = read.plate;
+          if (_candidateCount >= 2) {
+            await _lockAndLookUp(read.plate);
+          } else {
+            setState(() => _statusMessage = _loc.plateScanDetected(read.plate));
+          }
         } else {
-          setState(() {
-            _state = _ScanState.scanning;
-            _statusMessage = _loc.plateScanDetected(plateText);
-          });
+          _candidateCount = 0;
+          setState(() => _statusMessage = _loc.plateScanNotDetected);
         }
-      } else {
-        _candidateCount = 0;
-        setState(() {
-          _state = _ScanState.scanning;
-          _statusMessage = _loc.plateScanNotDetected;
-        });
+      } else if (read.found) {
+        // A shutter tap: one exact read is enough.
+        await _lockAndLookUp(read.plate);
+      } else if (!automatic) {
+        await _confirmAndLookUp(read.suggestion);
       }
+      // automatic && _manualRequested && nothing found: the queued tap
+      // takes its own photo in `finally`.
     } on PlateScanException catch (error) {
       if (mounted) {
         setState(() {
@@ -268,7 +295,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
         });
       }
     } catch (_) {
-      if (mounted) {
+      if (mounted && !automatic) {
         setState(() {
           _state = _ScanState.scanning;
           _statusMessage = _loc.plateScanAlignPrompt;
@@ -287,10 +314,20 @@ class _PlateScanScreenState extends State<PlateScanScreen>
           File(analyzedPath).delete().catchError((_) => File(analyzedPath!)),
         );
       }
+      if (mounted && _manualRequested && !_isPausedByRoute) {
+        _manualRequested = false;
+        unawaited(_captureAndAnalyze());
+      } else if (mounted && _state == _ScanState.capturing) {
+        setState(() {
+          _state = _ScanState.scanning;
+          _statusMessage = _loc.plateScanAlignPrompt;
+        });
+      }
     }
   }
 
   Future<void> _lockAndLookUp(String plateText) async {
+    _manualRequested = false;
     setState(() {
       _state = _ScanState.locked;
       _statusMessage = _loc.plateScanChecking(plateText);
@@ -315,6 +352,27 @@ class _PlateScanScreenState extends State<PlateScanScreen>
     }
   }
 
+  /// Shows what OCR could make out (possibly nothing) so the officer can
+  /// confirm or type the plate, then looks it up.
+  Future<void> _confirmAndLookUp(String suggestion) async {
+    final plate = await _promptForPlate(
+      title: _loc.plateScanConfirmTitle,
+      message: suggestion.isEmpty
+          ? _loc.plateScanUnreadMessage
+          : _loc.plateScanConfirmMessage,
+      initialText: suggestion,
+    );
+    if (!mounted) return;
+    if (plate == null) {
+      setState(() {
+        _state = _ScanState.scanning;
+        _statusMessage = _loc.plateScanAlignPrompt;
+      });
+      return;
+    }
+    await _lockAndLookUp(plate);
+  }
+
   Future<void> _scanFromGallery() async {
     if (_isCapturing) return;
     _isCapturing = true;
@@ -336,18 +394,13 @@ class _PlateScanScreenState extends State<PlateScanScreen>
         return;
       }
 
-      final plateText =
-          await widget.plateScanService.extractPlateText(photo.path);
-      if (plateText.isEmpty) {
-        throw PlateScanException(_loc.plateScanGalleryNoPlate);
+      final read = await widget.plateScanService.readPlate(photo.path);
+      if (!mounted) return;
+      if (read.found) {
+        await _lockAndLookUp(read.plate);
+      } else {
+        await _confirmAndLookUp(read.suggestion);
       }
-      final status = await widget.plateScanService.checkVehicle(plateText);
-
-      if (!mounted) {
-        return;
-      }
-      await Navigator.pushNamed(context, AppRoutes.plateResult,
-          arguments: status);
     } on PlateScanException catch (error) {
       if (!mounted) return;
       setState(() {
@@ -366,37 +419,64 @@ class _PlateScanScreenState extends State<PlateScanScreen>
   }
 
   Future<void> _enterPlate() async {
+    final plate = await _promptForPlate(title: _loc.plateScanEnterTitle);
+    if (plate == null || !mounted) return;
+    await _lockAndLookUp(plate);
+  }
+
+  /// Plate entry dialog. Returns the canonical plate, or null when the
+  /// officer cancels or types something that is not a registration.
+  Future<String?> _promptForPlate({
+    required String title,
+    String? message,
+    String initialText = '',
+  }) async {
     _isPausedByRoute = true;
-    final controller = TextEditingController();
+    final controller = TextEditingController(text: initialText);
     final text = await showDialog<String>(
-        context: context,
-        builder: (context) => AlertDialog(
-              title: Text(_loc.plateScanEnterTitle),
-              content: TextField(
-                  controller: controller,
-                  autofocus: true,
-                  textCapitalization: TextCapitalization.characters,
-                  decoration: const InputDecoration(hintText: 'CBR 6797')),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(_loc.commonCancel)),
-                TextButton(
-                    onPressed: () => Navigator.pop(context, controller.text),
-                    child: Text(_loc.plateScanCheckButton)),
-              ],
-            ));
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (message != null) ...[
+              Text(message),
+              const SizedBox(height: 12),
+            ],
+            TextField(
+              controller: controller,
+              autofocus: true,
+              textCapitalization: TextCapitalization.characters,
+              decoration: const InputDecoration(hintText: 'CAB-1234'),
+              onSubmitted: (value) => Navigator.pop(context, value),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(_loc.commonCancel)),
+          TextButton(
+              onPressed: () => Navigator.pop(context, controller.text),
+              child: Text(_loc.plateScanCheckButton)),
+        ],
+      ),
+    );
     controller.dispose();
-    if (!mounted) return;
     _isPausedByRoute = false;
-    if (text == null) return;
+    if (text == null || !mounted) return null;
     final plate = widget.plateScanService.canonicalPlate(text);
     if (plate.isEmpty) {
-      setState(
-          () => _errorMessage = _loc.plateScanInvalidPlate);
-      return;
+      setState(() {
+        _state = _ScanState.scanning;
+        _statusMessage = _loc.plateScanAlignPrompt;
+        _errorMessage = _loc.plateScanInvalidPlate;
+      });
+      return null;
     }
-    await _lockAndLookUp(plate);
+    return plate;
   }
 
   @override
@@ -422,7 +502,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
         systemOverlayStyle: SystemUiOverlayStyle.light,
         title: Text(
           _loc.plateScanTitle,
-          style: TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.white),
         ),
       ),
       body: Stack(

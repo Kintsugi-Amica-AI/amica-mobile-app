@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
-import '../../../core/theme/theme_controller.dart';
 import '../../../core/widgets/amica_primitives.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/loading_view.dart';
+import '../../../core/widgets/primary_button.dart';
+import '../../../core/widgets/theme_mode_selector.dart';
 import '../../auth/models/app_user.dart';
 import '../../auth/services/auth_service.dart';
+import '../../auth/services/user_profile_service.dart';
 import '../../emergency_contacts/models/emergency_contact.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../emergency_contacts/services/emergency_contact_service.dart';
@@ -19,27 +21,65 @@ import '../../emergency_contacts/services/emergency_contact_service.dart';
 /// First, setup is a visible checklist rather than a set of fields buried
 /// in Settings. A woman should be able to tell in one glance whether this
 /// app will actually work for her tonight — a half-configured safety app
-/// that looks finished is worse than one that admits what is missing.
+/// that looks finished is worse than one that admits what is missing. Every
+/// unfinished item has a working "Add" that takes her straight to the fix.
 ///
 /// Second, **Log out lives here.** It used to sit in the home app bar, one
 /// tap from the SOS button.
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
     super.key,
     this.authService = const AuthService(),
     this.contactService = const EmergencyContactService(),
+    this.userProfileService = const UserProfileService(),
   });
 
   final AuthService authService;
   final EmergencyContactService contactService;
+  final UserProfileService userProfileService;
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  late Future<AppUser?> _profile = widget.authService.currentUserProfile();
+
+  /// Re-reads the profile after an edit, a new voice phrase, etc., so the
+  /// checklist ticks over immediately.
+  void _reload() {
+    setState(() => _profile = widget.authService.currentUserProfile());
+  }
+
+  Future<void> _openSettings() async {
+    await Navigator.pushNamed(context, AppRoutes.settings);
+    if (mounted) _reload();
+  }
+
+  Future<void> _editProfile(AppUser? user, {bool focusNotes = false}) async {
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => _EditProfileSheet(
+        user: user,
+        focusNotes: focusNotes,
+        service: widget.userProfileService,
+      ),
+    );
+    if (saved == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).profileSaved)),
+      );
+      _reload();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final c = Theme.of(context).amica;
     final loc = AppLocalizations.of(context);
 
     return Scaffold(
-      backgroundColor: c.ivory,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Text(loc.profileAppBarTitle),
@@ -47,16 +87,17 @@ class ProfileScreen extends StatelessWidget {
       body: SafeArea(
         top: false,
         child: FutureBuilder<AppUser?>(
-          future: authService.currentUserProfile(),
+          future: _profile,
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
+            if (snapshot.connectionState == ConnectionState.waiting &&
+                !snapshot.hasData) {
               return LoadingView(message: loc.profileLoadingYourProfile);
             }
 
             final user = snapshot.data;
 
             return StreamBuilder<List<EmergencyContact>>(
-              stream: contactService.watchEmergencyContacts(),
+              stream: widget.contactService.watchEmergencyContacts(),
               builder: (context, contactSnap) {
                 final guardians =
                     (contactSnap.data ?? []).where((g) => g.isActive).toList();
@@ -64,16 +105,27 @@ class ProfileScreen extends StatelessWidget {
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
                   children: [
-                    _Identity(user: user),
+                    _Identity(
+                      user: user,
+                      onEdit: () => _editProfile(user),
+                    ),
                     const SizedBox(height: 24),
                     _SetupChecklist(
                       user: user,
                       guardianCount: guardians.length,
+                      onAddGuardian: () => Navigator.pushNamed(
+                        context,
+                        AppRoutes.addEmergencyContact,
+                      ),
+                      onAddVoicePhrase: _openSettings,
+                      onAddPhone: () => _editProfile(user),
+                      onAddMedicalNotes: () =>
+                          _editProfile(user, focusNotes: true),
                     ),
                     const SizedBox(height: 24),
                     SectionLabel(loc.profileSectionHowAmicaBehaves),
                     const SizedBox(height: 4),
-                    const _DiscreetModeRow(),
+                    const _AppearanceRow(),
                     const AmicaDivider(),
                     AmicaListRow(
                       icon: Icons.mic_none_rounded,
@@ -81,26 +133,23 @@ class ProfileScreen extends StatelessWidget {
                       subtitle: user?.secretPhrase?.trim().isNotEmpty == true
                           ? loc.profileVoicePhraseSet(user!.secretPhrase!)
                           : loc.profileVoicePhraseNotSet,
-                      onTap: () =>
-                          Navigator.pushNamed(context, AppRoutes.settings),
+                      onTap: _openSettings,
                     ),
                     const AmicaDivider(),
                     AmicaListRow(
                       icon: Icons.lock_outline_rounded,
                       title: loc.profilePrivacyTitle,
                       subtitle: loc.profilePrivacySubtitle,
-                      onTap: () =>
-                          Navigator.pushNamed(context, AppRoutes.settings),
+                      onTap: _openSettings,
                     ),
                     const AmicaDivider(),
                     AmicaListRow(
                       icon: Icons.tune_rounded,
                       title: loc.profileAllSettings,
-                      onTap: () =>
-                          Navigator.pushNamed(context, AppRoutes.settings),
+                      onTap: _openSettings,
                     ),
                     const SizedBox(height: 28),
-                    _LogoutButton(authService: authService),
+                    _LogoutButton(authService: widget.authService),
                   ],
                 );
               },
@@ -112,10 +161,65 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
+/// A small pill-shaped button — the tappable sibling of [StatusPill].
+class _PillButton extends StatelessWidget {
+  const _PillButton({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+    this.warm = false,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  /// Warm (peach/gold) for "still to do"; otherwise lavender.
+  final bool warm;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Theme.of(context).amica;
+    final bg = warm ? c.goldSoft : c.accentSoft;
+    final fg = warm ? c.gold : c.accentInk;
+    return Material(
+      color: bg,
+      shape: const StadiumBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const StadiumBorder(),
+        child: ConstrainedBox(
+          // 44px tall hit area even though the pill looks compact.
+          constraints: const BoxConstraints(minHeight: 34, minWidth: 44),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 14, color: fg),
+                const SizedBox(width: 5),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: fg,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _Identity extends StatelessWidget {
-  const _Identity({required this.user});
+  const _Identity({required this.user, required this.onEdit});
 
   final AppUser? user;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -124,72 +228,113 @@ class _Identity extends StatelessWidget {
     final loc = AppLocalizations.of(context);
     final name = user?.name.trim() ?? '';
 
-    return Row(
-      children: [
-        AmicaAvatar(
-          initial: name.isEmpty ? 'A' : name,
-          size: 62,
-          background: c.blush,
-          foreground: c.terracottaDeep,
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                name.isEmpty ? loc.profileYourProfile : name,
-                style: theme.textTheme.headlineSmall?.copyWith(fontSize: 22),
+    return AmicaCard(
+      padding: const EdgeInsets.all(16),
+      onTap: onEdit,
+      child: Row(
+        children: [
+          // Gradient ring around the initial, the one decorative flourish on
+          // this screen.
+          Container(
+            padding: const EdgeInsets.all(2.5),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: c.accentGradient,
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(2.5),
+              decoration: BoxDecoration(shape: BoxShape.circle, color: c.card),
+              child: AmicaAvatar(
+                initial: name.isEmpty ? 'A' : name,
+                size: 56,
               ),
-              const SizedBox(height: 2),
-              Text(
-                user?.phone.trim().isNotEmpty == true
-                    ? user!.phone
-                    : user?.email ?? '',
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w500,
-                  color: c.plum45,
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-        StatusPill(label: loc.commonEdit),
-      ],
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  name.isEmpty ? loc.profileYourProfile : name,
+                  style: theme.textTheme.headlineSmall?.copyWith(fontSize: 22),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  user?.phone.trim().isNotEmpty == true
+                      ? user!.phone
+                      : user?.email ?? '',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                    color: c.plum45,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _PillButton(
+            label: loc.commonEdit,
+            icon: Icons.edit_rounded,
+            onTap: onEdit,
+          ),
+        ],
+      ),
     );
   }
 }
 
-/// Honest about what is not done yet.
+/// Honest about what is not done yet — and one tap from fixing it.
 class _SetupChecklist extends StatelessWidget {
-  const _SetupChecklist({required this.user, required this.guardianCount});
+  const _SetupChecklist({
+    required this.user,
+    required this.guardianCount,
+    required this.onAddGuardian,
+    required this.onAddVoicePhrase,
+    required this.onAddPhone,
+    required this.onAddMedicalNotes,
+  });
 
   final AppUser? user;
   final int guardianCount;
+  final VoidCallback onAddGuardian;
+  final VoidCallback onAddVoicePhrase;
+  final VoidCallback onAddPhone;
+  final VoidCallback onAddMedicalNotes;
 
   @override
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
     final loc = AppLocalizations.of(context);
 
-    final items = <({String label, bool done})>[
+    final items = <({String label, bool done, IconData icon, VoidCallback onAdd})>[
       (
         label: guardianCount > 0
             ? loc.profileGuardiansInCircle(guardianCount)
             : loc.profileNoGuardiansYet,
         done: guardianCount > 0,
+        icon: Icons.people_alt_outlined,
+        onAdd: onAddGuardian,
       ),
       (
         label: loc.profileVoicePhraseRecorded,
         done: user?.secretPhrase?.trim().isNotEmpty == true,
+        icon: Icons.mic_none_rounded,
+        onAdd: onAddVoicePhrase,
       ),
       (
         label: loc.profilePhoneConfirmed,
         done: user?.phone.trim().isNotEmpty == true,
+        icon: Icons.phone_outlined,
+        onAdd: onAddPhone,
       ),
-      (label: loc.profileMedicalNotes, done: false),
+      (
+        label: loc.profileMedicalNotes,
+        done: user?.medicalNotes.isNotEmpty == true,
+        icon: Icons.medical_information_outlined,
+        onAdd: onAddMedicalNotes,
+      ),
     ];
 
     final done = items.where((i) => i.done).length;
@@ -214,18 +359,39 @@ class _SetupChecklist extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
           child: Column(
             children: [
+              // Overall progress, as a soft gradient bar.
+              Padding(
+                padding: const EdgeInsets.only(top: 12, bottom: 4),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: done / items.length,
+                    minHeight: 6,
+                    backgroundColor: c.accentSoft,
+                    valueColor: AlwaysStoppedAnimation(
+                      done == items.length ? c.sage : c.accent,
+                    ),
+                  ),
+                ),
+              ),
               for (var i = 0; i < items.length; i++) ...[
                 if (i > 0) const AmicaDivider(),
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Row(
                     children: [
-                      Icon(
-                        items[i].done
-                            ? Icons.check_circle_outline_rounded
-                            : Icons.error_outline_rounded,
-                        size: 18,
-                        color: items[i].done ? c.sage : c.gold,
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: items[i].done ? c.sageSoft : c.goldSoft,
+                        ),
+                        child: Icon(
+                          items[i].done ? Icons.check_rounded : items[i].icon,
+                          size: 17,
+                          color: items[i].done ? c.sage : c.gold,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -239,7 +405,12 @@ class _SetupChecklist extends StatelessWidget {
                         ),
                       ),
                       if (!items[i].done)
-                        StatusPill(label: loc.commonAdd, tone: PillTone.gold),
+                        _PillButton(
+                          label: loc.commonAdd,
+                          icon: Icons.add_rounded,
+                          warm: true,
+                          onTap: items[i].onAdd,
+                        ),
                     ],
                   ),
                 ),
@@ -252,30 +423,179 @@ class _SetupChecklist extends StatelessWidget {
   }
 }
 
-class _DiscreetModeRow extends StatelessWidget {
-  const _DiscreetModeRow();
+/// Edits the name, phone number and medical notes. Pops `true` once saved.
+class _EditProfileSheet extends StatefulWidget {
+  const _EditProfileSheet({
+    required this.user,
+    required this.focusNotes,
+    required this.service,
+  });
+
+  final AppUser? user;
+  final bool focusNotes;
+  final UserProfileService service;
+
+  @override
+  State<_EditProfileSheet> createState() => _EditProfileSheetState();
+}
+
+class _EditProfileSheetState extends State<_EditProfileSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late final _name = TextEditingController(text: widget.user?.name ?? '');
+  late final _phone = TextEditingController(text: widget.user?.phone ?? '');
+  late final _notes =
+      TextEditingController(text: widget.user?.medicalNotes ?? '');
+  final _notesFocus = FocusNode();
+  bool _saving = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.focusNotes) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _notesFocus.requestFocus();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _phone.dispose();
+    _notes.dispose();
+    _notesFocus.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      await widget.service.updateProfile(
+        name: _name.text,
+        phone: _phone.text,
+        medicalNotes: _notes.text,
+      );
+      if (mounted) Navigator.pop(context, true);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = AppLocalizations.of(context).profileSaveFailed;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final controller = AmicaThemeController.instance;
+    final loc = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final c = theme.amica;
+
+    return Padding(
+      // Lifts the sheet above the keyboard.
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.viewInsetsOf(context).bottom,
+      ),
+      child: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(loc.profileEditTitle, style: theme.textTheme.headlineSmall),
+                const SizedBox(height: 4),
+                Text(loc.profileEditSubtitle, style: theme.textTheme.bodyMedium),
+                const SizedBox(height: 18),
+                TextFormField(
+                  controller: _name,
+                  textInputAction: TextInputAction.next,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: InputDecoration(
+                    labelText: loc.profileNameLabel,
+                    prefixIcon: const Icon(Icons.person_outline_rounded),
+                  ),
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? loc.profileNameRequired
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _phone,
+                  keyboardType: TextInputType.phone,
+                  textInputAction: TextInputAction.next,
+                  decoration: InputDecoration(
+                    labelText: loc.profilePhoneLabel,
+                    hintText: '+94 7X XXX XXXX',
+                    prefixIcon: const Icon(Icons.phone_outlined),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _notes,
+                  focusNode: _notesFocus,
+                  minLines: 2,
+                  maxLines: 4,
+                  maxLength: 500,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: InputDecoration(
+                    labelText: loc.profileMedicalNotesLabel,
+                    hintText: loc.profileMedicalNotesHint,
+                    prefixIcon: const Icon(Icons.medical_information_outlined),
+                    alignLabelWithHint: true,
+                  ),
+                ),
+                if (_error != null) ...[
+                  const SizedBox(height: 4),
+                  Text(_error!, style: TextStyle(color: c.terracottaDeep)),
+                ],
+                const SizedBox(height: 16),
+                PrimaryButton(
+                  label: loc.commonSave,
+                  icon: Icons.check_rounded,
+                  isBusy: _saving,
+                  onPressed: _save,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Light · Dark · System. Dark doubles as discreet mode.
+class _AppearanceRow extends StatelessWidget {
+  const _AppearanceRow();
+
+  @override
+  Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
 
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: controller,
-      builder: (context, _, __) {
-        final on = controller.isDiscreetIn(context);
-        return AmicaListRow(
-          icon: Icons.dark_mode_outlined,
-          title: loc.profileDiscreetModeTitle,
-          subtitle: loc.profileDiscreetModeSubtitle,
-          showChevron: false,
-          onTap: () => controller.setDiscreet(!on),
-          trailing: Switch(
-            value: on,
-            onChanged: controller.setDiscreet,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AmicaListRow(
+            icon: Icons.palette_outlined,
+            title: loc.appearanceTitle,
+            subtitle: loc.appearanceSubtitle,
+            showChevron: false,
           ),
-        );
-      },
+          const SizedBox(height: 4),
+          const ThemeModeSelector(),
+        ],
+      ),
     );
   }
 }

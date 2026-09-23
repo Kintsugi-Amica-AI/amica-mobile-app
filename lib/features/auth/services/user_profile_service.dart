@@ -130,6 +130,46 @@ class UserProfileService {
     }, SetOptions(merge: true));
   }
 
+  /// Saves the editable parts of the profile: name, phone and the medical
+  /// notes shown to responders. Merged, so nothing else on the user
+  /// document is touched.
+  Future<void> updateProfile({
+    required String name,
+    required String phone,
+    required String medicalNotes,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw const UserProfileException(
+          'Please log in before saving your profile.');
+    }
+    final trimmedName = name.trim();
+    if (trimmedName.isEmpty || trimmedName.length > 80) {
+      throw const UserProfileException('Enter a name up to 80 characters.');
+    }
+    final trimmedNotes = medicalNotes.trim();
+    if (trimmedNotes.length > 500) {
+      throw const UserProfileException(
+          'Medical notes can be at most 500 characters.');
+    }
+
+    await _firestore.collection('users').doc(user.uid).set({
+      'name': trimmedName,
+      'phone': phone.trim(),
+      'safetySettings': {'medicalNotes': trimmedNotes},
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    if (trimmedName != user.displayName) {
+      try {
+        await user.updateDisplayName(trimmedName);
+      } catch (_) {
+        // The Firestore profile is the source of truth; the Auth display
+        // name is only a convenience copy.
+      }
+    }
+  }
+
   Future<Map<String, dynamic>> _getCurrentUserData() async {
     final user = _auth.currentUser;
     if (user == null) {

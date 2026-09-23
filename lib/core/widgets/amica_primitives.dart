@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import 'glass_card.dart';
 
-/// Small shared pieces of the Warm Dawn vocabulary, one-to-one with the
+/// Small shared pieces of the Blossom vocabulary, one-to-one with the
 /// design system sheet. Kept together because each is a handful of lines
 /// and screens almost always need several at once.
 
 /// What a [StatusPill] is reporting.
-enum PillTone { sage, gold, blush, quiet }
+enum PillTone { sage, gold, blush, quiet, accent }
 
 /// A short status word on a tinted, rounded ground — "Live", "Active",
 /// "3 of 4 done". Never interactive; if it can be tapped it is a button.
@@ -33,6 +33,7 @@ class StatusPill extends StatelessWidget {
       PillTone.gold => (c.goldSoft, c.gold),
       PillTone.blush => (c.blush, c.terracottaDeep),
       PillTone.quiet => (c.shell, c.plum70),
+      PillTone.accent => (c.accentSoft, c.accentInk),
     };
 
     return Container(
@@ -118,22 +119,22 @@ class AmicaTile extends StatelessWidget {
 
     return AmicaCard(
       onTap: onTap,
-      padding: const EdgeInsets.fromLTRB(11, 13, 11, 13),
-      borderRadius: 18,
+      padding: const EdgeInsets.fromLTRB(10, 14, 10, 13),
+      borderRadius: 22,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: tint,
-              borderRadius: BorderRadius.circular(11),
+              shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 18, color: iconColor ?? c.plum),
+            child: Icon(icon, size: 19, color: iconColor ?? c.accentInk),
           ),
-          const SizedBox(height: 9),
+          const SizedBox(height: 10),
           Text(
             label,
             style: const TextStyle(
@@ -218,10 +219,10 @@ class AmicaListRow extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: iconTint ?? c.shell,
-                    borderRadius: BorderRadius.circular(11),
+                    color: iconTint ?? c.accentSoft,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(icon, size: 18, color: iconColor ?? c.plum70),
+                  child: Icon(icon, size: 18, color: iconColor ?? c.accentInk),
                 ),
                 const SizedBox(width: 13),
               ],
@@ -291,7 +292,7 @@ class AmicaAvatar extends StatelessWidget {
       height: size,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: background ?? c.shell,
+        color: background ?? c.accentSoft,
         shape: BoxShape.circle,
         border: ringColor == null
             ? null
@@ -300,7 +301,7 @@ class AmicaAvatar extends StatelessWidget {
       child: Text(
         initial.isEmpty ? '?' : initial.characters.first.toUpperCase(),
         style: TextStyle(
-          color: foreground ?? c.plum70,
+          color: foreground ?? c.accentInk,
           fontSize: size * 0.35,
           fontWeight: FontWeight.w600,
         ),
@@ -338,13 +339,13 @@ class AmicaEmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 62,
-              height: 62,
+              width: 68,
+              height: 68,
               decoration: BoxDecoration(
-                color: c.shell,
-                borderRadius: BorderRadius.circular(20),
+                color: c.accentSoft,
+                shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 26, color: c.plum45),
+              child: Icon(icon, size: 28, color: c.accentInk),
             ),
             const SizedBox(height: 18),
             Text(

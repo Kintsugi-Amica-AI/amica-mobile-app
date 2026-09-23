@@ -6,6 +6,7 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 import 'package:image/image.dart' as img;
 
 import '../models/vehicle_status.dart';
+import '../utils/sri_lanka_plate.dart';
 
 List<int> _encodePlateCrop(img.Image image) =>
     img.encodeJpg(image, quality: 92);
@@ -26,6 +27,19 @@ class PlateScanException implements Exception {
   String toString() => message;
 }
 
+/// Outcome of reading one plate photo.
+class PlateRead {
+  const PlateRead({this.plate = '', this.suggestion = ''});
+
+  /// The exactly-read, canonical plate, or '' when none was read.
+  final String plate;
+
+  /// A best guess to pre-fill for confirmation when [plate] is empty.
+  final String suggestion;
+
+  bool get found => plate.isNotEmpty;
+}
+
 class PlateScanService {
   const PlateScanService({FirebaseFirestore? firestore})
       : _injectedFirestore = firestore;
@@ -43,45 +57,21 @@ class PlateScanService {
   ///
   /// Mirrors `clean_plate_text` in amica-ai-core's plate_ocr module so the
   /// mobile app and the AI prototype agree on the same plate format.
-  String cleanPlateText(String rawText) {
-    if (rawText.isEmpty) {
-      return '';
-    }
-    return rawText.replaceAll(RegExp(r'[^A-Za-z0-9]'), '').toUpperCase();
-  }
+  String cleanPlateText(String rawText) => SriLankaPlate.clean(rawText);
 
-  /// Whether a cleaned string is actually shaped like a vehicle plate
-  /// (a handful of letters and digits) rather than unrelated text ML Kit
-  /// also picked up in the frame, such as a brand badge or dealer sticker.
-  bool looksLikePlate(String cleaned) {
-    return RegExp(r'^(?:(?:WP|CP|SP|NP|EP|NW|NC|SG|UP))?[A-Z]{2,3}[0-9]{4}$')
-        .hasMatch(cleaned);
-  }
+  /// Whether a cleaned string is shaped like a Sri Lankan registration
+  /// (see [SriLankaPlate]) rather than unrelated text ML Kit also picked
+  /// up in the frame, such as a brand badge or dealer sticker.
+  bool looksLikePlate(String cleaned) => SriLankaPlate.isPlateShaped(cleaned);
 
-  /// Province is separate from the nationally unique modern registration.
-  /// Never turn letters into digits: silently guessing could identify another car.
-  String canonicalPlate(String text) {
-    var cleaned = cleanPlateText(text);
-    if (RegExp(r'^(WP|CP|SP|NP|EP|NW|NC|SG|UP)[A-Z]{2,3}[0-9]{4}$')
-        .hasMatch(cleaned)) {
-      cleaned = cleaned.substring(2);
-    }
-    return RegExp(r'^[A-Z]{2,3}[0-9]{4}$').hasMatch(cleaned) ? cleaned : '';
-  }
+  /// Province is separate from the nationally unique registration.
+  /// Never turn letters into digits: silently guessing could identify
+  /// another car.
+  String canonicalPlate(String text) => SriLankaPlate.canonical(text);
 
-  String parseRecognizedText(String text) {
-    // The supplied older NC example has a small D security marking between
-    // its series and number. It is not part of that registration.
-    final upper = text.toUpperCase().replaceAllMapped(
-        RegExp(r'\bNC[\s-]+D[\s-]+(\d{4})\b'), (m) => 'NC ${m[1]}');
-    final matches = RegExp(
-      r'(?<![A-Z0-9])(?:(?:WP|CP|SP|NP|EP|NW|NC|SG|UP)[\s-]+)?([A-Z]{2,3})[\s-]*(\d{4})(?![A-Z0-9])',
-    ).allMatches(upper).map((m) => '${m[1]}${m[2]}').toSet();
-    // Two different plates in the frame require a tighter scan or manual entry.
-    if (matches.length == 1) return matches.single;
-    if (matches.length > 1) return '';
-    return canonicalPlate(text);
-  }
+  /// The single registration read exactly from [text], or '' if none or
+  /// more than one.
+  String parseRecognizedText(String text) => SriLankaPlate.parse(text);
 
   /// Crops [imagePath] down to a fractional region (each value 0.0-1.0,
   /// relative to the orientation-corrected image) and writes the result to
@@ -142,58 +132,41 @@ class PlateScanService {
     }
   }
 
-  /// Runs on-device OCR (Google ML Kit) over a captured plate photo and
-  /// returns the cleaned plate text, or an empty string if nothing was
-  /// confidently recognized.
+  /// Runs on-device OCR (Google ML Kit) over a plate photo.
   ///
-  /// Sri Lankan plates split their identifier across more than one visual
-  /// group: a province code (e.g. "NW") sits separately from the main
-  /// series and digits (e.g. "TI-9982"), and on three-wheeler/taxi plates
-  /// those two parts often stack on separate lines entirely. ML Kit
-  /// reports each line individually, so evaluating lines in isolation
-  /// (e.g. "TI" alone, or "9982" alone) misses the plate. This groups each
-  /// recognized block's full text (ML Kit already clusters spatially close
-  /// lines into one block) in addition to individual lines, then prefers
-  /// whichever candidate actually looks like a plate (mix of letters and
-  /// digits) over simply the longest text ML Kit found, since a vehicle's
-  /// badge, dealer sticker, or background signage is often longer than the
-  /// plate itself and would otherwise win by length.
-  Future<String> extractPlateText(String imagePath,
+  /// Sri Lankan plates split their registration across several visual
+  /// groups (province code, series, number), and three-wheeler plates
+  /// stack them on separate lines. ML Kit reports each line on its own,
+  /// so the whole-image text, every block and every line are all parsed,
+  /// and the single plate found across them wins.
+  ///
+  /// [PlateRead.plate] is only set for an exact read. When nothing reads
+  /// exactly, [PlateRead.suggestion] carries a best guess with OCR
+  /// look-alikes fixed (O/0, B/8, I/1...) for the officer to confirm.
+  Future<PlateRead> readPlate(String imagePath,
       {bool tryRotations = true}) async {
     final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
     try {
-      final inputImage = InputImage.fromFilePath(imagePath);
-      final result = await recognizer.processImage(inputImage);
+      final result =
+          await recognizer.processImage(InputImage.fromFilePath(imagePath));
+      final fragments = <String>[
+        result.text,
+        for (final block in result.blocks) ...[
+          block.text,
+          for (final line in block.lines) line.text,
+        ],
+      ];
 
-      final allCandidates = <String>[];
-
-      // The whole image's text in natural reading order, in case the
-      // province code and the main plate code are separate ML Kit blocks
-      // that never get clustered together (e.g. a province box set apart
-      // from the main plate face).
-      final wholeImageCleaned = parseRecognizedText(result.text);
-      if (wholeImageCleaned.length >= 4) {
-        allCandidates.add(wholeImageCleaned);
+      final plate = SriLankaPlate.parseFragments(fragments);
+      if (plate.isNotEmpty) return PlateRead(plate: plate);
+      final suggestion = SriLankaPlate.suggest(fragments);
+      if (suggestion.isNotEmpty || !tryRotations) {
+        return PlateRead(suggestion: suggestion);
       }
 
-      for (final block in result.blocks) {
-        final blockCleaned = parseRecognizedText(block.text);
-        if (blockCleaned.length >= 4) {
-          allCandidates.add(blockCleaned);
-        }
-        for (final line in block.lines) {
-          final lineCleaned = parseRecognizedText(line.text);
-          if (lineCleaned.length >= 4) {
-            allCandidates.add(lineCleaned);
-          }
-        }
-      }
-
-      final plates = allCandidates.where(looksLikePlate).toSet();
-      if (plates.length == 1) return plates.single;
-      if (plates.length > 1 || !tryRotations) return '';
       // Gallery photos may be sideways without EXIF rotation metadata.
       final rotatedPlates = <String>{};
+      var rotatedSuggestion = '';
       for (final angle in [90, 180, 270]) {
         final path = '$imagePath.rotate$angle.jpg';
         try {
@@ -201,13 +174,17 @@ class PlateScanService {
               (bytes: await File(imagePath).readAsBytes(), angle: angle));
           if (rotated == null) continue;
           await File(path).writeAsBytes(rotated);
-          final plate = await extractPlateText(path, tryRotations: false);
-          if (plate.isNotEmpty) rotatedPlates.add(plate);
+          final read = await readPlate(path, tryRotations: false);
+          if (read.found) rotatedPlates.add(read.plate);
+          if (rotatedSuggestion.isEmpty) rotatedSuggestion = read.suggestion;
         } finally {
           if (await File(path).exists()) await File(path).delete();
         }
       }
-      return rotatedPlates.length == 1 ? rotatedPlates.single : '';
+      if (rotatedPlates.length == 1) {
+        return PlateRead(plate: rotatedPlates.single);
+      }
+      return PlateRead(suggestion: rotatedSuggestion);
     } catch (_) {
       throw const PlateScanException(
         'Could not read the plate. Try a clearer, well-lit photo.',
@@ -216,6 +193,11 @@ class PlateScanService {
       await recognizer.close();
     }
   }
+
+  /// The exactly-read plate in [imagePath], or '' if there is none.
+  Future<String> extractPlateText(String imagePath,
+          {bool tryRotations = true}) async =>
+      (await readPlate(imagePath, tryRotations: tryRotations)).plate;
 
   /// Looks up a cleaned plate number against the shared Firestore
   /// `vehicles` collection (matching amica-cloud-backend's schema).

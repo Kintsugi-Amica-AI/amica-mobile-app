@@ -712,6 +712,162 @@ abstract class AppLocalizations {
   /// **'Dark, silent, no preview in notifications'**
   String get profileDiscreetModeSubtitle;
 
+  /// No description provided for @appearanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearanceTitle;
+
+  /// No description provided for @appearanceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Light is easiest to read by day. Dark is discreet at night.'**
+  String get appearanceSubtitle;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get themeSystem;
+
+  /// No description provided for @mapRecenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Centre on my location'**
+  String get mapRecenter;
+
+  /// No description provided for @mapShowWholeRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the whole route'**
+  String get mapShowWholeRoute;
+
+  /// No description provided for @mapZoomIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom in'**
+  String get mapZoomIn;
+
+  /// No description provided for @mapZoomOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom out'**
+  String get mapZoomOut;
+
+  /// No description provided for @startJourneyYourLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Your location'**
+  String get startJourneyYourLocation;
+
+  /// No description provided for @profileEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get profileEditTitle;
+
+  /// No description provided for @profileEditSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep these up to date so Amica can help you faster.'**
+  String get profileEditSubtitle;
+
+  /// No description provided for @profileNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get profileNameLabel;
+
+  /// No description provided for @profilePhoneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number'**
+  String get profilePhoneLabel;
+
+  /// No description provided for @profileMedicalNotesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical notes (optional)'**
+  String get profileMedicalNotesLabel;
+
+  /// No description provided for @profileMedicalNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Allergies, conditions, medication, blood group…'**
+  String get profileMedicalNotesHint;
+
+  /// No description provided for @profileNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your name'**
+  String get profileNameRequired;
+
+  /// No description provided for @profileSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile saved'**
+  String get profileSaved;
+
+  /// No description provided for @profileSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save your profile. Check your connection and try again.'**
+  String get profileSaveFailed;
+
+  /// No description provided for @homeSafetyTipTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety tip of the day'**
+  String get homeSafetyTipTitle;
+
+  /// No description provided for @homeSafetyTip1.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your journey with someone you trust before you set off.'**
+  String get homeSafetyTip1;
+
+  /// No description provided for @homeSafetyTip2.
+  ///
+  /// In en, this message translates to:
+  /// **'At night, sit near the driver or other passengers on buses and trains.'**
+  String get homeSafetyTip2;
+
+  /// No description provided for @homeSafetyTip3.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your phone charged above 20% before heading out late.'**
+  String get homeSafetyTip3;
+
+  /// No description provided for @homeSafetyTip4.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust your instincts. If a place feels wrong, leave and tell someone.'**
+  String get homeSafetyTip4;
+
+  /// No description provided for @homeSafetyTip5.
+  ///
+  /// In en, this message translates to:
+  /// **'Check that the taxi\'s number plate matches your booking before you get in.'**
+  String get homeSafetyTip5;
+
+  /// No description provided for @homeSafetyTip6.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a secret voice phrase so you can alert your circle without touching your phone.'**
+  String get homeSafetyTip6;
+
   /// No description provided for @profileLogOut.
   ///
   /// In en, this message translates to:
@@ -2317,8 +2473,26 @@ abstract class AppLocalizations {
   /// No description provided for @plateScanInvalidPlate.
   ///
   /// In en, this message translates to:
-  /// **'Enter two or three letters and four digits.'**
+  /// **'Enter a plate like CAB-1234, WP KA-1234 or 65-1234.'**
   String get plateScanInvalidPlate;
+
+  /// No description provided for @plateScanConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm plate number'**
+  String get plateScanConfirmTitle;
+
+  /// No description provided for @plateScanConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the plate we read and correct it if needed.'**
+  String get plateScanConfirmMessage;
+
+  /// No description provided for @plateScanUnreadMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the plate clearly. Type the number shown on the plate.'**
+  String get plateScanUnreadMessage;
 
   /// No description provided for @plateScanTitle.
   ///

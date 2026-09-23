@@ -362,6 +362,94 @@ class AppLocalizationsEn extends AppLocalizations {
       'Dark, silent, no preview in notifications';
 
   @override
+  String get appearanceTitle => 'Appearance';
+
+  @override
+  String get appearanceSubtitle =>
+      'Light is easiest to read by day. Dark is discreet at night.';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get themeSystem => 'System';
+
+  @override
+  String get mapRecenter => 'Centre on my location';
+
+  @override
+  String get mapShowWholeRoute => 'Show the whole route';
+
+  @override
+  String get mapZoomIn => 'Zoom in';
+
+  @override
+  String get mapZoomOut => 'Zoom out';
+
+  @override
+  String get startJourneyYourLocation => 'Your location';
+
+  @override
+  String get profileEditTitle => 'Edit profile';
+
+  @override
+  String get profileEditSubtitle =>
+      'Keep these up to date so Amica can help you faster.';
+
+  @override
+  String get profileNameLabel => 'Your name';
+
+  @override
+  String get profilePhoneLabel => 'Phone number';
+
+  @override
+  String get profileMedicalNotesLabel => 'Medical notes (optional)';
+
+  @override
+  String get profileMedicalNotesHint =>
+      'Allergies, conditions, medication, blood group…';
+
+  @override
+  String get profileNameRequired => 'Please enter your name';
+
+  @override
+  String get profileSaved => 'Profile saved';
+
+  @override
+  String get profileSaveFailed =>
+      'Couldn\'t save your profile. Check your connection and try again.';
+
+  @override
+  String get homeSafetyTipTitle => 'Safety tip of the day';
+
+  @override
+  String get homeSafetyTip1 =>
+      'Share your journey with someone you trust before you set off.';
+
+  @override
+  String get homeSafetyTip2 =>
+      'At night, sit near the driver or other passengers on buses and trains.';
+
+  @override
+  String get homeSafetyTip3 =>
+      'Keep your phone charged above 20% before heading out late.';
+
+  @override
+  String get homeSafetyTip4 =>
+      'Trust your instincts. If a place feels wrong, leave and tell someone.';
+
+  @override
+  String get homeSafetyTip5 =>
+      'Check that the taxi\'s number plate matches your booking before you get in.';
+
+  @override
+  String get homeSafetyTip6 =>
+      'Set a secret voice phrase so you can alert your circle without touching your phone.';
+
+  @override
   String get profileLogOut => 'Log out';
 
   @override
@@ -1281,7 +1369,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get plateScanInvalidPlate =>
-      'Enter two or three letters and four digits.';
+      'Enter a plate like CAB-1234, WP KA-1234 or 65-1234.';
+
+  @override
+  String get plateScanConfirmTitle => 'Confirm plate number';
+
+  @override
+  String get plateScanConfirmMessage =>
+      'Check the plate we read and correct it if needed.';
+
+  @override
+  String get plateScanUnreadMessage =>
+      'Couldn\'t read the plate clearly. Type the number shown on the plate.';
 
   @override
   String get plateScanTitle => 'Scan before you ride';

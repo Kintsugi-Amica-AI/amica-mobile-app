@@ -47,8 +47,6 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = Theme.of(context).amica;
-
     return Scaffold(
       body: SafeArea(
         bottom: false,
@@ -90,6 +88,8 @@ class HomeScreen extends StatelessWidget {
                             _SosHero(guardians: guardians),
                             const SizedBox(height: 30),
                             _QuieterOptions(),
+                            const SizedBox(height: 16),
+                            const _SafetyTip(),
                             const SizedBox(height: 20),
                           ],
                         ),
@@ -102,7 +102,6 @@ class HomeScreen extends StatelessWidget {
           },
         ),
       ),
-      backgroundColor: c.ivory,
     );
   }
 }
@@ -124,11 +123,15 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
       child: Row(
         children: [
-          Text(
-            'Amica',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontSize: 23,
-              letterSpacing: 0.2,
+          ShaderMask(
+            blendMode: BlendMode.srcIn,
+            shaderCallback: (bounds) => c.accentGradient.createShader(bounds),
+            child: Text(
+              'Amica',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontSize: 24,
+                letterSpacing: 0.2,
+              ),
             ),
           ),
           const Spacer(),
@@ -149,14 +152,16 @@ class _Header extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: on ? c.plum : c.shell,
+                      color: on ? null : c.card,
+                      gradient: on ? c.accentGradient : null,
                       shape: BoxShape.circle,
-                      border: Border.all(color: on ? c.plum : c.line),
+                      border: on ? null : Border.all(color: c.lineSoft),
+                      boxShadow: c.shadow,
                     ),
                     child: Icon(
-                      Icons.dark_mode_outlined,
+                      on ? Icons.dark_mode_rounded : Icons.dark_mode_outlined,
                       size: 19,
-                      color: on ? c.ivory : c.plum70,
+                      color: on ? AppColors.onAccent : c.accentInk,
                     ),
                   ),
                 ),
@@ -166,10 +171,16 @@ class _Header extends StatelessWidget {
           const SizedBox(width: 8),
           GestureDetector(
             onTap: onProfile,
-            child: AmicaAvatar(
-              initial: initial.isEmpty ? 'A' : initial,
-              background: c.blush,
-              foreground: c.terracottaDeep,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: c.accentGradient,
+              ),
+              child: AmicaAvatar(
+                initial: initial.isEmpty ? 'A' : initial,
+                size: 38,
+              ),
             ),
           ),
         ],
@@ -245,16 +256,16 @@ class _ProtectionStatus extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: AmicaCard(
-        padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
         onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
         child: Row(
           children: [
             Container(
-              width: 38,
-              height: 38,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 color: ready ? c.sageSoft : c.goldSoft,
-                borderRadius: BorderRadius.circular(12),
+                shape: BoxShape.circle,
               ),
               child: Icon(
                 ready ? Icons.verified_user_outlined : Icons.shield_outlined,
@@ -378,8 +389,8 @@ class _QuieterOptions extends StatelessWidget {
                 child: AmicaTile(
                   label: loc.homeTileScanPlate,
                   icon: Icons.qr_code_scanner_rounded,
-                  tint: c.blush,
-                  iconColor: c.terracottaDeep,
+                  tint: c.sky,
+                  iconColor: c.skyInk,
                   onTap: () =>
                       Navigator.pushNamed(context, AppRoutes.plateScan),
                 ),
@@ -389,8 +400,8 @@ class _QuieterOptions extends StatelessWidget {
                 child: AmicaTile(
                   label: loc.homeTileStopAlert,
                   icon: Icons.notifications_active_outlined,
-                  tint: c.shell,
-                  iconColor: c.plum70,
+                  tint: c.accentSoft,
+                  iconColor: c.accentInk,
                   onTap: () =>
                       Navigator.pushNamed(context, AppRoutes.stopAlert),
                 ),
@@ -398,6 +409,70 @@ class _QuieterOptions extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// A gentle daily safety tip, like the "tip of the day" card in the
+/// reference designs. Rotates by calendar day so it feels fresh without
+/// ever changing mid-glance.
+class _SafetyTip extends StatelessWidget {
+  const _SafetyTip();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Theme.of(context).amica;
+    final theme = Theme.of(context);
+    final loc = AppLocalizations.of(context);
+    final tips = [
+      loc.homeSafetyTip1,
+      loc.homeSafetyTip2,
+      loc.homeSafetyTip3,
+      loc.homeSafetyTip4,
+      loc.homeSafetyTip5,
+      loc.homeSafetyTip6,
+    ];
+    final now = DateTime.now();
+    final dayOfYear = now.difference(DateTime(now.year)).inDays;
+    final tip = tips[dayOfYear % tips.length];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: AmicaCard(
+        padding: const EdgeInsets.fromLTRB(14, 14, 16, 14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: c.accentGradient,
+                boxShadow: c.accentGlow,
+              ),
+              child: const Icon(
+                Icons.tips_and_updates_outlined,
+                size: 20,
+                color: AppColors.onAccent,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(loc.homeSafetyTipTitle,
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(color: c.accentInk)),
+                  const SizedBox(height: 3),
+                  Text(tip, style: theme.textTheme.bodyMedium),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -93,7 +93,6 @@ class _SosActiveScreenState extends State<SosActiveScreen> {
     final args = widget.arguments;
 
     return Scaffold(
-      backgroundColor: c.ivory,
       body: Column(
         children: [
           _LiveStrip(elapsed: _elapsedLabel),
@@ -249,7 +248,7 @@ class _LiveStrip extends StatelessWidget {
                 const SizedBox(width: 9),
                 Text(
                   AppLocalizations.of(context).sosActiveLive,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.onTerracotta,
                     fontSize: 13.5,
                     fontWeight: FontWeight.w700,

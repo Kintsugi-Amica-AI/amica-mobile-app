@@ -5,6 +5,7 @@ import '../../../core/widgets/amica_background.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/loading_view.dart';
 import '../../../core/widgets/primary_button.dart';
+import '../../../core/widgets/theme_mode_selector.dart';
 import '../../auth/services/user_profile_service.dart';
 import '../../../core/locale/locale_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -181,6 +182,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(height: 12),
                 ],
+                Row(
+                  children: [
+                    Icon(Icons.palette_outlined,
+                        color: Theme.of(context).amica.accentInk, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      loc.appearanceTitle,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                GlassCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        loc.appearanceSubtitle,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 12),
+                      const ThemeModeSelector(),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
                 Row(
                   children: [
                     Icon(Icons.phone_in_talk_outlined,
@@ -377,23 +404,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       // highlighted.
                       final effective = selected ??
                           Localizations.localeOf(context);
-                      return Column(
-                        children: [
-                          for (final locale
-                              in AmicaLocaleController.supportedLocales)
-                            RadioListTile<String>(
-                              contentPadding: EdgeInsets.zero,
-                              value: locale.languageCode,
-                              groupValue: effective.languageCode,
-                              title: Text(
-                                AmicaLocaleController
-                                        .nativeNames[locale.languageCode] ??
-                                    locale.languageCode,
+                      return RadioGroup<String>(
+                        groupValue: effective.languageCode,
+                        onChanged: (code) {
+                          if (code == null) return;
+                          AmicaLocaleController.instance
+                              .setLocale(Locale(code));
+                        },
+                        child: Column(
+                          children: [
+                            for (final locale
+                                in AmicaLocaleController.supportedLocales)
+                              RadioListTile<String>(
+                                contentPadding: EdgeInsets.zero,
+                                value: locale.languageCode,
+                                title: Text(
+                                  AmicaLocaleController
+                                          .nativeNames[locale.languageCode] ??
+                                      locale.languageCode,
+                                ),
                               ),
-                              onChanged: (_) => AmicaLocaleController.instance
-                                  .setLocale(locale),
-                            ),
-                        ],
+                          ],
+                        ),
                       );
                     },
                   ),

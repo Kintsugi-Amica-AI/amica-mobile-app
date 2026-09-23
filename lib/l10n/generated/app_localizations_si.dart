@@ -370,6 +370,94 @@ class AppLocalizationsSi extends AppLocalizations {
       'අඳුරු, නිහඬ, දැනුම්දීම්වල පෙරදසුනක් නැත';
 
   @override
+  String get appearanceTitle => 'පෙනුම';
+
+  @override
+  String get appearanceSubtitle =>
+      'දිවා කාලයේ ආලෝක මාදිලිය කියවීමට පහසුයි. රාත්‍රියේ අඳුරු මාදිලිය රහසිගතයි.';
+
+  @override
+  String get themeLight => 'ආලෝක';
+
+  @override
+  String get themeDark => 'අඳුරු';
+
+  @override
+  String get themeSystem => 'පද්ධතිය';
+
+  @override
+  String get mapRecenter => 'මගේ ස්ථානයට යොමු කරන්න';
+
+  @override
+  String get mapShowWholeRoute => 'සම්පූර්ණ මාර්ගය පෙන්වන්න';
+
+  @override
+  String get mapZoomIn => 'විශාලනය කරන්න';
+
+  @override
+  String get mapZoomOut => 'කුඩා කරන්න';
+
+  @override
+  String get startJourneyYourLocation => 'ඔබේ ස්ථානය';
+
+  @override
+  String get profileEditTitle => 'පැතිකඩ සංස්කරණය';
+
+  @override
+  String get profileEditSubtitle =>
+      'Amica ට ඔබට ඉක්මනින් උදව් කිරීමට මේවා යාවත්කාලීනව තබාගන්න.';
+
+  @override
+  String get profileNameLabel => 'ඔබේ නම';
+
+  @override
+  String get profilePhoneLabel => 'දුරකථන අංකය';
+
+  @override
+  String get profileMedicalNotesLabel => 'වෛද්‍ය සටහන් (අත්‍යවශ්‍ය නොවේ)';
+
+  @override
+  String get profileMedicalNotesHint =>
+      'අසාත්මිකතා, රෝගී තත්ත්ව, ඖෂධ, රුධිර වර්ගය…';
+
+  @override
+  String get profileNameRequired => 'කරුණාකර ඔබේ නම ඇතුළත් කරන්න';
+
+  @override
+  String get profileSaved => 'පැතිකඩ සුරකින ලදී';
+
+  @override
+  String get profileSaveFailed =>
+      'ඔබේ පැතිකඩ සුරැකීමට නොහැකි විය. සම්බන්ධතාව පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get homeSafetyTipTitle => 'අද දවසේ ආරක්ෂක ඉඟිය';
+
+  @override
+  String get homeSafetyTip1 =>
+      'පිටත් වීමට පෙර ඔබේ ගමන ඔබ විශ්වාස කරන කෙනෙකු සමඟ බෙදාගන්න.';
+
+  @override
+  String get homeSafetyTip2 =>
+      'රාත්‍රියේ බස් සහ දුම්රියවල රියදුරු හෝ අනෙක් මගීන් අසල වාඩි වන්න.';
+
+  @override
+  String get homeSafetyTip3 =>
+      'රෑ බෝ වී පිටත් වීමට පෙර ඔබේ දුරකථනය 20%ට වඩා ආරෝපණය කර තබාගන්න.';
+
+  @override
+  String get homeSafetyTip4 =>
+      'ඔබේ හැඟීම් විශ්වාස කරන්න. ස්ථානයක් වැරදි යැයි හැඟේ නම්, එතැනින් ඉවත් වී කෙනෙකුට දන්වන්න.';
+
+  @override
+  String get homeSafetyTip5 =>
+      'කුලී රථයට නැගීමට පෙර එහි අංක තහඩුව ඔබේ වෙන්කිරීමට ගැළපේදැයි පරීක්ෂා කරන්න.';
+
+  @override
+  String get homeSafetyTip6 =>
+      'දුරකථනය ස්පර්ශ නොකර ඔබේ කවයට දැනුම් දීමට රහස් හඬ වාක්‍යයක් සකසන්න.';
+
+  @override
   String get profileLogOut => 'පිටවන්න';
 
   @override
@@ -1293,7 +1381,18 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get plateScanInvalidPlate =>
-      'අකුරු දෙකක් හෝ තුනක් සහ ඉලක්කම් හතරක් ඇතුළත් කරන්න.';
+      'CAB-1234, WP KA-1234 හෝ 65-1234 වැනි අංකයක් ඇතුළත් කරන්න.';
+
+  @override
+  String get plateScanConfirmTitle => 'වාහන අංකය තහවුරු කරන්න';
+
+  @override
+  String get plateScanConfirmMessage =>
+      'කියවූ අංකය පරීක්ෂා කර අවශ්‍ය නම් නිවැරදි කරන්න.';
+
+  @override
+  String get plateScanUnreadMessage =>
+      'අංක තහඩුව පැහැදිලිව කියවිය නොහැකි විය. තහඩුවේ ඇති අංකය ටයිප් කරන්න.';
 
   @override
   String get plateScanTitle => 'ගමන් යාමට පෙර සුපිරික්සන්න';

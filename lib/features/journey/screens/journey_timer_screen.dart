@@ -22,6 +22,7 @@ import '../../sos/services/sos_service.dart';
 import '../models/journey.dart';
 import '../models/location_data_model.dart';
 import '../services/journey_service.dart';
+import '../widgets/journey_visuals.dart';
 import 'safety_check_screen.dart';
 import '../../plate_scan/screens/vehicle_rating_screen.dart';
 import '../../plate_scan/services/vehicle_journey_service.dart';
@@ -690,7 +691,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     final minutes = await showModalBottomSheet<int>(
       context: context,
       showDragHandle: true,
-      builder: (context) => _PauseDurationSheet(
+      builder: (context) => const _PauseDurationSheet(
         choicesMinutes: _pauseChoicesMinutes,
         initialMinutes: _defaultPauseMinutes,
       ),
@@ -913,33 +914,14 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
         isPaused ? _loc.journeyTimerPaused : _statusLabel(journey.status);
     final vehiclePlate = journey.metadata['vehiclePlate'];
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: c.shell,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border(top: BorderSide(color: c.lineSoft)),
-        boxShadow: c.shadow,
-      ),
-      child: SafeArea(
-        top: false,
-        child: ListView(
-          controller: scrollController,
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: c.line,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
+    return JourneyGlassSheet(
+      scrollController: scrollController,
+      children: [
             // Destination + status.
             Row(
               children: [
+                GradientIconBadge(icon: journeyTypeIcon(journey.journeyType)),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -989,6 +971,23 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
                             ),
                           ),
                         ),
+                        const SizedBox(height: 8),
+                        ValueListenableBuilder<Duration>(
+                          valueListenable: _remainingNotifier,
+                          builder: (context, remaining, _) {
+                            final total =
+                                journey.estimatedDurationMinutes * 60;
+                            final fraction = total <= 0
+                                ? 0.0
+                                : (remaining.inSeconds / total)
+                                    .clamp(0.0, 1.0);
+                            return _TimeLeftBar(
+                              fraction: fraction,
+                              paused: isPaused,
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 6),
                         ValueListenableBuilder<Duration?>(
                           valueListenable: _pauseLeftNotifier,
                           builder: (context, pauseLeft, _) {
@@ -1022,11 +1021,10 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
               padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
               child: Row(
                 children: [
-                  Icon(
-                    journey.journeyType == 'walk'
-                        ? Icons.directions_walk_rounded
-                        : Icons.directions_car_rounded,
-                    color: c.plum70,
+                  const GradientIconBadge(
+                    icon: Icons.alt_route_rounded,
+                    size: 38,
+                    soft: true,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -1049,6 +1047,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
                   ),
                   IconButton(
                     tooltip: _loc.journeyTimerOpenInMaps,
+                    color: c.accentInk,
                     icon: const Icon(Icons.navigation_rounded),
                     onPressed: journey.destinationLocation == null
                         ? null
@@ -1067,12 +1066,14 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: _isSaving ? null : () => _sendSos(journey),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: c.terracottaDeep,
+                side: BorderSide(color: c.terracotta.withValues(alpha: 0.45)),
+              ),
               icon: const Icon(Icons.sos_rounded),
               label: Text(_loc.journeyTimerTriggerTestSos),
             ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 
@@ -1098,6 +1099,41 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
           : () => _pauseJourney(journey),
       icon: const Icon(Icons.pause_rounded),
       label: Text(_loc.journeyTimerPause),
+    );
+  }
+}
+
+/// Time left, as a soft gradient bar. Gold while paused.
+class _TimeLeftBar extends StatelessWidget {
+  const _TimeLeftBar({required this.fraction, required this.paused});
+
+  final double fraction;
+  final bool paused;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Theme.of(context).amica;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(999),
+      child: SizedBox(
+        height: 7,
+        width: double.infinity,
+        child: Stack(
+          children: [
+            Positioned.fill(child: ColoredBox(color: c.accentSoft)),
+            FractionallySizedBox(
+              widthFactor: fraction,
+              heightFactor: 1,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: paused ? c.gold : null,
+                  gradient: paused ? null : c.accentGradient,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

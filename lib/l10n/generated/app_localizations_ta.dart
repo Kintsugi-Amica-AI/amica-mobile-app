@@ -370,6 +370,95 @@ class AppLocalizationsTa extends AppLocalizations {
       'இருள், அமைதி, அறிவிப்புகளில் முன்னோட்டம் இல்லை';
 
   @override
+  String get appearanceTitle => 'தோற்றம்';
+
+  @override
+  String get appearanceSubtitle =>
+      'பகலில் ஒளி பயன்முறை படிக்க எளிது. இரவில் இருள் பயன்முறை மறைவாக இருக்கும்.';
+
+  @override
+  String get themeLight => 'ஒளி';
+
+  @override
+  String get themeDark => 'இருள்';
+
+  @override
+  String get themeSystem => 'சிஸ்டம்';
+
+  @override
+  String get mapRecenter => 'என் இருப்பிடத்திற்கு மையப்படுத்து';
+
+  @override
+  String get mapShowWholeRoute => 'முழு வழியைக் காட்டு';
+
+  @override
+  String get mapZoomIn => 'பெரிதாக்கு';
+
+  @override
+  String get mapZoomOut => 'சிறிதாக்கு';
+
+  @override
+  String get startJourneyYourLocation => 'உங்கள் இருப்பிடம்';
+
+  @override
+  String get profileEditTitle => 'சுயவிவரத்தைத் திருத்து';
+
+  @override
+  String get profileEditSubtitle =>
+      'Amica உங்களுக்கு விரைவாக உதவ இவற்றைப் புதுப்பித்து வைத்திருங்கள்.';
+
+  @override
+  String get profileNameLabel => 'உங்கள் பெயர்';
+
+  @override
+  String get profilePhoneLabel => 'தொலைபேசி எண்';
+
+  @override
+  String get profileMedicalNotesLabel =>
+      'மருத்துவக் குறிப்புகள் (விருப்பத்தேர்வு)';
+
+  @override
+  String get profileMedicalNotesHint =>
+      'ஒவ்வாமைகள், நோய் நிலைகள், மருந்துகள், இரத்த வகை…';
+
+  @override
+  String get profileNameRequired => 'உங்கள் பெயரை உள்ளிடவும்';
+
+  @override
+  String get profileSaved => 'சுயவிவரம் சேமிக்கப்பட்டது';
+
+  @override
+  String get profileSaveFailed =>
+      'உங்கள் சுயவிவரத்தைச் சேமிக்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.';
+
+  @override
+  String get homeSafetyTipTitle => 'இன்றைய பாதுகாப்பு குறிப்பு';
+
+  @override
+  String get homeSafetyTip1 =>
+      'புறப்படுவதற்கு முன் உங்கள் பயணத்தை நம்பிக்கைக்குரிய ஒருவருடன் பகிருங்கள்.';
+
+  @override
+  String get homeSafetyTip2 =>
+      'இரவில் பேருந்து மற்றும் ரயில்களில் ஓட்டுநர் அல்லது மற்ற பயணிகளுக்கு அருகில் அமருங்கள்.';
+
+  @override
+  String get homeSafetyTip3 =>
+      'இரவில் வெளியே செல்லும் முன் உங்கள் தொலைபேசியில் 20%க்கு மேல் சார்ஜ் இருக்கட்டும்.';
+
+  @override
+  String get homeSafetyTip4 =>
+      'உங்கள் உள்ளுணர்வை நம்புங்கள். ஒரு இடம் சரியில்லை எனத் தோன்றினால், வெளியேறி யாரிடமாவது சொல்லுங்கள்.';
+
+  @override
+  String get homeSafetyTip5 =>
+      'டாக்ஸியில் ஏறும் முன் அதன் எண் பலகை உங்கள் முன்பதிவுடன் பொருந்துகிறதா எனச் சரிபாருங்கள்.';
+
+  @override
+  String get homeSafetyTip6 =>
+      'தொலைபேசியைத் தொடாமலே உங்கள் வட்டத்தை எச்சரிக்க ஒரு ரகசிய குரல் சொற்றொடரை அமையுங்கள்.';
+
+  @override
   String get profileLogOut => 'வெளியேறு';
 
   @override
@@ -1326,7 +1415,18 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get plateScanInvalidPlate =>
-      'இரண்டு அல்லது மூன்று எழுத்துகளும் நான்கு இலக்கங்களும் உள்ளிடவும்.';
+      'CAB-1234, WP KA-1234 அல்லது 65-1234 போன்ற எண்ணை உள்ளிடவும்.';
+
+  @override
+  String get plateScanConfirmTitle => 'வாகன எண்ணை உறுதிப்படுத்தவும்';
+
+  @override
+  String get plateScanConfirmMessage =>
+      'படித்த எண்ணைச் சரிபார்த்து, தேவைப்பட்டால் திருத்தவும்.';
+
+  @override
+  String get plateScanUnreadMessage =>
+      'எண் பலகையைத் தெளிவாகப் படிக்க முடியவில்லை. பலகையில் உள்ள எண்ணை உள்ளிடவும்.';
 
   @override
   String get plateScanTitle => 'பயணிப்பதற்கு முன் ஸ்கேன் செய்யுங்கள்';

@@ -139,9 +139,20 @@ class _SosHoldButtonState extends State<SosHoldButton>
                   // Halo. Static — it marks the target, it does not pulse.
                   // A perpetually throbbing button is exhausting to live
                   // beside on a home screen you open every day.
+                  // Two soft concentric rose rings, as in the reference
+                  // designs — the target reads from across the room without
+                  // any motion.
                   Container(
                     width: _outer,
                     height: _outer,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: c.blush.withValues(alpha: 0.55),
+                    ),
+                  ),
+                  Container(
+                    width: (_outer + _core) / 2,
+                    height: (_outer + _core) / 2,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: c.blush,
@@ -153,6 +164,7 @@ class _SosHoldButtonState extends State<SosHoldButton>
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: c.terracotta,
+                      gradient: c.sosGradient,
                       boxShadow: c.lift,
                     ),
                     child: Center(

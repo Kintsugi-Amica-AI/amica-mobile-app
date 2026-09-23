@@ -4,25 +4,26 @@ import '../constants/app_colors.dart';
 
 /// What an Amica button means, by colour.
 enum AmicaButtonTone {
-  /// Default. Plum — the ordinary "continue" action.
+  /// Default. The lavender → orchid brand gradient — the ordinary
+  /// "continue" action.
   primary,
 
-  /// Shell with a hairline. A secondary choice sitting beside a primary one.
+  /// White pill with a hairline. A secondary choice beside a primary one.
   quiet,
 
-  /// Terracotta. Reserved for actions that summon help. Nothing else in the
-  /// app may use this tone, so it never loses its meaning.
+  /// Emergency rose. Reserved for actions that summon help. Nothing else in
+  /// the app may use this tone, so it never loses its meaning.
   danger,
 
   /// Sage. Confirming safety — "I'm safe", "end journey".
   safe,
 }
 
-/// Amica's action button: flat fill, 16px radius, 54px tall.
+/// Amica's action button: a 54px pill.
 ///
-/// The old version was a violet-to-cyan gradient with a 20px neon glow.
-/// Warm Dawn has no gradients and no glow — hierarchy is carried by colour
-/// and position instead, which survives being looked at in a hurry.
+/// Primary actions carry the brand gradient with a soft tinted glow
+/// beneath (light mode only — dark stays matte). Hierarchy is still carried
+/// by colour and position: one gradient pill per screen at most.
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
     required this.label,
@@ -55,62 +56,88 @@ class PrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
     final enabled = onPressed != null && !isBusy;
+    final radius = BorderRadius.circular(height / 2);
 
-    final (Color bg, Color fg, Color? border) = switch (_tone) {
-      AmicaButtonTone.primary => (c.plum, c.ivory, null),
-      AmicaButtonTone.quiet => (c.shell, c.plum, c.line),
-      AmicaButtonTone.danger => (c.terracotta, AppColors.onTerracotta, null),
-      AmicaButtonTone.safe => (c.sage, AppColors.onSage, null),
+    final (Color? bg, Gradient? gradient, Color fg, Color? border) =
+        switch (_tone) {
+      AmicaButtonTone.primary =>
+        (null, c.accentGradient, AppColors.onAccent, null),
+      AmicaButtonTone.quiet => (c.card, null, c.plum, c.line),
+      AmicaButtonTone.danger =>
+        (null, c.sosGradient, AppColors.onTerracotta, null),
+      AmicaButtonTone.safe => (c.sage, null, AppColors.onSage, null),
     };
+
+    final List<BoxShadow> glow = !enabled
+        ? const []
+        : switch (_tone) {
+            AmicaButtonTone.primary => c.accentGlow,
+            AmicaButtonTone.danger => c.shadow.isEmpty
+                ? const []
+                : [
+                    BoxShadow(
+                      color: c.terracotta.withValues(alpha: 0.28),
+                      blurRadius: 22,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+            _ => const [],
+          };
 
     return Opacity(
       opacity: enabled || isBusy ? 1 : 0.45,
       child: SizedBox(
         height: height,
-        child: Material(
-          color: bg,
-          borderRadius: BorderRadius.circular(16),
-          child: InkWell(
-            onTap: enabled ? onPressed : null,
-            borderRadius: BorderRadius.circular(16),
-            child: Ink(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                border: border == null ? null : Border.all(color: border),
-              ),
-              child: Center(
-                child: isBusy
-                    ? SizedBox(
-                        width: 21,
-                        height: 21,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.2,
-                          valueColor: AlwaysStoppedAnimation(fg),
-                        ),
-                      )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (icon != null) ...[
-                            Icon(icon, color: fg, size: 20),
-                            const SizedBox(width: 9),
-                          ],
-                          Flexible(
-                            child: Text(
-                              label,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: fg,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.08,
-                                fontSize: 15.5,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: bg,
+            gradient: gradient,
+            borderRadius: radius,
+            border: border == null ? null : Border.all(color: border),
+            boxShadow: glow,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: radius,
+            child: InkWell(
+              onTap: enabled ? onPressed : null,
+              borderRadius: radius,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Center(
+                  child: isBusy
+                      ? SizedBox(
+                          width: 21,
+                          height: 21,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.2,
+                            valueColor: AlwaysStoppedAnimation(fg),
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (icon != null) ...[
+                              Icon(icon, color: fg, size: 20),
+                              const SizedBox(width: 9),
+                            ],
+                            Flexible(
+                              child: Text(
+                                label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: fg,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.1,
+                                  fontSize: 15.5,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
+                ),
               ),
             ),
           ),

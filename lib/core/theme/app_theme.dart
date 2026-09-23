@@ -2,13 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../constants/app_colors.dart';
+import '../widgets/amica_background.dart';
 
-/// Amica's "Warm Dawn" theme.
+/// Amica's "Blossom" theme.
 ///
-/// Two themes, one token set: [light] is the daytime app, [dark] is the
-/// discreet night mode. Neither is a restyle of the other — they are the
-/// same [AmicaColors] structure with swapped values, so no widget in the
-/// app needs to branch on brightness.
+/// Two themes, one token set: [light] is the default daytime app, [dark]
+/// is the discreet night mode. Neither is a restyle of the other — they are
+/// the same [AmicaColors] structure with swapped values, so no widget in
+/// the app needs to branch on brightness.
+///
+/// Shape language follows the reference set the redesign was built from:
+/// generous radii (24px cards, pill buttons), soft tinted shadows, and a
+/// pastel gradient ground painted behind every page route (see
+/// [AmicaBackground] and [_AmicaPageTransitionsBuilder]).
 ///
 /// Type is Bricolage Grotesque for display sizes and Public Sans for
 /// everything else. Both are bundled under `assets/fonts/` rather than
@@ -42,8 +48,10 @@ class AppTheme {
 
     final colorScheme = ColorScheme(
       brightness: brightness,
-      primary: c.plum,
-      onPrimary: c.ivory,
+      primary: c.accent,
+      onPrimary: AppColors.onAccent,
+      primaryContainer: c.accentSoft,
+      onPrimaryContainer: c.accentInk,
       secondary: c.sage,
       onSecondary: AppColors.onSage,
       error: c.terracotta,
@@ -60,14 +68,38 @@ class AppTheme {
       brightness: brightness,
       colorScheme: colorScheme,
       extensions: [c],
-      scaffoldBackgroundColor: c.ivory,
+      // Scaffolds are transparent: every page route paints the Blossom
+      // gradient ground underneath itself (see [_AmicaPageTransitionsBuilder]).
+      scaffoldBackgroundColor: Colors.transparent,
       canvasColor: c.ivory,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: _AmicaPageTransitionsBuilder(
+            ZoomPageTransitionsBuilder(),
+          ),
+          TargetPlatform.iOS: _AmicaPageTransitionsBuilder(
+            CupertinoPageTransitionsBuilder(),
+          ),
+          TargetPlatform.fuchsia: _AmicaPageTransitionsBuilder(
+            ZoomPageTransitionsBuilder(),
+          ),
+          TargetPlatform.linux: _AmicaPageTransitionsBuilder(
+            ZoomPageTransitionsBuilder(),
+          ),
+          TargetPlatform.macOS: _AmicaPageTransitionsBuilder(
+            CupertinoPageTransitionsBuilder(),
+          ),
+          TargetPlatform.windows: _AmicaPageTransitionsBuilder(
+            ZoomPageTransitionsBuilder(),
+          ),
+        },
+      ),
       fontFamily: bodyFont,
       textTheme: textTheme,
-      // Warm Dawn has no ripple-and-glow. Touch feedback is a quiet tint.
+      // Touch feedback is a quiet lavender tint.
       splashFactory: InkSparkle.splashFactory,
-      splashColor: c.plum.withValues(alpha: 0.05),
-      highlightColor: c.plum.withValues(alpha: 0.03),
+      splashColor: c.accent.withValues(alpha: 0.06),
+      highlightColor: c.accent.withValues(alpha: 0.03),
       dividerColor: c.lineSoft,
       dividerTheme: DividerThemeData(
         color: c.lineSoft,
@@ -76,7 +108,7 @@ class AppTheme {
       ),
 
       appBarTheme: AppBarTheme(
-        backgroundColor: c.ivory,
+        backgroundColor: Colors.transparent,
         foregroundColor: c.plum,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -93,8 +125,8 @@ class AppTheme {
       // with one thumb while walking.
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: c.plum,
-          foregroundColor: c.ivory,
+          backgroundColor: c.accent,
+          foregroundColor: AppColors.onAccent,
           disabledBackgroundColor: c.shell,
           disabledForegroundColor: c.plum45,
           elevation: 0,
@@ -105,15 +137,13 @@ class AppTheme {
             fontWeight: FontWeight.w600,
             letterSpacing: 0.08,
           ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: const StadiumBorder(),
         ),
       ),
 
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          backgroundColor: c.shell,
+          backgroundColor: c.card,
           foregroundColor: c.plum,
           minimumSize: const Size.fromHeight(54),
           side: BorderSide(color: c.line),
@@ -122,15 +152,13 @@ class AppTheme {
             fontSize: 15.5,
             fontWeight: FontWeight.w600,
           ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: const StadiumBorder(),
         ),
       ),
 
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: c.terracottaDeep,
+          foregroundColor: c.accentInk,
           textStyle: const TextStyle(
             fontFamily: bodyFont,
             fontSize: 14,
@@ -143,19 +171,19 @@ class AppTheme {
         filled: true,
         fillColor: c.card,
         labelStyle: TextStyle(color: c.plum70, fontSize: 14),
-        floatingLabelStyle: TextStyle(color: c.plum, fontSize: 13),
+        floatingLabelStyle: TextStyle(color: c.accentInk, fontSize: 13),
         hintStyle: TextStyle(color: c.plum45, fontSize: 15),
         helperStyle: TextStyle(color: c.plum45, fontSize: 12),
         errorStyle: TextStyle(color: c.terracottaDeep, fontSize: 12),
         prefixIconColor: c.plum45,
         suffixIconColor: c.plum45,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
+          horizontal: 18,
           vertical: 17,
         ),
         border: _fieldBorder(c.line),
         enabledBorder: _fieldBorder(c.line),
-        focusedBorder: _fieldBorder(c.plum, width: 1.6),
+        focusedBorder: _fieldBorder(c.accent, width: 1.6),
         errorBorder: _fieldBorder(c.terracotta, width: 1.4),
         focusedErrorBorder: _fieldBorder(c.terracotta, width: 1.6),
       ),
@@ -166,7 +194,7 @@ class AppTheme {
         margin: EdgeInsets.zero,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           side: BorderSide(color: c.lineSoft),
         ),
       ),
@@ -187,18 +215,47 @@ class AppTheme {
           (s) => s.contains(WidgetState.selected) ? Colors.white : c.card,
         ),
         trackColor: WidgetStateProperty.resolveWith(
-          (s) => s.contains(WidgetState.selected) ? c.sage : c.line,
+          (s) => s.contains(WidgetState.selected) ? c.accent : c.line,
         ),
         trackOutlineColor: WidgetStateProperty.resolveWith(
-          (s) => s.contains(WidgetState.selected) ? c.sage : c.line,
+          (s) => s.contains(WidgetState.selected) ? c.accent : c.line,
         ),
       ),
 
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? c.accent : null,
+        ),
+        checkColor: const WidgetStatePropertyAll(AppColors.onAccent),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        side: BorderSide(color: c.plum45, width: 1.4),
+      ),
+
+      radioTheme: RadioThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? c.accent : c.plum45,
+        ),
+      ),
+
+      sliderTheme: SliderThemeData(
+        activeTrackColor: c.accent,
+        inactiveTrackColor: c.accentSoft,
+        thumbColor: c.accent,
+        overlayColor: c.accent.withValues(alpha: 0.12),
+      ),
+
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: c.accent,
+        selectionColor: c.accent.withValues(alpha: 0.22),
+        selectionHandleColor: c.accent,
+      ),
+
       chipTheme: ChipThemeData(
-        backgroundColor: c.shell,
+        backgroundColor: c.accentSoft,
+        selectedColor: c.accent,
         labelStyle: TextStyle(
           fontFamily: bodyFont,
-          color: c.plum70,
+          color: c.accentInk,
           fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
@@ -212,7 +269,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(28),
         ),
         titleTextStyle: textTheme.headlineSmall,
         contentTextStyle: textTheme.bodyMedium,
@@ -223,7 +280,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
       ),
 
@@ -235,18 +292,18 @@ class AppTheme {
           fontSize: 14,
           fontWeight: FontWeight.w500,
         ),
-        actionTextColor: c.blush,
+        actionTextColor: c.accentSoft,
         behavior: SnackBarBehavior.floating,
         elevation: 0,
         insetPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(18),
         ),
       ),
 
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: c.card,
-        indicatorColor: Colors.transparent,
+        indicatorColor: c.accentSoft,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         height: 64,
@@ -254,7 +311,7 @@ class AppTheme {
         iconTheme: WidgetStateProperty.resolveWith(
           (s) => IconThemeData(
             size: 22,
-            color: s.contains(WidgetState.selected) ? c.plum : c.plum45,
+            color: s.contains(WidgetState.selected) ? c.accentInk : c.plum45,
           ),
         ),
         labelTextStyle: WidgetStateProperty.resolveWith(
@@ -262,14 +319,34 @@ class AppTheme {
             fontFamily: bodyFont,
             fontSize: 10.5,
             fontWeight: FontWeight.w600,
-            color: s.contains(WidgetState.selected) ? c.plum : c.plum45,
+            color: s.contains(WidgetState.selected) ? c.accentInk : c.plum45,
           ),
         ),
       ),
 
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: c.accent,
+        foregroundColor: AppColors.onAccent,
+        elevation: 0,
+        highlightElevation: 0,
+        shape: const StadiumBorder(),
+      ),
+
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (s) => s.contains(WidgetState.selected) ? c.accentSoft : c.card,
+          ),
+          foregroundColor: WidgetStateProperty.resolveWith(
+            (s) => s.contains(WidgetState.selected) ? c.accentInk : c.plum70,
+          ),
+          side: WidgetStatePropertyAll(BorderSide(color: c.line)),
+        ),
+      ),
+
       progressIndicatorTheme: ProgressIndicatorThemeData(
-        color: c.plum,
-        linearTrackColor: c.shell,
+        color: c.accent,
+        linearTrackColor: c.accentSoft,
         circularTrackColor: c.shell,
       ),
 
@@ -285,7 +362,7 @@ class AppTheme {
           elevation: const WidgetStatePropertyAll(0),
           shape: WidgetStatePropertyAll(
             RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
               side: BorderSide(color: c.lineSoft),
             ),
           ),
@@ -296,7 +373,7 @@ class AppTheme {
 
   static OutlineInputBorder _fieldBorder(Color color, {double width = 1}) {
     return OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18),
       borderSide: BorderSide(color: color, width: width),
     );
   }
@@ -388,6 +465,37 @@ class AppTheme {
         fontWeight: FontWeight.w600,
         letterSpacing: 1.0,
       ),
+    );
+  }
+}
+
+/// Wraps every page route in the Blossom gradient ground, then hands off to
+/// the platform's normal transition.
+///
+/// Painting the ground per *route* (rather than once behind the whole
+/// navigator) keeps each page opaque, so a pushed page never shows the one
+/// beneath it through its transparent scaffold mid-transition. Because it
+/// hooks the theme, routes pushed with a bare [MaterialPageRoute] anywhere in
+/// the app get the ground too, with no per-screen changes.
+class _AmicaPageTransitionsBuilder extends PageTransitionsBuilder {
+  const _AmicaPageTransitionsBuilder(this.inner);
+
+  final PageTransitionsBuilder inner;
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return inner.buildTransitions<T>(
+      route,
+      context,
+      animation,
+      secondaryAnimation,
+      AmicaBackground(child: child),
     );
   }
 }

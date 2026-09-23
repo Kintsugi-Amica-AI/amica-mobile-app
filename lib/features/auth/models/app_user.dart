@@ -117,6 +117,13 @@ class AppUser {
     };
   }
 
+  /// Notes for responders (allergies, conditions…), stored under
+  /// `safetySettings.medicalNotes`. Empty when not set.
+  String get medicalNotes {
+    final value = safetySettings['medicalNotes'];
+    return value is String ? value.trim() : '';
+  }
+
   static String _readString(dynamic value, [String fallback = '']) {
     return value is String ? value : fallback;
   }

@@ -107,7 +107,6 @@ class _LoginScreenState extends State<LoginScreen> {
     // translucent panel floating on a gradient, which made the first thing
     // a new user saw look like a pop-up rather than the app.
     return Scaffold(
-      backgroundColor: c.ivory,
       body: SafeArea(
         child: Form(
           key: _formKey,

@@ -4,10 +4,9 @@ import '../constants/app_colors.dart';
 
 /// Amica's brand mark.
 ///
-/// Was a glowing gradient circle with a shield-and-moon glyph and a
-/// letter-spaced all-caps wordmark under a neon shader. Warm Dawn states it
-/// quietly: a flat blush disc, a single stroke shield, and the name set in
-/// Bricolage Grotesque as ordinary words rather than shouted capitals.
+/// Blossom: a lavender → orchid gradient disc with a shield-and-moon glyph
+/// on a soft lavender halo, and the name in Bricolage Grotesque carrying the
+/// same gradient. Deliberately not rose — rose is reserved for emergency.
 ///
 /// Still pure vector — no image asset required.
 class AmicaLogo extends StatelessWidget {
@@ -33,24 +32,39 @@ class AmicaLogo extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Soft lavender halo, then the brand-gradient disc.
         Container(
-          width: size,
-          height: size,
+          width: size * 1.3,
+          height: size * 1.3,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: c.blush,
+            color: c.accentSoft,
           ),
-          child: Icon(
-            Icons.shield_outlined,
-            color: c.terracottaDeep,
-            size: size * 0.44,
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: c.accentGradient,
+              boxShadow: c.accentGlow,
+            ),
+            child: Icon(
+              Icons.shield_moon_outlined,
+              color: AppColors.onAccent,
+              size: size * 0.46,
+            ),
           ),
         ),
         if (showWordmark) ...[
           SizedBox(height: size * 0.22),
-          Text(
-            'Amica',
-            style: theme.textTheme.displaySmall?.copyWith(fontSize: 34),
+          ShaderMask(
+            blendMode: BlendMode.srcIn,
+            shaderCallback: (bounds) => c.accentGradient.createShader(bounds),
+            child: Text(
+              'Amica',
+              style: theme.textTheme.displaySmall?.copyWith(fontSize: 34),
+            ),
           ),
           const SizedBox(height: 5),
           Text(
