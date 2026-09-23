@@ -698,6 +698,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripFeederBusHint => 'Too far to walk to the station';
 
   @override
+  String get loginOr => 'or';
+
+  @override
+  String get loginShowPassword => 'Show password';
+
+  @override
+  String get loginHidePassword => 'Hide password';
+
+  @override
+  String get signupSectionAboutYou => 'About you';
+
+  @override
+  String get signupSectionSafety => 'Your safety';
+
+  @override
+  String get signupSectionPassword => 'Password';
+
+  @override
+  String get signupStrengthWeak => 'Weak';
+
+  @override
+  String get signupStrengthFair => 'Fair';
+
+  @override
+  String get signupStrengthStrong => 'Strong';
+
+  @override
   String tripRideToStation(String station) {
     return 'Take a bus or tuk-tuk to $station';
   }

@@ -709,6 +709,33 @@ class AppLocalizationsTa extends AppLocalizations {
   String get tripFeederBusHint => 'நிலையத்திற்கு நடக்க தூரம் அதிகம்';
 
   @override
+  String get loginOr => 'அல்லது';
+
+  @override
+  String get loginShowPassword => 'கடவுச்சொல்லைக் காட்டு';
+
+  @override
+  String get loginHidePassword => 'கடவுச்சொல்லை மறை';
+
+  @override
+  String get signupSectionAboutYou => 'உங்களைப் பற்றி';
+
+  @override
+  String get signupSectionSafety => 'உங்கள் பாதுகாப்பு';
+
+  @override
+  String get signupSectionPassword => 'கடவுச்சொல்';
+
+  @override
+  String get signupStrengthWeak => 'பலவீனம்';
+
+  @override
+  String get signupStrengthFair => 'பரவாயில்லை';
+
+  @override
+  String get signupStrengthStrong => 'வலிமை';
+
+  @override
   String tripRideToStation(String station) {
     return '$station வரை பேருந்து அல்லது ஆட்டோவில் செல்லவும்';
   }

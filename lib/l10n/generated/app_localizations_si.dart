@@ -706,6 +706,33 @@ class AppLocalizationsSi extends AppLocalizations {
   String get tripFeederBusHint => 'දුම්රිය ස්ථානයට ඇවිදීමට දුර වැඩියි';
 
   @override
+  String get loginOr => 'හෝ';
+
+  @override
+  String get loginShowPassword => 'මුරපදය පෙන්වන්න';
+
+  @override
+  String get loginHidePassword => 'මුරපදය සඟවන්න';
+
+  @override
+  String get signupSectionAboutYou => 'ඔබ ගැන';
+
+  @override
+  String get signupSectionSafety => 'ඔබේ ආරක්ෂාව';
+
+  @override
+  String get signupSectionPassword => 'මුරපදය';
+
+  @override
+  String get signupStrengthWeak => 'දුර්වල';
+
+  @override
+  String get signupStrengthFair => 'සාමාන්‍ය';
+
+  @override
+  String get signupStrengthStrong => 'ශක්තිමත්';
+
+  @override
   String tripRideToStation(String station) {
     return '$station දක්වා බසයකින් හෝ ත්‍රීරෝද රථයකින් යන්න';
   }

@@ -1270,6 +1270,60 @@ abstract class AppLocalizations {
   /// **'Too far to walk to the station'**
   String get tripFeederBusHint;
 
+  /// No description provided for @loginOr.
+  ///
+  /// In en, this message translates to:
+  /// **'or'**
+  String get loginOr;
+
+  /// No description provided for @loginShowPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get loginShowPassword;
+
+  /// No description provided for @loginHidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get loginHidePassword;
+
+  /// No description provided for @signupSectionAboutYou.
+  ///
+  /// In en, this message translates to:
+  /// **'About you'**
+  String get signupSectionAboutYou;
+
+  /// No description provided for @signupSectionSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'Your safety'**
+  String get signupSectionSafety;
+
+  /// No description provided for @signupSectionPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get signupSectionPassword;
+
+  /// No description provided for @signupStrengthWeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Weak'**
+  String get signupStrengthWeak;
+
+  /// No description provided for @signupStrengthFair.
+  ///
+  /// In en, this message translates to:
+  /// **'Fair'**
+  String get signupStrengthFair;
+
+  /// No description provided for @signupStrengthStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong'**
+  String get signupStrengthStrong;
+
   /// No description provided for @tripRideToStation.
   ///
   /// In en, this message translates to:

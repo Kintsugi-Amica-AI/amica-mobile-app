@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../core/widgets/amica_logo.dart';
+import '../../../core/widgets/auth_widgets.dart';
 import '../../../core/widgets/custom_text_field.dart';
+import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/motion.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../services/auth_service.dart';
@@ -26,6 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _obscurePassword = true;
   bool _isGoogleLoading = false;
   String? _errorMessage;
 
@@ -99,126 +102,137 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final c = Theme.of(context).amica;
     final theme = Theme.of(context);
     final loc = AppLocalizations.of(context);
 
-    // No card around the form. On the old screen the fields sat inside a
-    // translucent panel floating on a gradient, which made the first thing
-    // a new user saw look like a pop-up rather than the app.
+    // Logo on the pastel ground, then one frosted card holding the whole
+    // sign-in — email, password, log in, or Google — and the sign-up link
+    // underneath. Sections drift in one after another.
     return Scaffold(
       body: SafeArea(
         child: Form(
           key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
-            children: [
-              const SizedBox(height: 12),
-              const AmicaLogo(),
-              const SizedBox(height: 36),
-              Text(loc.loginWelcomeBack, style: theme.textTheme.headlineMedium),
-              const SizedBox(height: 6),
-              Text(
-                loc.loginSubtitle,
-                style: theme.textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 26),
-              CustomTextField(
-                label: loc.commonEmail,
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.next,
-                validator: (value) {
-                  if (value == null || !value.contains('@')) {
-                    return loc.commonEnterValidEmail;
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              CustomTextField(
-                label: loc.commonPassword,
-                controller: _passwordController,
-                obscureText: true,
-                textInputAction: TextInputAction.done,
-                onFieldSubmitted: (_) => _isBusy ? null : _login(),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return loc.loginPasswordRequired;
-                  }
-                  return null;
-                },
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: _isBusy
-                      ? null
-                      : () => Navigator.pushNamed(
-                            context,
-                            AppRoutes.forgotPassword,
-                          ),
-                  child: Text(loc.loginForgotPassword),
+          child: AutofillGroup(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(22, 24, 22, 28),
+              children: [
+                const SizedBox(height: 8),
+                const FadeSlideIn(
+                  offset: Offset(0, 0.08),
+                  child: Center(child: AmicaLogo(size: 116)),
                 ),
-              ),
-              if (_errorMessage != null) ...[
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 13,
-                    vertical: 11,
-                  ),
-                  decoration: BoxDecoration(
-                    color: c.blush,
-                    borderRadius: BorderRadius.circular(13),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.error_outline_rounded,
-                          size: 17, color: c.terracottaDeep),
-                      const SizedBox(width: 9),
-                      Expanded(
-                        child: Text(
-                          _errorMessage!,
-                          style: TextStyle(
-                            color: c.terracottaDeep,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            height: 1.4,
+                const SizedBox(height: 28),
+                FadeSlideIn(
+                  delay: const Duration(milliseconds: 120),
+                  child: AmicaCard(
+                    padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+                    borderRadius: 30,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          loc.loginWelcomeBack,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.headlineMedium,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          loc.loginSubtitle,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 22),
+                        CustomTextField(
+                          label: loc.commonEmail,
+                          controller: _emailController,
+                          prefixIcon: Icons.mail_outline_rounded,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          autofillHints: const [AutofillHints.email],
+                          validator: (value) {
+                            if (value == null || !value.contains('@')) {
+                              return loc.commonEnterValidEmail;
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 14),
+                        CustomTextField(
+                          label: loc.commonPassword,
+                          controller: _passwordController,
+                          prefixIcon: Icons.lock_outline_rounded,
+                          obscureText: _obscurePassword,
+                          textInputAction: TextInputAction.done,
+                          autofillHints: const [AutofillHints.password],
+                          onFieldSubmitted: (_) => _isBusy ? null : _login(),
+                          suffix: PasswordVisibilityButton(
+                            obscured: _obscurePassword,
+                            showLabel: loc.loginShowPassword,
+                            hideLabel: loc.loginHidePassword,
+                            onToggle: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return loc.loginPasswordRequired;
+                            }
+                            return null;
+                          },
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: _isBusy
+                                ? null
+                                : () => Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.forgotPassword,
+                                    ),
+                            child: Text(loc.loginForgotPassword),
                           ),
                         ),
+                        AuthErrorBanner(message: _errorMessage),
+                        PrimaryButton(
+                          label: loc.loginButton,
+                          icon: Icons.arrow_forward_rounded,
+                          isBusy: _isLoading,
+                          onPressed: _isBusy ? null : _login,
+                        ),
+                        const SizedBox(height: 18),
+                        OrDivider(label: loc.loginOr),
+                        const SizedBox(height: 18),
+                        GoogleSignInButton(
+                          label: loc.continueWithGoogle,
+                          isBusy: _isGoogleLoading,
+                          onPressed: _isBusy ? null : _continueWithGoogle,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                FadeSlideIn(
+                  delay: const Duration(milliseconds: 240),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        loc.loginNewToAmica,
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                      TextButton(
+                        onPressed: _isBusy
+                            ? null
+                            : () =>
+                                Navigator.pushNamed(context, AppRoutes.signup),
+                        child: Text(loc.loginCreateAccount),
                       ),
                     ],
                   ),
                 ),
               ],
-              const SizedBox(height: 20),
-              PrimaryButton(
-                label: loc.loginButton,
-                isBusy: _isLoading,
-                onPressed: _isBusy ? null : _login,
-              ),
-              const SizedBox(height: 10),
-              PrimaryButton(
-                label: loc.continueWithGoogle,
-                tone: AmicaButtonTone.quiet,
-                isBusy: _isGoogleLoading,
-                onPressed: _isBusy ? null : _continueWithGoogle,
-              ),
-              const SizedBox(height: 22),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(loc.loginNewToAmica, style: theme.textTheme.bodyMedium),
-                  TextButton(
-                    onPressed: _isBusy
-                        ? null
-                        : () => Navigator.pushNamed(context, AppRoutes.signup),
-                    child: Text(loc.loginCreateAccount),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),

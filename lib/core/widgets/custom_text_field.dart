@@ -23,6 +23,8 @@ class CustomTextField extends StatelessWidget {
     this.enabled = true,
     this.onClear,
     this.clearTooltip,
+    this.suffix,
+    this.autofillHints,
   });
 
   final String label;
@@ -44,6 +46,11 @@ class CustomTextField extends StatelessWidget {
   /// anything tied to the value, e.g. a map pin). Needs [controller].
   final VoidCallback? onClear;
   final String? clearTooltip;
+
+  /// A trailing widget (e.g. a show/hide-password eye). The ✕ from
+  /// [onClear] takes its place while there is text to clear.
+  final Widget? suffix;
+  final Iterable<String>? autofillHints;
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +80,7 @@ class CustomTextField extends StatelessWidget {
             enabled: enabled,
             textInputAction: textInputAction,
             onFieldSubmitted: onFieldSubmitted,
+            autofillHints: autofillHints,
             style: TextStyle(color: c.plum, fontSize: 15),
             cursorColor: c.plum,
             decoration: InputDecoration(
@@ -94,11 +102,11 @@ class CustomTextField extends StatelessWidget {
   Widget _withClearButton(Widget Function(Widget? suffix) build) {
     final controller = this.controller;
     final onClear = this.onClear;
-    if (controller == null || onClear == null) return build(null);
+    if (controller == null || onClear == null) return build(suffix);
     return ValueListenableBuilder<TextEditingValue>(
       valueListenable: controller,
       builder: (context, value, _) {
-        if (value.text.isEmpty || !enabled) return build(null);
+        if (value.text.isEmpty || !enabled) return build(suffix);
         final c = Theme.of(context).amica;
         return build(
           IconButton(
