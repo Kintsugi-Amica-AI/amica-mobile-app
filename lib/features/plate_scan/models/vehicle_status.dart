@@ -19,6 +19,7 @@ class VehicleStatus {
     this.isDemo = false,
     this.unverifiedSafetyCheckCount = 0,
     this.community = CommunityVehicleProfile.empty,
+    this.imagePath,
   });
 
   final String plateNumber;
@@ -34,6 +35,12 @@ class VehicleStatus {
 
   /// The usual type and colour other Amica scans have seen on this plate.
   final CommunityVehicleProfile community;
+
+  /// Storage path of the first photo a rider saved of this vehicle
+  /// (`vehicle_images/{plate}.jpg`), or null when there is none yet.
+  final String? imagePath;
+
+  bool get hasImage => imagePath != null;
 
   factory VehicleStatus.fromFirestore(
     String normalizedPlateNumber,
@@ -56,6 +63,7 @@ class VehicleStatus {
       ratingCount: _readInt(data['ratingCount']),
       unverifiedSafetyCheckCount: _readInt(data['unverifiedSafetyCheckCount']),
       community: CommunityVehicleProfile.fromMap(data['observedProfile']),
+      imagePath: _readImagePath(data['image']),
       isDemo: data['metadata'] is Map && data['metadata']['demo'] == true,
       plateNumber: _readString(
         data['plateNumber'],
@@ -76,6 +84,12 @@ class VehicleStatus {
       'reported' => VehicleRiskStatus.reported,
       _ => VehicleRiskStatus.unknown,
     };
+  }
+
+  static String? _readImagePath(dynamic value) {
+    if (value is! Map) return null;
+    final path = value['path'];
+    return path is String && path.startsWith('vehicle_images/') ? path : null;
   }
 
   static String _readString(dynamic value, [String fallback = '']) {

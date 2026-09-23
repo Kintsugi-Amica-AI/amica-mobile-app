@@ -14,6 +14,8 @@ dependencies:
   firebase_core: ^3.9.0
   # Circle alerts: pushes to contacts who also have Amica.
   firebase_messaging: ^15.2.10
+  # First photo of each new vehicle, shown to later riders.
+  firebase_storage: ^12.4.10
   flutter:
     sdk: flutter
   flutter_contacts: ^1.1.9+2

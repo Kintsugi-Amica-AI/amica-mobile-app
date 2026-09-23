@@ -1743,6 +1743,13 @@ class AppLocalizationsSi extends AppLocalizations {
       'වාහන පරීක්ෂා කිරීම් Amica හි බෙදාගත් ආරක්ෂණ දත්ත සමුදාය භාවිතා කරයි. සැක සහිත විටෙක, ගමන යාමට පෙර විශ්වාසවන්ත සම්බන්ධතාවක් සමඟ ඔබේ ගමන බෙදාගන්න.';
 
   @override
+  String get plateResultPhotoTitle => 'මෙම වාහනය පෙනුණු ආකාරය';
+
+  @override
+  String get plateResultPhotoCaption =>
+      'මෙම අංකය මුලින්ම ස්කෑන් කළ Amica මගියා විසින් සුරකින ලදී. නැගීමට පෙර ඔබ ඉදිරියේ ඇති වාහනය මෙයට ගැළපේදැයි පරීක්ෂා කරන්න.';
+
+  @override
   String get plateResultDemoNote =>
       'නිරූපණ දත්ත. මෙම ශ්‍රේණිගත කිරීම් ප්‍රබන්ධාත්මකයි.';
 
@@ -2279,6 +2286,25 @@ class AppLocalizationsSi extends AppLocalizations {
   String get vehicleToldDone => 'හරි';
 
   @override
+  String get vehicleToldCardTitle => 'නිවැරදි වාහනයදැයි පරීක්ෂා කරන්න';
+
+  @override
+  String get vehicleToldCardBody =>
+      'ඔබේ රයිඩ් යෙදුමේ පෙන්වූ වාහන වර්ගය සහ වර්ණය එක් කරන්න.';
+
+  @override
+  String get vehicleToldCardAdd => 'එක් කරන්න';
+
+  @override
+  String get vehicleToldCardSetTitle => 'ඔබට කී වාහනය';
+
+  @override
+  String get vehicleToldCardChange => 'වෙනස් කරන්න';
+
+  @override
+  String get vehicleToldPreviewEmpty => 'තවම කිසිවක් තෝරා නැත. පහතින් තෝරන්න.';
+
+  @override
   String get vehicleKindCar => 'කාර් රථය';
 
   @override
@@ -2392,7 +2418,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get vehicleMatchPrivacy =>
-      'ඔබගේ දුරකථනයේම පරීක්ෂා කළා. ඡායාරූප කිසිවිටෙක උඩුගත නොකෙරේ.';
+      'වර්ගය සහ වර්ණය ඔබගේ දුරකථනයේම පරීක්ෂා කෙරේ. නව වාහනයක පළමු ඡායාරූපය, වාහනයට පමණක් කපා, අනෙක් මගීන්ට හඳුනාගත හැකි වන පරිදි සුරකිනු ලැබේ.';
 
   @override
   String get zzzArbEnd => 'do not translate; internal append anchor';

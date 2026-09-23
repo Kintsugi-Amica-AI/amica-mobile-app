@@ -6,6 +6,7 @@ import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../models/plate_scan_outcome.dart';
 import '../models/vehicle_status.dart';
+import '../services/vehicle_image_service.dart';
 import '../services/vehicle_journey_service.dart';
 import '../../journey/screens/start_journey_screen.dart';
 import '../widgets/vehicle_match_card.dart';
@@ -185,6 +186,10 @@ class _PlateResultScreenState extends State<PlateResultScreen> {
                   ),
                 ),
               ),
+              if (status.imagePath != null) ...[
+                const SizedBox(height: 20),
+                _VehiclePhotoCard(path: status.imagePath!),
+              ],
               if (outcome != null) ...[
                 const SizedBox(height: 20),
                 VehicleMatchCard(outcome: outcome),
@@ -342,6 +347,116 @@ class _StatTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// The first photo a rider saved of this vehicle, so she can compare it with
+/// the one in front of her.
+class _VehiclePhotoCard extends StatefulWidget {
+  const _VehiclePhotoCard({required this.path});
+
+  final String path;
+
+  @override
+  State<_VehiclePhotoCard> createState() => _VehiclePhotoCardState();
+}
+
+class _VehiclePhotoCardState extends State<_VehiclePhotoCard> {
+  late final Future<String?> _url =
+      const VehicleImageService().downloadUrl(widget.path);
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Theme.of(context).amica;
+    final text = Theme.of(context).textTheme;
+    final loc = AppLocalizations.of(context);
+
+    return FutureBuilder<String?>(
+      future: _url,
+      builder: (context, snapshot) {
+        final done = snapshot.connectionState == ConnectionState.done;
+        final url = snapshot.data;
+        // Could not be fetched (offline, deleted): say nothing rather than
+        // show a broken card.
+        if (done && url == null) return const SizedBox.shrink();
+
+        return AmicaCard(
+          padding: const EdgeInsets.all(12),
+          borderRadius: 24,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 2, 4, 10),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: c.accentSoft,
+                      ),
+                      child: Icon(Icons.photo_camera_outlined,
+                          size: 16, color: c.accentInk),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(loc.plateResultPhotoTitle,
+                          style: text.titleSmall),
+                    ),
+                  ],
+                ),
+              ),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: AspectRatio(
+                  aspectRatio: 4 / 3,
+                  child: ColoredBox(
+                    color: c.shell,
+                    child: url == null
+                        ? const Center(
+                            child: SizedBox(
+                              width: 22,
+                              height: 22,
+                              child:
+                                  CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : Image.network(
+                            url,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, progress) =>
+                                progress == null
+                                    ? child
+                                    : const Center(
+                                        child: SizedBox(
+                                          width: 22,
+                                          height: 22,
+                                          child: CircularProgressIndicator(
+                                              strokeWidth: 2),
+                                        ),
+                                      ),
+                            errorBuilder: (context, error, stackTrace) => Center(
+                              child: Icon(Icons.image_not_supported_outlined,
+                                  color: c.plum45),
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 10, 4, 2),
+                child: Text(
+                  loc.plateResultPhotoCaption,
+                  style: text.bodySmall?.copyWith(color: c.plum70),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

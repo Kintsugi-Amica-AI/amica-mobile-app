@@ -500,6 +500,8 @@
   "plateResultReportsOnFile": "பதிவு செய்யப்பட்ட புகார்கள்",
   "plateResultRiskLevel": "ஆபத்து நிலை",
   "plateResultDbNote": "வாகன சோதனைகள் பகிரப்பட்ட Amica பாதுகாப்பு தரவுத்தளத்தைப் பயன்படுத்துகின்றன. சந்தேகம் இருந்தால், பயணிப்பதற்கு முன் நம்பகமான தொடர்புடன் உங்கள் பயணத்தைப் பகிரவும்.",
+  "plateResultPhotoTitle": "இந்த வாகனம் இப்படித் தோன்றியது",
+  "plateResultPhotoCaption": "இந்த எண்ணை முதலில் ஸ்கேன் செய்த Amica பயணி சேமித்தது. ஏறும் முன் உங்கள் முன் உள்ள வாகனம் இதுவா எனச் சரிபார்க்கவும்.",
   "plateResultDemoNote": "டெமோ தரவு. இந்த மதிப்பீடுகள் கற்பனையானவை.",
   "plateResultFeedbackNote": "பயணிகள் கருத்துக்கள் இந்த பலகையுடன் தொடர்புடையவை, சரிபார்க்கப்பட்ட ஓட்டுநர் அடையாளம் அல்லது பாதுகாப்பு உத்தரவாதம் அல்ல.",
   "plateResultNotifying": "தொடர்புகளுக்கு அறிவிக்கப்படுகிறது...",
@@ -645,6 +647,12 @@
   "vehicleToldColourLabel": "நிறம்",
   "vehicleToldClear": "அழி",
   "vehicleToldDone": "முடிந்தது",
+  "vehicleToldCardTitle": "சரியான வாகனமா எனச் சரிபார்க்கவும்",
+  "vehicleToldCardBody": "உங்கள் சவாரி செயலி காட்டிய வாகன வகையையும் நிறத்தையும் சேர்க்கவும்.",
+  "vehicleToldCardAdd": "சேர்",
+  "vehicleToldCardSetTitle": "உங்களுக்குச் சொல்லப்பட்டது",
+  "vehicleToldCardChange": "மாற்று",
+  "vehicleToldPreviewEmpty": "இன்னும் எதுவும் தேர்ந்தெடுக்கவில்லை. கீழே தேர்ந்தெடுக்கவும்.",
   "vehicleKindCar": "கார்",
   "vehicleKindVan": "வேன்",
   "vehicleKindBus": "பேருந்து",
@@ -677,7 +685,7 @@
   "vehicleMatchSeen": "கேமரா பார்ப்பது: {description}",
   "vehicleMatchSeenNothing": "கேமராவால் வாகனத்தை அடையாளம் காண முடியவில்லை.",
   "vehicleMatchCommunity": "வழக்கமாகப் பார்க்கப்படுவது: {description} ({count} ஸ்கேன்கள்)",
-  "vehicleMatchPrivacy": "உங்கள் தொலைபேசியிலேயே சரிபார்க்கப்பட்டது. படங்கள் ஒருபோதும் பதிவேற்றப்படாது.",
+  "vehicleMatchPrivacy": "வகையும் நிறமும் உங்கள் தொலைபேசியிலேயே சரிபார்க்கப்படும். புதிய வாகனத்தின் முதல் படம், வாகனம் மட்டும் தெரியும்படி வெட்டப்பட்டு, மற்ற பயணிகள் அடையாளம் காண சேமிக்கப்படும்.",
 
   "zzzArbEnd": "do not translate; internal append anchor"
 }

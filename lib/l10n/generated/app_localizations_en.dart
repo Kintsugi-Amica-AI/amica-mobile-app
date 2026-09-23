@@ -1730,6 +1730,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Vehicle checks use the shared Amica safety database. When in doubt, share your trip with a trusted contact before riding.';
 
   @override
+  String get plateResultPhotoTitle => 'What this vehicle looked like';
+
+  @override
+  String get plateResultPhotoCaption =>
+      'Saved by the first Amica rider who scanned this plate. Check the vehicle in front of you matches before you get in.';
+
+  @override
   String get plateResultDemoNote => 'Demo data. These ratings are fictional.';
 
   @override
@@ -2262,6 +2269,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleToldDone => 'Done';
 
   @override
+  String get vehicleToldCardTitle => 'Check it\'s the right vehicle';
+
+  @override
+  String get vehicleToldCardBody =>
+      'Add the type and colour your ride app showed you.';
+
+  @override
+  String get vehicleToldCardAdd => 'Add';
+
+  @override
+  String get vehicleToldCardSetTitle => 'You were told';
+
+  @override
+  String get vehicleToldCardChange => 'Change';
+
+  @override
+  String get vehicleToldPreviewEmpty => 'Nothing picked yet. Choose below.';
+
+  @override
   String get vehicleKindCar => 'car';
 
   @override
@@ -2376,7 +2402,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vehicleMatchPrivacy =>
-      'Checked on your phone. Photos are never uploaded.';
+      'Type and colour are checked on your phone. The first photo of a new vehicle is saved, cropped to the vehicle, so other riders can recognise it.';
 
   @override
   String get zzzArbEnd => 'do not translate; internal append anchor';

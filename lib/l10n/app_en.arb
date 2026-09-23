@@ -588,6 +588,8 @@
   "plateResultReportsOnFile": "Reports on file",
   "plateResultRiskLevel": "Risk level",
   "plateResultDbNote": "Vehicle checks use the shared Amica safety database. When in doubt, share your trip with a trusted contact before riding.",
+  "plateResultPhotoTitle": "What this vehicle looked like",
+  "plateResultPhotoCaption": "Saved by the first Amica rider who scanned this plate. Check the vehicle in front of you matches before you get in.",
   "plateResultDemoNote": "Demo data. These ratings are fictional.",
   "plateResultFeedbackNote": "Passenger feedback is associated with this plate, not a verified driver identity or safety guarantee.",
   "plateResultNotifying": "Notifying contacts...",
@@ -773,6 +775,12 @@
   "vehicleToldColourLabel": "Colour",
   "vehicleToldClear": "Clear",
   "vehicleToldDone": "Done",
+  "vehicleToldCardTitle": "Check it's the right vehicle",
+  "vehicleToldCardBody": "Add the type and colour your ride app showed you.",
+  "vehicleToldCardAdd": "Add",
+  "vehicleToldCardSetTitle": "You were told",
+  "vehicleToldCardChange": "Change",
+  "vehicleToldPreviewEmpty": "Nothing picked yet. Choose below.",
   "vehicleKindCar": "car",
   "vehicleKindVan": "van",
   "vehicleKindBus": "bus",
@@ -810,7 +818,7 @@
   "vehicleMatchSeenNothing": "The camera couldn't make out the vehicle.",
   "vehicleMatchCommunity": "Usually seen as: {description} ({count} scans)",
   "@vehicleMatchCommunity": { "placeholders": { "description": {"type": "String"}, "count": {"type": "int"} } },
-  "vehicleMatchPrivacy": "Checked on your phone. Photos are never uploaded.",
+  "vehicleMatchPrivacy": "Type and colour are checked on your phone. The first photo of a new vehicle is saved, cropped to the vehicle, so other riders can recognise it.",
 
   "zzzArbEnd": "do not translate; internal append anchor"
 }

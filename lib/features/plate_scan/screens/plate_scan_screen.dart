@@ -18,6 +18,7 @@ import '../models/detection.dart';
 import '../models/plate_scan_outcome.dart';
 import '../models/vehicle_profile.dart';
 import '../services/plate_scan_service.dart';
+import '../services/vehicle_image_service.dart';
 import '../services/vehicle_inspector.dart';
 import '../services/vehicle_observation_service.dart';
 import '../widgets/vehicle_labels.dart';
@@ -32,16 +33,19 @@ class PlateScanScreen extends StatefulWidget {
     ImagePicker? imagePicker,
     VehicleInspector? vehicleInspector,
     VehicleObservationService? observationService,
+    VehicleImageService? imageService,
   })  : plateScanService = plateScanService ?? const PlateScanService(),
         imagePicker = imagePicker ?? ImagePicker(),
         vehicleInspector = vehicleInspector ?? const VehicleInspector(),
         observationService =
-            observationService ?? const VehicleObservationService();
+            observationService ?? const VehicleObservationService(),
+        imageService = imageService ?? const VehicleImageService();
 
   final PlateScanService plateScanService;
   final ImagePicker imagePicker;
   final VehicleInspector vehicleInspector;
   final VehicleObservationService observationService;
+  final VehicleImageService imageService;
 
   @override
   State<PlateScanScreen> createState() => _PlateScanScreenState();
@@ -326,7 +330,8 @@ class _PlateScanScreenState extends State<PlateScanScreen>
               read.plate == _lastCandidate ? _candidateCount + 1 : 1;
           _lastCandidate = read.plate;
           if (_candidateCount >= 2) {
-            await _lockAndLookUp(read.plate, image: image, plateBox: plateBox);
+            await _lockAndLookUp(read.plate,
+                image: image, plateBox: plateBox, fromCamera: true);
           } else {
             setState(() => _statusMessage = _loc.plateScanDetected(read.plate));
           }
@@ -336,10 +341,11 @@ class _PlateScanScreenState extends State<PlateScanScreen>
         }
       } else if (read.found) {
         // A shutter tap: one exact read is enough.
-        await _lockAndLookUp(read.plate, image: image, plateBox: plateBox);
+        await _lockAndLookUp(read.plate,
+            image: image, plateBox: plateBox, fromCamera: true);
       } else if (!automatic) {
         await _confirmAndLookUp(read.suggestion,
-            image: image, plateBox: plateBox);
+            image: image, plateBox: plateBox, fromCamera: true);
       }
       // automatic && _manualRequested && nothing found: the queued tap
       // takes its own photo in `finally`.
@@ -392,11 +398,17 @@ class _PlateScanScreenState extends State<PlateScanScreen>
   /// vehicle's type and colour against what she was told and what the
   /// community has seen. Typed plates have no photo: the result screen
   /// then shows the plate result alone.
+  ///
+  /// [fromCamera] marks a photo taken just now with the scanner. Only those
+  /// can become a new vehicle's saved photo; a gallery picture may be old or
+  /// of a different car.
   Future<void> _lockAndLookUp(
     String plateText, {
     img.Image? image,
     PixelBox? plateBox,
+    bool fromCamera = false,
   }) async {
+    final photoToSave = fromCamera ? image : null;
     // Without the vehicle check the photo is not needed past OCR.
     if (!FeatureFlags.vehicleCheck) image = null;
     _manualRequested = false;
@@ -413,6 +425,15 @@ class _PlateScanScreenState extends State<PlateScanScreen>
               .catchError((Object _) => VehicleInspection.empty);
       final status = await widget.plateScanService.checkVehicle(plateText);
       final inspection = await inspectionFuture;
+      // First scan of a vehicle with no photo yet: save this one for the
+      // riders after her. In the background; the result screen never waits.
+      if (photoToSave != null && VehicleImageService.shouldSave(status)) {
+        unawaited(widget.imageService.saveIfFirst(
+          status: status,
+          image: photoToSave,
+          vehicleBox: inspection.vehicleBox,
+        ));
+      }
       if (!mounted) {
         return;
       }
@@ -446,6 +467,7 @@ class _PlateScanScreenState extends State<PlateScanScreen>
     String suggestion, {
     img.Image? image,
     PixelBox? plateBox,
+    bool fromCamera = false,
   }) async {
     final plate = await _promptForPlate(
       title: _loc.plateScanConfirmTitle,
@@ -462,7 +484,8 @@ class _PlateScanScreenState extends State<PlateScanScreen>
       });
       return;
     }
-    await _lockAndLookUp(plate, image: image, plateBox: plateBox);
+    await _lockAndLookUp(plate,
+        image: image, plateBox: plateBox, fromCamera: fromCamera);
   }
 
   Future<void> _scanFromGallery() async {
@@ -589,6 +612,10 @@ class _PlateScanScreenState extends State<PlateScanScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+      // The plate dialog's keyboard must not shrink the viewfinder: the
+      // overlay Column is sized for the full screen and overflowed ("Bottom
+      // overflowed by 58 pixels") when the body was resized under it.
+      resizeToAvoidBottomInset: false,
       extendBodyBehindAppBar: true,
       // The viewfinder is black in both modes, so this app bar opts out of
       // the app chrome and stays light-on-dark.
@@ -675,13 +702,14 @@ class _PlateScanScreenState extends State<PlateScanScreen>
         children: [
           if (FeatureFlags.vehicleCheck) ...[
             const SizedBox(height: kToolbarHeight + 8),
-            _ToldChip(
-              label: _told.isEmpty
-                  ? _loc.vehicleToldButton
-                  : _loc.vehicleToldButtonSet(
-                      _loc.describeVehicle(_told.kind, _told.colour)),
-              isSet: !_told.isEmpty,
-              onPressed: _state == _ScanState.scanning ? _editTold : null,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _ToldCard(
+                description: _told.isEmpty
+                    ? null
+                    : _loc.describeVehicle(_told.kind, _told.colour),
+                onPressed: _state == _ScanState.scanning ? _editTold : null,
+              ),
             ),
           ],
           const Spacer(),
@@ -782,58 +810,130 @@ class _PlateScanScreenState extends State<PlateScanScreen>
   }
 }
 
-/// Frosted "What was I told?" pill at the top of the viewfinder.
-class _ToldChip extends StatelessWidget {
-  const _ToldChip({
-    required this.label,
-    required this.isSet,
+/// "What was I told?" card at the top of the viewfinder.
+///
+/// Reads as a clear step with an action button, so it is not mistaken for a
+/// caption: before anything is set it asks her to add the vehicle the ride
+/// app showed; afterwards it shows that vehicle with a "Change" button.
+class _ToldCard extends StatelessWidget {
+  const _ToldCard({
+    required this.description,
     required this.onPressed,
   });
 
-  final String label;
-  final bool isSet;
+  /// What she was told ("White car"), or null when nothing is set yet.
+  final String? description;
   final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
     final c = Theme.of(context).amica;
-    return AmicaGlass(
-      strong: true,
-      blur: 16,
-      borderRadius: BorderRadius.circular(999),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(999),
-          onTap: onPressed,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  isSet
-                      ? Icons.directions_car_filled_rounded
-                      : Icons.help_outline_rounded,
-                  size: 18,
-                  color: c.accentInk,
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    label,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: c.plum,
-                          fontWeight: FontWeight.w600,
-                        ),
+    final text = Theme.of(context).textTheme;
+    final loc = AppLocalizations.of(context);
+    final isSet = description != null;
+    final title = isSet ? loc.vehicleToldCardSetTitle : loc.vehicleToldCardTitle;
+    final body = description ?? loc.vehicleToldCardBody;
+    final action = isSet ? loc.vehicleToldCardChange : loc.vehicleToldCardAdd;
+    final tone = isSet ? c.sageInk : c.accent;
+
+    return Semantics(
+      button: true,
+      enabled: onPressed != null,
+      label: '$title. $body',
+      onTap: onPressed,
+      excludeSemantics: true,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: onPressed == null ? 0.6 : 1,
+        child: Material(
+          color: c.card,
+          elevation: 6,
+          shadowColor: Colors.black54,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(color: tone, width: 1.5),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onPressed,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isSet ? c.sageSoft : c.accentSoft,
+                    ),
+                    child: Icon(
+                      isSet
+                          ? Icons.directions_car_filled_rounded
+                          : Icons.fact_check_outlined,
+                      size: 22,
+                      color: isSet ? c.sageInk : c.accentInk,
+                    ),
                   ),
-                ),
-                if (isSet) ...[
-                  const SizedBox(width: 6),
-                  Icon(Icons.edit_rounded, size: 14, color: c.plum45),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: text.titleSmall?.copyWith(
+                            color: c.plum,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          body,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: text.bodySmall?.copyWith(
+                            color: isSet ? c.plum : c.plum70,
+                            fontWeight:
+                                isSet ? FontWeight.w600 : FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // Looks like (and is) the button: the whole card is tappable.
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: tone,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isSet ? Icons.edit_rounded : Icons.add_rounded,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          action,
+                          style: text.labelLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -1128,6 +1228,7 @@ class _PlateEntryDialogState extends State<_PlateEntryDialog> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
     return AlertDialog(
+      scrollable: true,
       title: Text(widget.title),
       content: Column(
         mainAxisSize: MainAxisSize.min,

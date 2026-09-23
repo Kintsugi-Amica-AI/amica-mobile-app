@@ -3076,6 +3076,18 @@ abstract class AppLocalizations {
   /// **'Vehicle checks use the shared Amica safety database. When in doubt, share your trip with a trusted contact before riding.'**
   String get plateResultDbNote;
 
+  /// No description provided for @plateResultPhotoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What this vehicle looked like'**
+  String get plateResultPhotoTitle;
+
+  /// No description provided for @plateResultPhotoCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved by the first Amica rider who scanned this plate. Check the vehicle in front of you matches before you get in.'**
+  String get plateResultPhotoCaption;
+
   /// No description provided for @plateResultDemoNote.
   ///
   /// In en, this message translates to:
@@ -3922,6 +3934,42 @@ abstract class AppLocalizations {
   /// **'Done'**
   String get vehicleToldDone;
 
+  /// No description provided for @vehicleToldCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check it\'s the right vehicle'**
+  String get vehicleToldCardTitle;
+
+  /// No description provided for @vehicleToldCardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the type and colour your ride app showed you.'**
+  String get vehicleToldCardBody;
+
+  /// No description provided for @vehicleToldCardAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get vehicleToldCardAdd;
+
+  /// No description provided for @vehicleToldCardSetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You were told'**
+  String get vehicleToldCardSetTitle;
+
+  /// No description provided for @vehicleToldCardChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get vehicleToldCardChange;
+
+  /// No description provided for @vehicleToldPreviewEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing picked yet. Choose below.'**
+  String get vehicleToldPreviewEmpty;
+
   /// No description provided for @vehicleKindCar.
   ///
   /// In en, this message translates to:
@@ -4117,7 +4165,7 @@ abstract class AppLocalizations {
   /// No description provided for @vehicleMatchPrivacy.
   ///
   /// In en, this message translates to:
-  /// **'Checked on your phone. Photos are never uploaded.'**
+  /// **'Type and colour are checked on your phone. The first photo of a new vehicle is saved, cropped to the vehicle, so other riders can recognise it.'**
   String get vehicleMatchPrivacy;
 
   /// No description provided for @zzzArbEnd.
