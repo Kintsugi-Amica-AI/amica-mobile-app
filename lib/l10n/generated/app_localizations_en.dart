@@ -2442,5 +2442,70 @@ class AppLocalizationsEn extends AppLocalizations {
       'Type and colour are checked on your phone. The first photo of a new vehicle is saved, cropped to the vehicle, so other riders can recognise it.';
 
   @override
+  String get contactsSubtitle =>
+      'The people Amica reaches first when something feels wrong.';
+
+  @override
+  String get contactsGuardiansSection => 'Guardians';
+
+  @override
+  String get contactsNoneReady => 'No guardians switched on';
+
+  @override
+  String get contactsNoneLinked => 'None have Amica yet · SMS alerts';
+
+  @override
+  String get contactsPillPrimary => 'Primary';
+
+  @override
+  String get contactsPillLinked => 'Linked';
+
+  @override
+  String get contactsPillMuted => 'Muted';
+
+  @override
+  String get contactsPillSms => 'SMS';
+
+  @override
+  String get contactsDetailPrimary => 'Primary · SMS + call';
+
+  @override
+  String get contactsDetailPrimaryLinked => 'Primary · push, SMS + call';
+
+  @override
+  String get contactsDetailLinked => 'Has Amica · push + SMS';
+
+  @override
+  String get contactsDetailSmsOnly => 'SMS only';
+
+  @override
+  String get contactsAddGuardianButton => 'Add a guardian';
+
+  @override
+  String get contactsAlertsToggle => 'Alert this person';
+
+  @override
+  String contactsGuardiansReady(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count guardians ready',
+      one: '$count guardian ready',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String contactsLinkedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count have Amica · get instant alerts',
+      one: '$count has Amica · gets instant alerts',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get zzzArbEnd => 'do not translate; internal append anchor';
 }

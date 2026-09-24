@@ -698,5 +698,22 @@
   "vehicleMatchCommunity": "සාමාන්‍යයෙන් දකින්නේ: {description} (ස්කෑන් {count})",
   "vehicleMatchPrivacy": "වර්ගය සහ වර්ණය ඔබගේ දුරකථනයේම පරීක්ෂා කෙරේ. නව වාහනයක පළමු ඡායාරූපය, වාහනයට පමණක් කපා, අනෙක් මගීන්ට හඳුනාගත හැකි වන පරිදි සුරකිනු ලැබේ.",
 
+  "contactsSubtitle": "යමක් වැරදි බව දැනෙන විට Amica මුලින්ම සම්බන්ධ කරගන්නා අය.",
+  "contactsGuardiansSection": "භාරකරුවන්",
+  "contactsNoneReady": "කිසිදු භාරකරුවෙකු සක්‍රිය කර නැත",
+  "contactsNoneLinked": "තවම කිසිවෙකුට Amica නැත · SMS ඇඟවීම්",
+  "contactsPillPrimary": "ප්‍රධාන",
+  "contactsPillLinked": "සම්බන්ධයි",
+  "contactsPillMuted": "නිහඬයි",
+  "contactsPillSms": "SMS",
+  "contactsDetailPrimary": "ප්‍රධාන · SMS + ඇමතුම",
+  "contactsDetailPrimaryLinked": "ප්‍රධාන · push, SMS + ඇමතුම",
+  "contactsDetailLinked": "Amica ඇත · push + SMS",
+  "contactsDetailSmsOnly": "SMS පමණි",
+  "contactsAddGuardianButton": "භාරකරුවෙකු එක් කරන්න",
+  "contactsAlertsToggle": "මෙම පුද්ගලයාට ඇඟවීම් යවන්න",
+  "contactsGuardiansReady": "{count, plural, =1{භාරකරුවන් {count} දෙනෙක් සූදානම්} other{භාරකරුවන් {count} දෙනෙක් සූදානම්}}",
+  "contactsLinkedCount": "{count, plural, =1{{count} දෙනෙකුට Amica ඇත · ක්ෂණික ඇඟවීම් ලැබේ} other{{count} දෙනෙකුට Amica ඇත · ක්ෂණික ඇඟවීම් ලැබේ}}",
+
   "zzzArbEnd": "do not translate; internal append anchor"
 }

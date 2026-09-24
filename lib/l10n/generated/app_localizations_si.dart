@@ -2457,5 +2457,70 @@ class AppLocalizationsSi extends AppLocalizations {
       'වර්ගය සහ වර්ණය ඔබගේ දුරකථනයේම පරීක්ෂා කෙරේ. නව වාහනයක පළමු ඡායාරූපය, වාහනයට පමණක් කපා, අනෙක් මගීන්ට හඳුනාගත හැකි වන පරිදි සුරකිනු ලැබේ.';
 
   @override
+  String get contactsSubtitle =>
+      'යමක් වැරදි බව දැනෙන විට Amica මුලින්ම සම්බන්ධ කරගන්නා අය.';
+
+  @override
+  String get contactsGuardiansSection => 'භාරකරුවන්';
+
+  @override
+  String get contactsNoneReady => 'කිසිදු භාරකරුවෙකු සක්‍රිය කර නැත';
+
+  @override
+  String get contactsNoneLinked => 'තවම කිසිවෙකුට Amica නැත · SMS ඇඟවීම්';
+
+  @override
+  String get contactsPillPrimary => 'ප්‍රධාන';
+
+  @override
+  String get contactsPillLinked => 'සම්බන්ධයි';
+
+  @override
+  String get contactsPillMuted => 'නිහඬයි';
+
+  @override
+  String get contactsPillSms => 'SMS';
+
+  @override
+  String get contactsDetailPrimary => 'ප්‍රධාන · SMS + ඇමතුම';
+
+  @override
+  String get contactsDetailPrimaryLinked => 'ප්‍රධාන · push, SMS + ඇමතුම';
+
+  @override
+  String get contactsDetailLinked => 'Amica ඇත · push + SMS';
+
+  @override
+  String get contactsDetailSmsOnly => 'SMS පමණි';
+
+  @override
+  String get contactsAddGuardianButton => 'භාරකරුවෙකු එක් කරන්න';
+
+  @override
+  String get contactsAlertsToggle => 'මෙම පුද්ගලයාට ඇඟවීම් යවන්න';
+
+  @override
+  String contactsGuardiansReady(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'භාරකරුවන් $count දෙනෙක් සූදානම්',
+      one: 'භාරකරුවන් $count දෙනෙක් සූදානම්',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String contactsLinkedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count දෙනෙකුට Amica ඇත · ක්ෂණික ඇඟවීම් ලැබේ',
+      one: '$count දෙනෙකුට Amica ඇත · ක්ෂණික ඇඟවීම් ලැබේ',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get zzzArbEnd => 'do not translate; internal append anchor';
 }

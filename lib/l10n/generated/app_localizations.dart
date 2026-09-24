@@ -4234,6 +4234,102 @@ abstract class AppLocalizations {
   /// **'Type and colour are checked on your phone. The first photo of a new vehicle is saved, cropped to the vehicle, so other riders can recognise it.'**
   String get vehicleMatchPrivacy;
 
+  /// No description provided for @contactsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The people Amica reaches first when something feels wrong.'**
+  String get contactsSubtitle;
+
+  /// No description provided for @contactsGuardiansSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Guardians'**
+  String get contactsGuardiansSection;
+
+  /// No description provided for @contactsNoneReady.
+  ///
+  /// In en, this message translates to:
+  /// **'No guardians switched on'**
+  String get contactsNoneReady;
+
+  /// No description provided for @contactsNoneLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'None have Amica yet · SMS alerts'**
+  String get contactsNoneLinked;
+
+  /// No description provided for @contactsPillPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary'**
+  String get contactsPillPrimary;
+
+  /// No description provided for @contactsPillLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked'**
+  String get contactsPillLinked;
+
+  /// No description provided for @contactsPillMuted.
+  ///
+  /// In en, this message translates to:
+  /// **'Muted'**
+  String get contactsPillMuted;
+
+  /// No description provided for @contactsPillSms.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS'**
+  String get contactsPillSms;
+
+  /// No description provided for @contactsDetailPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary · SMS + call'**
+  String get contactsDetailPrimary;
+
+  /// No description provided for @contactsDetailPrimaryLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary · push, SMS + call'**
+  String get contactsDetailPrimaryLinked;
+
+  /// No description provided for @contactsDetailLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'Has Amica · push + SMS'**
+  String get contactsDetailLinked;
+
+  /// No description provided for @contactsDetailSmsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS only'**
+  String get contactsDetailSmsOnly;
+
+  /// No description provided for @contactsAddGuardianButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a guardian'**
+  String get contactsAddGuardianButton;
+
+  /// No description provided for @contactsAlertsToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert this person'**
+  String get contactsAlertsToggle;
+
+  /// No description provided for @contactsGuardiansReady.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{count} guardian ready} other{{count} guardians ready}}'**
+  String contactsGuardiansReady(int count);
+
+  /// No description provided for @contactsLinkedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{count} has Amica · gets instant alerts} other{{count} have Amica · get instant alerts}}'**
+  String contactsLinkedCount(int count);
+
   /// No description provided for @zzzArbEnd.
   ///
   /// In en, this message translates to:

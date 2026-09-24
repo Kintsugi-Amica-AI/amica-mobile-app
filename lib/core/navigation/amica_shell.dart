@@ -63,7 +63,7 @@ class _AmicaShellState extends State<AmicaShell> {
   static const List<Widget> _tabs = [
     HomeScreen(),
     JourneysScreen(),
-    EmergencyContactsScreen(),
+    EmergencyContactsScreen(isTab: true),
     ProfileScreen(),
   ];
 

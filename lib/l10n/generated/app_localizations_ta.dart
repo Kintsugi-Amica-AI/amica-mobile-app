@@ -2506,5 +2506,71 @@ class AppLocalizationsTa extends AppLocalizations {
       'வகையும் நிறமும் உங்கள் தொலைபேசியிலேயே சரிபார்க்கப்படும். புதிய வாகனத்தின் முதல் படம், வாகனம் மட்டும் தெரியும்படி வெட்டப்பட்டு, மற்ற பயணிகள் அடையாளம் காண சேமிக்கப்படும்.';
 
   @override
+  String get contactsSubtitle =>
+      'ஏதாவது தவறாகத் தோன்றும்போது Amica முதலில் தொடர்புகொள்ளும் நபர்கள்.';
+
+  @override
+  String get contactsGuardiansSection => 'பாதுகாவலர்கள்';
+
+  @override
+  String get contactsNoneReady => 'எந்தப் பாதுகாவலரும் இயக்கப்படவில்லை';
+
+  @override
+  String get contactsNoneLinked =>
+      'இன்னும் யாரிடமும் Amica இல்லை · SMS எச்சரிக்கைகள்';
+
+  @override
+  String get contactsPillPrimary => 'முதன்மை';
+
+  @override
+  String get contactsPillLinked => 'இணைக்கப்பட்டது';
+
+  @override
+  String get contactsPillMuted => 'முடக்கப்பட்டது';
+
+  @override
+  String get contactsPillSms => 'SMS';
+
+  @override
+  String get contactsDetailPrimary => 'முதன்மை · SMS + அழைப்பு';
+
+  @override
+  String get contactsDetailPrimaryLinked => 'முதன்மை · push, SMS + அழைப்பு';
+
+  @override
+  String get contactsDetailLinked => 'Amica உள்ளது · push + SMS';
+
+  @override
+  String get contactsDetailSmsOnly => 'SMS மட்டும்';
+
+  @override
+  String get contactsAddGuardianButton => 'பாதுகாவலரைச் சேர்';
+
+  @override
+  String get contactsAlertsToggle => 'இவருக்கு எச்சரிக்கை அனுப்பு';
+
+  @override
+  String contactsGuardiansReady(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count பாதுகாவலர்கள் தயார்',
+      one: '$count பாதுகாவலர் தயார்',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String contactsLinkedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count பேரிடம் Amica உள்ளது · உடனடி எச்சரிக்கைகள்',
+      one: '$count பேரிடம் Amica உள்ளது · உடனடி எச்சரிக்கைகள்',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get zzzArbEnd => 'do not translate; internal append anchor';
 }

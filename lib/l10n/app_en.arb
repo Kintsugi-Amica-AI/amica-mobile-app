@@ -831,5 +831,24 @@
   "@vehicleMatchCommunity": { "placeholders": { "description": {"type": "String"}, "count": {"type": "int"} } },
   "vehicleMatchPrivacy": "Type and colour are checked on your phone. The first photo of a new vehicle is saved, cropped to the vehicle, so other riders can recognise it.",
 
+  "contactsSubtitle": "The people Amica reaches first when something feels wrong.",
+  "contactsGuardiansSection": "Guardians",
+  "contactsNoneReady": "No guardians switched on",
+  "contactsNoneLinked": "None have Amica yet · SMS alerts",
+  "contactsPillPrimary": "Primary",
+  "contactsPillLinked": "Linked",
+  "contactsPillMuted": "Muted",
+  "contactsPillSms": "SMS",
+  "contactsDetailPrimary": "Primary · SMS + call",
+  "contactsDetailPrimaryLinked": "Primary · push, SMS + call",
+  "contactsDetailLinked": "Has Amica · push + SMS",
+  "contactsDetailSmsOnly": "SMS only",
+  "contactsAddGuardianButton": "Add a guardian",
+  "contactsAlertsToggle": "Alert this person",
+  "contactsGuardiansReady": "{count, plural, =1{{count} guardian ready} other{{count} guardians ready}}",
+  "@contactsGuardiansReady": { "placeholders": { "count": {"type": "int"} } },
+  "contactsLinkedCount": "{count, plural, =1{{count} has Amica · gets instant alerts} other{{count} have Amica · get instant alerts}}",
+  "@contactsLinkedCount": { "placeholders": { "count": {"type": "int"} } },
+
   "zzzArbEnd": "do not translate; internal append anchor"
 }

@@ -698,5 +698,22 @@
   "vehicleMatchCommunity": "வழக்கமாகப் பார்க்கப்படுவது: {description} ({count} ஸ்கேன்கள்)",
   "vehicleMatchPrivacy": "வகையும் நிறமும் உங்கள் தொலைபேசியிலேயே சரிபார்க்கப்படும். புதிய வாகனத்தின் முதல் படம், வாகனம் மட்டும் தெரியும்படி வெட்டப்பட்டு, மற்ற பயணிகள் அடையாளம் காண சேமிக்கப்படும்.",
 
+  "contactsSubtitle": "ஏதாவது தவறாகத் தோன்றும்போது Amica முதலில் தொடர்புகொள்ளும் நபர்கள்.",
+  "contactsGuardiansSection": "பாதுகாவலர்கள்",
+  "contactsNoneReady": "எந்தப் பாதுகாவலரும் இயக்கப்படவில்லை",
+  "contactsNoneLinked": "இன்னும் யாரிடமும் Amica இல்லை · SMS எச்சரிக்கைகள்",
+  "contactsPillPrimary": "முதன்மை",
+  "contactsPillLinked": "இணைக்கப்பட்டது",
+  "contactsPillMuted": "முடக்கப்பட்டது",
+  "contactsPillSms": "SMS",
+  "contactsDetailPrimary": "முதன்மை · SMS + அழைப்பு",
+  "contactsDetailPrimaryLinked": "முதன்மை · push, SMS + அழைப்பு",
+  "contactsDetailLinked": "Amica உள்ளது · push + SMS",
+  "contactsDetailSmsOnly": "SMS மட்டும்",
+  "contactsAddGuardianButton": "பாதுகாவலரைச் சேர்",
+  "contactsAlertsToggle": "இவருக்கு எச்சரிக்கை அனுப்பு",
+  "contactsGuardiansReady": "{count, plural, =1{{count} பாதுகாவலர் தயார்} other{{count} பாதுகாவலர்கள் தயார்}}",
+  "contactsLinkedCount": "{count, plural, =1{{count} பேரிடம் Amica உள்ளது · உடனடி எச்சரிக்கைகள்} other{{count} பேரிடம் Amica உள்ளது · உடனடி எச்சரிக்கைகள்}}",
+
   "zzzArbEnd": "do not translate; internal append anchor"
 }
