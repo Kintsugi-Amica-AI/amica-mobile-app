@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -146,10 +147,14 @@ class JourneyRouteService {
 
       final data = response.data;
       if (data is! Map || data['available'] != true) {
+        debugPrint('getJourneyRoute: backend returned no route ($data)');
         return null;
       }
       return JourneyRoute.fromMap(data);
-    } catch (_) {
+    } catch (error) {
+      // Surfaces the real cause (not-found = function not deployed,
+      // unauthenticated = not signed in, timeout, etc.) in `flutter run` logs.
+      debugPrint('getJourneyRoute failed: $error');
       return null;
     }
   }
