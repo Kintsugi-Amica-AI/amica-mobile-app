@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "clips": [
+    {
+      "id": "friend_pickup",
+      "language": "en",
+      "role": "friend",
+      "gender": "female",
+      "asset": "assets/audio/fake_call/en/friend_pickup.m4a",
+      "transcript": "Hey! Where are you right now? Oh okay, I know that place. I'm like five minutes away, I'll come pick you up. No, no, it's fine, I'm already in the car. I can see your location on my phone, so just stay where you are, okay? Yeah. Just keep talking to me till I get there. Mm-hm. So how was today? Seriously? Okay, tell me properly when I see you. Alright, I'm turning onto your road now. Stay on the line."
+    },
+    {
+      "id": "mom_checkin",
+      "language": "en",
+      "role": "mom",
+      "gender": "female",
+      "asset": "assets/audio/fake_call/en/mom_checkin.m4a",
+      "transcript": "Hello, darling? Where are you now? It's getting late, no? Who are you with? Okay. Your father is coming to pick you up, he just left. Share your location with me, I want to see where you are. Yes, I can see it now. He'll be there very soon. Don't go anywhere else, just wait there. And keep the phone with you. Mm. Did you eat anything? Okay, okay. Call me the minute he reaches, alright?"
+    },
+    {
+      "id": "sister_tracking",
+      "language": "en",
+      "role": "sister",
+      "gender": "female",
+      "asset": "assets/audio/fake_call/en/sister_tracking.m4a",
+      "transcript": "Hi, I'm watching your trip on the app right now. Yeah, I can see the car. Tell me the number plate again? Okay, got it. I've sent it to Mum as well. You're about ten minutes away, right? I'll stay on the phone the whole way. No, it's fine, I'm not busy. Just talk to me. Mm-hm. Okay. I'll be waiting outside when you get there."
+    },
+    {
+      "id": "brother_pickup",
+      "language": "en",
+      "role": "brother",
+      "gender": "male",
+      "asset": "assets/audio/fake_call/en/brother_pickup.m4a",
+      "transcript": "Hey, where are you? Okay, stay there. I'm coming to get you, I'm close by. Like five minutes. I can see your location. No, don't walk anywhere, just wait there. Yeah, yeah. Keep the phone on, I'm driving. Mm. Okay. I'm nearly there. Look out for the car."
+    },
+    {
+      "id": "dad_checkin",
+      "language": "en",
+      "role": "dad",
+      "gender": "male",
+      "asset": "assets/audio/fake_call/en/dad_checkin.m4a",
+      "transcript": "Hello? Where are you now? Okay. I'm leaving now to pick you up. Stay there. About ten minutes. I have your location. Is anyone with you? Okay. Stay somewhere with people around, alright? Keep the line open. I'm on my way. I'm almost there. Wait near the entrance."
+    },
+    {
+      "id": "friend_pickup",
+      "language": "si",
+      "role": "friend",
+      "gender": "female",
+      "asset": "assets/audio/fake_call/si/friend_pickup.m4a",
+      "transcript": "හලෝ! ඔයා දැන් කොහෙද ඉන්නේ? ආ හරි, මම ඒ තැන දන්නවා. මම තව විනාඩි පහකින් එනවා ඔයාව එක්කන් යන්න. නෑ නෑ, කමක් නෑ. මම දැනටමත් වාහනේ ඉන්නේ. ඔයාගේ location එක මට ෆෝන් එකේ පේනවා. ඔතනම ඉන්න, හරිද? ඔව්. මම එනකම් මාත් එක්ක කතා කර කර ඉන්න. හ්ම්. ඉතින් අද කොහොමද? ඇත්තද? හරි, හම්බුනාම හරියට කියන්න. හරි, මම දැන් ඔයාගේ පාරට හැරුණා. ෆෝන් එක තියන්න එපා."
+    },
+    {
+      "id": "mom_checkin",
+      "language": "si",
+      "role": "mom",
+      "gender": "female",
+      "asset": "assets/audio/fake_call/si/mom_checkin.m4a",
+      "transcript": "හලෝ දුව? දැන් කොහෙද ඉන්නේ? දැන් රෑ වෙනවනේ. කවුද ඔයා එක්ක ඉන්නේ? හරි. තාත්තා ඔයාව ගන්න එනවා, දැන් ගෙදරින් පිටත් වුණා. ඔයාගේ location එක මට එවන්න, මට බලන්න ඕනේ ඔයා කොහෙද කියලා. ආ, දැන් පේනවා. තාත්තා ඉක්මනට එයි. වෙන කොහේවත් යන්න එපා, ඔතනම ඉන්න. ෆෝන් එක ළඟ තියාගන්න. හ්ම්. ඔයා මොනවා හරි කෑවද? හරි හරි. තාත්තා ආපු ගමන් මට කෝල් එකක් දෙන්න, හරිද?"
+    },
+    {
+      "id": "sister_tracking",
+      "language": "si",
+      "role": "sister",
+      "gender": "female",
+      "asset": "assets/audio/fake_call/si/sister_tracking.m4a",
+      "transcript": "හායි, මම දැන් ඔයාගේ ගමන app එකෙන් බලාගෙන ඉන්නේ. ඔව්, මට වාහනේ පේනවා. නම්බර් ප්ලේට් එක ආයෙත් කියන්නකෝ? හරි, ගත්තා. මම ඒක අම්මටත් යැව්වා. තව විනාඩි දහයක් විතර නේද? මම මුළු ගමනම ෆෝන් එකේ ඉන්නම්. නෑ, කමක් නෑ, මට වැඩක් නෑ. මාත් එක්ක කතා කරන්න. හ්ම්. හරි. ඔයා එනකොට මම එළියේ බලාගෙන ඉන්නම්."
+    },
+    {
+      "id": "brother_pickup",
+      "language": "si",
+      "role": "brother",
+      "gender": "male",
+      "asset": "assets/audio/fake_call/si/brother_pickup.m4a",
+      "transcript": "හලෝ, කොහෙද ඉන්නේ? හරි, ඔතනම ඉන්න. මම ඔයාව ගන්න එනවා, මම ළඟපාතම ඉන්නේ. විනාඩි පහක් විතර. මට ඔයාගේ location එක පේනවා. නෑ, කොහේවත් ඇවිදගෙන යන්න එපා. ඔතනම ඉන්න. ඔව් ඔව්. ෆෝන් එක තියන්න එපා, මම ඩ්‍රයිව් කරනවා. හ්ම්. හරි. මම ළඟටම ආවා. වාහනේ දිහා බලාගෙන ඉන්න."
+    }
+  ],
+  "fillers": [
+    {
+      "language": "en",
+      "gender": "female",
+      "asset": "assets/audio/fake_call/en/filler_female.m4a",
+      "transcript": "Mm-hm. Yeah. Okay. Really? Mm. Go on. Haha, yeah."
+    },
+    {
+      "language": "en",
+      "gender": "male",
+      "asset": "assets/audio/fake_call/en/filler_male.m4a",
+      "transcript": "Mm-hm. Yeah. Okay. Really? Mm. Go on. Haha, yeah."
+    }
+  ]
+}

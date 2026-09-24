@@ -791,6 +791,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Listen for the secret phrase during an active fake call.';
 
   @override
+  String get settingsSosEvidenceSection => 'SOS evidence';
+
+  @override
+  String get settingsRecordSosAudio => 'Record audio when an SOS fires';
+
+  @override
+  String get settingsRecordSosAudioHelper =>
+      'Saves a 30-second clip from the moment Voice SOS or the SOS button fires. Only you can access it.';
+
+  @override
+  String get settingsMicrophoneNeeded =>
+      'Allow microphone access so Amica can record during an SOS.';
+
+  @override
   String get settingsEnableSecretPhrase => 'Enable secret phrase';
 
   @override
@@ -1039,6 +1053,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sosActiveRecordingAudio => 'Recording audio';
+
+  @override
+  String get sosActiveAudioSaving => 'Saving the audio clip…';
+
+  @override
+  String get sosActiveAudioSaved => 'Audio clip saved securely';
+
+  @override
+  String get sosActiveAudioPending =>
+      'Audio clip kept on phone, uploads when online';
+
+  @override
+  String get sosActiveAudioNoPermission =>
+      'Not recording: microphone not allowed';
+
+  @override
+  String get sosActiveAudioOff => 'Audio recording is off in settings';
+
+  @override
+  String get sosActiveAudioFailed => 'Couldn\'t record audio';
+
+  @override
+  String get sosActiveAudioNotRecording => 'Not recording audio';
 
   @override
   String get sosActiveSirenSounding => 'Siren — sounding';

@@ -49,6 +49,13 @@ flutter:
     - assets/icons/
     # Detector models; see assets/models/README.md.
     - assets/models/
+    # Fake Call caller voices, made once with Gemini TTS by
+    # tool/fake_call_audio/generate.py. Directory entries are not recursive,
+    # so each language folder is listed.
+    - assets/audio/fake_call/
+    - assets/audio/fake_call/en/
+    - assets/audio/fake_call/si/
+    - assets/audio/fake_call/ta/
 
   # Bundled, not fetched at runtime: Amica has to render correctly with no
   # network. Both families are SIL Open Font Licence 1.1 — see

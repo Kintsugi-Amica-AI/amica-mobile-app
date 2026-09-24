@@ -10,6 +10,7 @@ import '../../auth/services/user_profile_service.dart';
 import '../../../core/locale/locale_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../fake_call/services/fake_call_shortcut_service.dart';
+import '../../sos/services/sos_audio_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   SettingsScreen({
@@ -38,6 +39,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _voiceSosEnabled = true;
   bool _secretPhraseEnabled = true;
   bool _fakeCallVolumeShortcutEnabled = true;
+  bool _sosAudioEnabled = true;
   String? _errorMessage;
 
   @override
@@ -61,6 +63,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final phrases = await widget.userProfileService.getSecretPhrases();
       final settings = await widget.userProfileService.getSafetySettings();
+      // Keep this phone in step with the account (e.g. after a reinstall).
+      await SosAudioService.instance
+          .setEnabled(settings['sosAudioRecordingEnabled'] != false);
 
       if (!mounted) {
         return;
@@ -87,6 +92,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _secretPhraseEnabled = settings['secretPhraseEnabled'] == true;
         _fakeCallVolumeShortcutEnabled =
             settings['fakeCallVolumeShortcutEnabled'] == true;
+        _sosAudioEnabled = settings['sosAudioRecordingEnabled'] != false;
         _isLoading = false;
       });
     } catch (_) {
@@ -97,6 +103,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _errorMessage = AppLocalizations.of(context).settingsCouldNotLoad;
         _isLoading = false;
       });
+    }
+  }
+
+  /// Turning SOS audio on asks for the microphone now, in a calm moment,
+  /// rather than during an emergency.
+  Future<void> _setSosAudioEnabled(bool value) async {
+    setState(() => _sosAudioEnabled = value);
+    if (!value) return;
+    final granted = await SosAudioService.instance.requestPermission();
+    if (!granted && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).settingsMicrophoneNeeded),
+        ),
+      );
     }
   }
 
@@ -120,7 +141,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         voiceSosEnabled: _voiceSosEnabled,
         secretPhraseEnabled: _secretPhraseEnabled,
         fakeCallVolumeShortcutEnabled: _fakeCallVolumeShortcutEnabled,
+        sosAudioRecordingEnabled: _sosAudioEnabled,
       );
+      // Read on the phone at SOS time, with no network round trip.
+      await SosAudioService.instance.setEnabled(_sosAudioEnabled);
       await widget.fakeCallShortcutService.syncShortcutMonitor();
 
       if (!mounted) {
@@ -374,6 +398,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         },
                       ),
                     ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Icon(Icons.mic_none_rounded,
+                        color: Theme.of(context).amica.sage, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      loc.settingsSosEvidenceSection,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                GlassCard(
+                  child: SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _sosAudioEnabled,
+                    onChanged: _isSaving ? null : _setSosAudioEnabled,
+                    title: Text(loc.settingsRecordSosAudio),
+                    subtitle: Text(loc.settingsRecordSosAudioHelper),
                   ),
                 ),
                 const SizedBox(height: 24),

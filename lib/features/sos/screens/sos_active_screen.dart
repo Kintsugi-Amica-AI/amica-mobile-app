@@ -15,6 +15,7 @@ import '../../emergency_contacts/models/emergency_contact.dart';
 import '../../emergency_contacts/services/emergency_contact_service.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../services/circle_alert_service.dart';
+import '../services/sos_audio_service.dart';
 import '../../journey/models/location_data_model.dart';
 
 class SosActiveArguments {
@@ -189,6 +190,35 @@ class _SosActiveScreenState extends State<SosActiveScreen> {
     return '$m:$s';
   }
 
+  static bool _audioOn(SosAudioPhase phase) => switch (phase) {
+        SosAudioPhase.recording ||
+        SosAudioPhase.uploading ||
+        SosAudioPhase.saved ||
+        SosAudioPhase.pending =>
+          true,
+        _ => false,
+      };
+
+  static IconData _audioIcon(SosAudioPhase phase) => switch (phase) {
+        SosAudioPhase.recording => Icons.mic_none_rounded,
+        SosAudioPhase.uploading => Icons.cloud_upload_outlined,
+        SosAudioPhase.saved => Icons.cloud_done_outlined,
+        SosAudioPhase.pending => Icons.phone_android_rounded,
+        _ => Icons.mic_off_outlined,
+      };
+
+  static String _audioLabel(AppLocalizations loc, SosAudioPhase phase) =>
+      switch (phase) {
+        SosAudioPhase.recording => loc.sosActiveRecordingAudio,
+        SosAudioPhase.uploading => loc.sosActiveAudioSaving,
+        SosAudioPhase.saved => loc.sosActiveAudioSaved,
+        SosAudioPhase.pending => loc.sosActiveAudioPending,
+        SosAudioPhase.noPermission => loc.sosActiveAudioNoPermission,
+        SosAudioPhase.disabled => loc.sosActiveAudioOff,
+        SosAudioPhase.failed => loc.sosActiveAudioFailed,
+        SosAudioPhase.idle => loc.sosActiveAudioNotRecording,
+      };
+
   String _triggerLabel(AppLocalizations loc, String? triggerType) {
     return switch (triggerType) {
       'voice' => loc.sosActiveTriggerVoice,
@@ -260,10 +290,15 @@ class _SosActiveScreenState extends State<SosActiveScreen> {
                               on: true,
                             ),
                             const AmicaDivider(),
-                            _DoingRow(
-                              icon: Icons.mic_none_rounded,
-                              label: loc.sosActiveRecordingAudio,
-                              on: true,
+                            // What the microphone is really doing — not a
+                            // promise the phone might not be keeping.
+                            ValueListenableBuilder<SosAudioPhase>(
+                              valueListenable: SosAudioService.instance.phase,
+                              builder: (context, phase, _) => _DoingRow(
+                                icon: _audioIcon(phase),
+                                label: _audioLabel(loc, phase),
+                                on: _audioOn(phase),
+                              ),
                             ),
                             const AmicaDivider(),
                             _DoingRow(

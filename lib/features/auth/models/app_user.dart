@@ -119,6 +119,7 @@ class AppUser {
       'voiceSosEnabled': true,
       'secretPhraseEnabled': true,
       'fakeCallVolumeShortcutEnabled': true,
+      'sosAudioRecordingEnabled': true,
       'voiceSosEmergencyMessage': 'I need help. This is my live location.',
     };
   }

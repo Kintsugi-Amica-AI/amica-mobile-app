@@ -20,6 +20,7 @@ import '../../../services/transit_plan_service.dart';
 import '../../emergency_contacts/models/emergency_contact.dart';
 import '../../emergency_contacts/services/emergency_contact_service.dart';
 import '../../sos/screens/sos_active_screen.dart';
+import '../../sos/services/sos_audio_service.dart';
 import '../../sos/services/sos_service.dart';
 import '../models/journey.dart';
 import '../models/location_data_model.dart';
@@ -339,6 +340,13 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     _cancelSafetyEscalations();
     setState(() => _isSaving = true);
     _showEscalationSnack(_loc.journeyTimerSendingSos);
+    // She pressed SOS herself: record a clip. A timer SOS may fire with the
+    // app in the background, where Android does not allow the microphone.
+    if (timerTriggered) {
+      SosAudioService.instance.markNoClip();
+    } else {
+      unawaited(SosAudioService.instance.startForSos(triggerType: 'manual'));
+    }
     try {
       await _stopNativeSafetyMonitor();
       final location = await _sosLocation(journey);
@@ -351,6 +359,9 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
               location: location,
               journeyId: journey.id,
             );
+      if (!timerTriggered) {
+        unawaited(SosAudioService.instance.attachAlert(alertId));
+      }
       unawaited(
         widget.journeyService.markJourneySos(journey.id).catchError((_) {}),
       );

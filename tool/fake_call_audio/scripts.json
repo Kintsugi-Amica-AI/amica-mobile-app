@@ -1,0 +1,241 @@
+{
+  "_comment": [
+    "Caller scripts for the Fake Call voice clips. Only the caller's side is",
+    "written; each {pause} is a gap sized for the user to answer out loud, so",
+    "people nearby hear a two-sided conversation.",
+    "Edit freely, then re-run generate.py. Unchanged lines come from the cache",
+    "and are not billed again.",
+    "Sinhala and Tamil lines should be checked by a native speaker."
+  ],
+  "styles": {
+    "en": "Speak with a natural Sri Lankan English accent, like a real phone call, not a narrator. ",
+    "si": "Speak natural, casual spoken Sinhala as used in Sri Lanka, like a real phone call, not a narrator. ",
+    "ta": "Speak natural, casual spoken Sri Lankan Tamil, like a real phone call, not a narrator. "
+  },
+  "roles": {
+    "friend": {
+      "voice": "Leda",
+      "gender": "female",
+      "style": "Warm, relaxed young woman talking to her close friend. Slightly quick."
+    },
+    "mom": {
+      "voice": "Gacrux",
+      "gender": "female",
+      "style": "Caring middle-aged mother, a little worried, speaking softly but clearly."
+    },
+    "sister": {
+      "voice": "Kore",
+      "gender": "female",
+      "style": "Confident older sister, calm and firm, in control."
+    },
+    "brother": {
+      "voice": "Achird",
+      "gender": "male",
+      "style": "Relaxed, friendly older brother who is driving."
+    },
+    "dad": {
+      "voice": "Charon",
+      "gender": "male",
+      "style": "Calm, protective father, steady and reassuring."
+    }
+  },
+  "clips": {
+    "friend_pickup": {
+      "role": "friend",
+      "lines": {
+        "en": [
+          ["Hey! Where are you right now?", 4.0],
+          ["Oh okay, I know that place. I'm like five minutes away, I'll come pick you up.", 3.5],
+          ["No, no, it's fine, I'm already in the car.", 3.5],
+          ["I can see your location on my phone, so just stay where you are, okay?", 4.0],
+          ["Yeah. Just keep talking to me till I get there.", 4.5],
+          ["Mm-hm. So how was today?", 6.0],
+          ["Seriously? Okay, tell me properly when I see you.", 4.0],
+          ["Alright, I'm turning onto your road now. Stay on the line.", 3.0]
+        ],
+        "si": [
+          ["හලෝ! ඔයා දැන් කොහෙද ඉන්නේ?", 4.0],
+          ["ආ හරි, මම ඒ තැන දන්නවා. මම තව විනාඩි පහකින් එනවා ඔයාව එක්කන් යන්න.", 3.5],
+          ["නෑ නෑ, කමක් නෑ. මම දැනටමත් වාහනේ ඉන්නේ.", 3.5],
+          ["ඔයාගේ location එක මට ෆෝන් එකේ පේනවා. ඔතනම ඉන්න, හරිද?", 4.0],
+          ["ඔව්. මම එනකම් මාත් එක්ක කතා කර කර ඉන්න.", 4.5],
+          ["හ්ම්. ඉතින් අද කොහොමද?", 6.0],
+          ["ඇත්තද? හරි, හම්බුනාම හරියට කියන්න.", 4.0],
+          ["හරි, මම දැන් ඔයාගේ පාරට හැරුණා. ෆෝන් එක තියන්න එපා.", 3.0]
+        ],
+        "ta": [
+          ["ஹலோ! இப்ப எங்க நிக்கிறாய்?", 4.0],
+          ["ஓ சரி, அந்த இடம் எனக்குத் தெரியும். இன்னும் ஐந்து நிமிஷத்தில உன்னைக் கூட்டிப் போக வாறன்.", 3.5],
+          ["இல்ல இல்ல, பரவாயில்ல. நான் ஏற்கனவே வண்டியில இருக்கிறன்.", 3.5],
+          ["உன்ட location என்ட phone-ல தெரியுது. அங்கேயே நில், சரியா?", 4.0],
+          ["ஓம். நான் வரும் வரைக்கும் என்னோட கதைச்சுக் கொண்டிரு.", 4.5],
+          ["ம்ம். சரி, இன்டைக்கு எப்பிடி போச்சு?", 6.0],
+          ["உண்மையாவா? சரி, சந்திக்கேக்க ஒழுங்கா சொல்லு.", 4.0],
+          ["சரி, இப்ப உன்ட றோட்டுக்குத் திரும்பிட்டன். phone-ஐ வைக்காதே.", 3.0]
+        ]
+      }
+    },
+    "mom_checkin": {
+      "role": "mom",
+      "lines": {
+        "en": [
+          ["Hello, darling? Where are you now?", 4.0],
+          ["It's getting late, no? Who are you with?", 4.0],
+          ["Okay. Your father is coming to pick you up, he just left.", 3.5],
+          ["Share your location with me, I want to see where you are.", 4.0],
+          ["Yes, I can see it now. He'll be there very soon.", 4.0],
+          ["Don't go anywhere else, just wait there. And keep the phone with you.", 4.5],
+          ["Mm. Did you eat anything?", 5.0],
+          ["Okay, okay. Call me the minute he reaches, alright?", 3.0]
+        ],
+        "si": [
+          ["හලෝ දුව? දැන් කොහෙද ඉන්නේ?", 4.0],
+          ["දැන් රෑ වෙනවනේ. කවුද ඔයා එක්ක ඉන්නේ?", 4.0],
+          ["හරි. තාත්තා ඔයාව ගන්න එනවා, දැන් ගෙදරින් පිටත් වුණා.", 3.5],
+          ["ඔයාගේ location එක මට එවන්න, මට බලන්න ඕනේ ඔයා කොහෙද කියලා.", 4.0],
+          ["ආ, දැන් පේනවා. තාත්තා ඉක්මනට එයි.", 4.0],
+          ["වෙන කොහේවත් යන්න එපා, ඔතනම ඉන්න. ෆෝන් එක ළඟ තියාගන්න.", 4.5],
+          ["හ්ම්. ඔයා මොනවා හරි කෑවද?", 5.0],
+          ["හරි හරි. තාත්තා ආපු ගමන් මට කෝල් එකක් දෙන්න, හරිද?", 3.0]
+        ],
+        "ta": [
+          ["ஹலோ, மகள்? இப்ப எங்க இருக்கிறாய்?", 4.0],
+          ["நேரம் போயிட்டுதே. உன்னோட ஆர் இருக்கினம்?", 4.0],
+          ["சரி. அப்பா உன்னைக் கூட்டிப் போக வாறார், இப்பதான் வெளிக்கிட்டவர்.", 3.5],
+          ["உன்ட location-ஐ எனக்கு அனுப்பு, நீ எங்க இருக்கிறாய் எண்டு பாக்கோணும்.", 4.0],
+          ["ஓம், இப்ப தெரியுது. அப்பா கெதியா வந்திடுவார்.", 4.0],
+          ["வேற எங்கேயும் போகாதே, அங்கேயே நில். phone-ஐ கையில வைச்சிரு.", 4.5],
+          ["ம்ம். ஏதாவது சாப்பிட்டியா?", 5.0],
+          ["சரி சரி. அப்பா வந்தவுடனே எனக்கு call பண்ணு, சரியா?", 3.0]
+        ]
+      }
+    },
+    "sister_tracking": {
+      "role": "sister",
+      "lines": {
+        "en": [
+          ["Hi, I'm watching your trip on the app right now.", 3.5],
+          ["Yeah, I can see the car. Tell me the number plate again?", 5.0],
+          ["Okay, got it. I've sent it to Mum as well.", 3.5],
+          ["You're about ten minutes away, right? I'll stay on the phone the whole way.", 4.0],
+          ["No, it's fine, I'm not busy. Just talk to me.", 5.0],
+          ["Mm-hm. Okay.", 5.0],
+          ["I'll be waiting outside when you get there.", 3.0]
+        ],
+        "si": [
+          ["හායි, මම දැන් ඔයාගේ ගමන app එකෙන් බලාගෙන ඉන්නේ.", 3.5],
+          ["ඔව්, මට වාහනේ පේනවා. නම්බර් ප්ලේට් එක ආයෙත් කියන්නකෝ?", 5.0],
+          ["හරි, ගත්තා. මම ඒක අම්මටත් යැව්වා.", 3.5],
+          ["තව විනාඩි දහයක් විතර නේද? මම මුළු ගමනම ෆෝන් එකේ ඉන්නම්.", 4.0],
+          ["නෑ, කමක් නෑ, මට වැඩක් නෑ. මාත් එක්ක කතා කරන්න.", 5.0],
+          ["හ්ම්. හරි.", 5.0],
+          ["ඔයා එනකොට මම එළියේ බලාගෙන ඉන්නම්.", 3.0]
+        ],
+        "ta": [
+          ["ஹாய், உன்ட பயணத்தை இப்ப app-ல பாத்துக் கொண்டிருக்கிறன்.", 3.5],
+          ["ஓம், வண்டி தெரியுது. number plate-ஐ திரும்ப ஒருக்கா சொல்லு?", 5.0],
+          ["சரி, எடுத்திட்டன். அம்மாவுக்கும் அனுப்பிட்டன்.", 3.5],
+          ["இன்னும் பத்து நிமிஷம்தானே? முழுப் பயணமும் நான் phone-ல இருப்பன்.", 4.0],
+          ["இல்ல, பரவாயில்ல, எனக்கு வேலை இல்ல. என்னோட கதை.", 5.0],
+          ["ம்ம். சரி.", 5.0],
+          ["நீ வரேக்க நான் வெளியில பாத்துக் கொண்டு நிப்பன்.", 3.0]
+        ]
+      }
+    },
+    "brother_pickup": {
+      "role": "brother",
+      "lines": {
+        "en": [
+          ["Hey, where are you?", 4.0],
+          ["Okay, stay there. I'm coming to get you, I'm close by.", 3.5],
+          ["Like five minutes. I can see your location.", 4.0],
+          ["No, don't walk anywhere, just wait there.", 4.0],
+          ["Yeah, yeah. Keep the phone on, I'm driving.", 5.0],
+          ["Mm. Okay.", 5.0],
+          ["I'm nearly there. Look out for the car.", 3.0]
+        ],
+        "si": [
+          ["හලෝ, කොහෙද ඉන්නේ?", 4.0],
+          ["හරි, ඔතනම ඉන්න. මම ඔයාව ගන්න එනවා, මම ළඟපාතම ඉන්නේ.", 3.5],
+          ["විනාඩි පහක් විතර. මට ඔයාගේ location එක පේනවා.", 4.0],
+          ["නෑ, කොහේවත් ඇවිදගෙන යන්න එපා. ඔතනම ඉන්න.", 4.0],
+          ["ඔව් ඔව්. ෆෝන් එක තියන්න එපා, මම ඩ්‍රයිව් කරනවා.", 5.0],
+          ["හ්ම්. හරි.", 5.0],
+          ["මම ළඟටම ආවා. වාහනේ දිහා බලාගෙන ඉන්න.", 3.0]
+        ],
+        "ta": [
+          ["ஹலோ, எங்க நிக்கிறாய்?", 4.0],
+          ["சரி, அங்கேயே நில். உன்னைக் கூட்டிப் போக வாறன், கிட்டத்தான் நிக்கிறன்.", 3.5],
+          ["ஒரு ஐந்து நிமிஷம். உன்ட location தெரியுது.", 4.0],
+          ["இல்ல, எங்கேயும் நடந்து போகாதே. அங்கேயே நில்.", 4.0],
+          ["ஓம் ஓம். phone-ஐ வைக்காதே, நான் drive பண்ணுறன்.", 5.0],
+          ["ம்ம். சரி.", 5.0],
+          ["கிட்ட வந்திட்டன். வண்டியைப் பாத்துக் கொண்டு நில்.", 3.0]
+        ]
+      }
+    },
+    "dad_checkin": {
+      "role": "dad",
+      "lines": {
+        "en": [
+          ["Hello? Where are you now?", 4.0],
+          ["Okay. I'm leaving now to pick you up. Stay there.", 4.0],
+          ["About ten minutes. I have your location.", 4.0],
+          ["Is anyone with you?", 4.0],
+          ["Okay. Stay somewhere with people around, alright?", 4.0],
+          ["Keep the line open. I'm on my way.", 5.0],
+          ["I'm almost there. Wait near the entrance.", 3.0]
+        ],
+        "si": [
+          ["හලෝ දුව? දැන් කොහෙද?", 4.0],
+          ["හරි. මම දැන් ඔයාව ගන්න එනවා. ඔතනම ඉන්න.", 4.0],
+          ["විනාඩි දහයක් විතර. මට ඔයාගේ location එක තියෙනවා.", 4.0],
+          ["කවුරු හරි ඔයා එක්ක ඉන්නවද?", 4.0],
+          ["හරි. මිනිස්සු ඉන්න තැනක ඉන්න, හරිද?", 4.0],
+          ["ෆෝන් එක තියන්න එපා. මම එන ගමන්.", 5.0],
+          ["මම ළඟටම ආවා. ගේට්ටුව ළඟ ඉන්න.", 3.0]
+        ],
+        "ta": [
+          ["ஹலோ, மகள்? இப்ப எங்க?", 4.0],
+          ["சரி. இப்ப உன்னைக் கூட்டிப் போக வாறன். அங்கேயே நில்.", 4.0],
+          ["ஒரு பத்து நிமிஷம். உன்ட location என்னட்ட இருக்கு.", 4.0],
+          ["உன்னோட ஆராவது இருக்கினமா?", 4.0],
+          ["சரி. ஆக்கள் இருக்கிற இடத்தில நில், சரியா?", 4.0],
+          ["phone-ஐ வைக்காதே. வந்து கொண்டிருக்கிறன்.", 5.0],
+          ["கிட்ட வந்திட்டன். gate-க்குப் பக்கத்தில நில்.", 3.0]
+        ]
+      }
+    }
+  },
+  "fillers": {
+    "_comment": "Looped quietly after the main clip ends, so a long call never falls silent. One per voice gender.",
+    "female": { "role": "friend" },
+    "male": { "role": "brother" },
+    "lines": {
+      "en": [
+        ["Mm-hm.", 6.0],
+        ["Yeah.", 7.0],
+        ["Okay.", 6.0],
+        ["Really?", 7.0],
+        ["Mm. Go on.", 8.0],
+        ["Haha, yeah.", 7.0]
+      ],
+      "si": [
+        ["හ්ම්.", 6.0],
+        ["ඔව්.", 7.0],
+        ["හරි.", 6.0],
+        ["ඇත්තද?", 7.0],
+        ["හ්ම්, කියන්න.", 8.0],
+        ["හා හා, ඔව්.", 7.0]
+      ],
+      "ta": [
+        ["ம்ம்.", 6.0],
+        ["ஓம்.", 7.0],
+        ["சரி.", 6.0],
+        ["உண்மையாவா?", 7.0],
+        ["ம்ம், சொல்லு.", 8.0],
+        ["ஹா ஹா, ஓம்.", 7.0]
+      ]
+    }
+  }
+}

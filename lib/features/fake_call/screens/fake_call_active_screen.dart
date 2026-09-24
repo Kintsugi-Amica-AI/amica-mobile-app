@@ -8,7 +8,9 @@ import '../../../services/location_service.dart';
 import '../../auth/services/user_profile_service.dart';
 import '../../emergency_contacts/services/emergency_contact_service.dart';
 import '../../sos/screens/sos_active_screen.dart';
+import '../../sos/services/sos_audio_service.dart';
 import '../../sos/services/sos_service.dart';
+import '../services/fake_call_audio_service.dart';
 import '../services/fake_call_service.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../services/voice_sos_service.dart';
@@ -34,7 +36,9 @@ class FakeCallActiveScreen extends StatefulWidget {
     this.emergencyActionService = const EmergencyActionService(),
     this.emergencyContactService = const EmergencyContactService(),
     VoiceSosService? voiceSosService,
-  }) : voiceSosService = voiceSosService ?? VoiceSosService();
+    FakeCallAudioService? fakeCallAudioService,
+  })  : voiceSosService = voiceSosService ?? VoiceSosService(),
+        fakeCallAudioService = fakeCallAudioService ?? FakeCallAudioService();
 
   final FakeCallActiveArguments? arguments;
   final UserProfileService userProfileService;
@@ -44,6 +48,7 @@ class FakeCallActiveScreen extends StatefulWidget {
   final EmergencyActionService emergencyActionService;
   final EmergencyContactService emergencyContactService;
   final VoiceSosService voiceSosService;
+  final FakeCallAudioService fakeCallAudioService;
 
   @override
   State<FakeCallActiveScreen> createState() => _FakeCallActiveScreenState();
@@ -57,6 +62,12 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
       UserProfileService.defaultVoiceSosEmergencyMessage;
   String _lastDetectedText = '';
   bool _isTriggeringSos = false;
+  bool _speakerOn = false;
+  bool _callerVoiceStarted = false;
+
+  String get _callerName =>
+      widget.arguments?.callerName ??
+      widget.fakeCallService.getDefaultCallerName();
 
   @override
   void initState() {
@@ -69,8 +80,20 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_callerVoiceStarted) {
+      _callerVoiceStarted = true;
+      unawaited(
+        _startCallerVoice(Localizations.localeOf(context).languageCode),
+      );
+    }
+  }
+
+  @override
   void dispose() {
     _callTimer?.cancel();
+    unawaited(widget.fakeCallAudioService.stop());
     widget.voiceSosService.stopListening();
     unawaited(
       widget.emergencyActionService.setCallProximityEnabled(enabled: false),
@@ -84,6 +107,37 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
         setState(() => _callDuration += const Duration(seconds: 1));
       }
     });
+  }
+
+  /// Plays a pre-recorded caller so the call is not silent. Starts even when
+  /// the profile cannot be read; the secret phrases only steer clip choice.
+  Future<void> _startCallerVoice(String languageCode) async {
+    var phrases = const [UserProfileService.defaultSecretPhrase];
+    try {
+      phrases = await widget.userProfileService
+          .getSecretPhrases()
+          .timeout(const Duration(seconds: 2));
+    } catch (_) {
+      // Offline or signed out: guard against the default phrase only.
+    }
+    if (!mounted || _isTriggeringSos) {
+      return;
+    }
+    await widget.fakeCallAudioService.start(
+      languageCode: languageCode,
+      callerName: _callerName,
+      secretPhrases: phrases,
+      speakerOn: _speakerOn,
+    );
+    if (!mounted) {
+      // The call ended while the clip was starting.
+      await widget.fakeCallAudioService.stop();
+    }
+  }
+
+  Future<void> _toggleSpeaker() async {
+    setState(() => _speakerOn = !_speakerOn);
+    await widget.fakeCallAudioService.setSpeaker(enabled: _speakerOn);
   }
 
   Future<void> _startVoiceSos() async {
@@ -143,7 +197,11 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
     });
 
     try {
+      // The caller voice stops first so the SOS recording stays clean.
+      await widget.fakeCallAudioService.stop();
+      // Speech recognition has to let go of the microphone first.
       await widget.voiceSosService.stopListening();
+      unawaited(SosAudioService.instance.startForSos(triggerType: 'voice'));
       final location = await widget.locationService.getCurrentLocationData();
       final phrase = detectedPhrase?.trim().isNotEmpty == true
           ? detectedPhrase!.trim()
@@ -154,6 +212,7 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
         expectedPhrase: _expectedPhrase,
         emergencyMessage: _voiceSosEmergencyMessage,
       );
+      unawaited(SosAudioService.instance.attachAlert(alertId));
       // The SOS screen texts the whole circle (not just the first contact)
       // and shows who was actually reached.
 
@@ -199,6 +258,7 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
   }
 
   Future<void> _endCall() async {
+    await widget.fakeCallAudioService.stop();
     await widget.voiceSosService.stopListening();
     await widget.emergencyActionService.setCallProximityEnabled(enabled: false);
     if (!mounted) {
@@ -214,8 +274,7 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
-    final callerName = widget.arguments?.callerName ??
-        widget.fakeCallService.getDefaultCallerName();
+    final callerName = _callerName;
     final callerNumber = widget.arguments?.callerNumber ??
         widget.fakeCallService.getDefaultCallerNumber();
 
@@ -278,7 +337,12 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
               children: [
                 _CallControlButton(icon: Icons.mic_off, label: loc.fakeCallActiveMute),
                 _CallControlButton(icon: Icons.dialpad, label: loc.fakeCallActiveKeypad),
-                _CallControlButton(icon: Icons.volume_up, label: loc.fakeCallActiveSpeaker),
+                _CallControlButton(
+                  icon: Icons.volume_up,
+                  label: loc.fakeCallActiveSpeaker,
+                  isActive: _speakerOn,
+                  onTap: _toggleSpeaker,
+                ),
               ],
             ),
             const SizedBox(height: 28),
@@ -310,19 +374,32 @@ class _CallControlButton extends StatelessWidget {
   const _CallControlButton({
     required this.icon,
     required this.label,
+    this.isActive = false,
+    this.onTap,
   });
 
   final IconData icon;
   final String label;
 
+  /// Drawn light with a dark icon, like the stock dialer's "on" state.
+  final bool isActive;
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        CircleAvatar(
-          radius: 28,
-          backgroundColor: const Color(0xFF3C4043),
-          child: Icon(icon, color: Colors.white),
+        GestureDetector(
+          onTap: onTap,
+          child: CircleAvatar(
+            radius: 28,
+            backgroundColor:
+                isActive ? Colors.white : const Color(0xFF3C4043),
+            child: Icon(
+              icon,
+              color: isActive ? const Color(0xFF202124) : Colors.white,
+            ),
+          ),
         ),
         const SizedBox(height: 8),
         Text(label, style: const TextStyle(color: Colors.white70)),

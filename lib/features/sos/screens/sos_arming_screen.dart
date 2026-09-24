@@ -7,6 +7,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../services/location_service.dart';
 import '../../emergency_contacts/models/emergency_contact.dart';
+import '../services/sos_audio_service.dart';
 import '../services/sos_service.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import 'sos_active_screen.dart';
@@ -79,11 +80,15 @@ class _SosArmingScreenState extends State<SosArmingScreen> {
   Future<void> _send() async {
     if (_sending) return;
     setState(() => _sending = true);
+    // The clip starts now, while location and the alert are still being
+    // worked out, so the first seconds are not lost.
+    unawaited(SosAudioService.instance.startForSos(triggerType: 'manual'));
 
     try {
       final location = await widget.locationService.getCurrentLocationData();
       final alertId =
           await widget.sosService.createManualSosAlert(location: location);
+      unawaited(SosAudioService.instance.attachAlert(alertId));
 
       if (!mounted) return;
       Navigator.pushReplacement(

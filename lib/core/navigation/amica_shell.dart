@@ -9,6 +9,7 @@ import '../../features/emergency_contacts/screens/emergency_contacts_screen.dart
 import '../../features/home/screens/home_screen.dart';
 import '../../features/journey/screens/journeys_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
+import '../../features/sos/services/sos_audio_service.dart';
 
 /// The app's persistent shell.
 ///
@@ -39,6 +40,16 @@ class _AmicaShellState extends State<AmicaShell> {
   void _select(int i) {
     setState(() => _index = i);
     _currentTab.value = i;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Ask for the microphone once, calmly, so an SOS can record a clip
+    // later without a permission dialog in the way.
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => SosAudioService.instance.askPermissionOnce(),
+    );
   }
 
   @override

@@ -3,6 +3,7 @@ package com.kintsugi.amica
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
@@ -17,20 +18,26 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private val emergencyChannelName = "com.kintsugi.amica/emergency_actions"
+    private val fakeCallAudioChannelName = "com.kintsugi.amica/fake_call_audio"
     private val sendSmsRequestCode = 4101
     private val startCallRequestCode = 4102
     private val preparePermissionsRequestCode = 4103
+    private val microphonePermissionRequestCode = 4104
     private val volumeShortcutWindowMillis = 1500L
     private val openCallShortcutExtra = "openCallShortcut"
 
     private var emergencyChannel: MethodChannel? = null
     private var pendingResult: MethodChannel.Result? = null
     private var pendingAction: PendingAction? = null
+    // Kept apart from pendingResult: a refused microphone is an answer
+    // (false), not an error, and must never block an SMS permission request.
+    private var pendingMicrophoneResult: MethodChannel.Result? = null
     private var volumeShortcutPressCount = 0
     private var firstVolumeShortcutAtMillis = 0L
     private var pendingCallShortcut = false
     private var pendingScheduledCall = false
     private var proximityWakeLock: PowerManager.WakeLock? = null
+    private var fakeCallAudioPlayer: FakeCallAudioPlayer? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -64,9 +71,23 @@ class MainActivity : FlutterActivity() {
                     consumePendingScheduledCall(result)
                 "startStopAlertMonitor" -> handleStartStopAlertMonitor(call, result)
                 "stopStopAlertMonitor" -> handleStopStopAlertMonitor(result)
+                "prepareMicrophonePermission" -> prepareMicrophonePermission(result)
+                "hasMicrophonePermission" ->
+                    result.success(hasPermission(Manifest.permission.RECORD_AUDIO))
+                "startSosAudioRecording" -> handleStartSosAudioRecording(call, result)
+                "stopSosAudioRecording" -> {
+                    startService(SosAudioRecorderService.stopIntent(this))
+                    result.success(true)
+                }
+                "sosAudioRecordingStatus" ->
+                    result.success(SosAudioRecorderService.status(this))
                 else -> result.notImplemented()
             }
         }
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            fakeCallAudioChannelName,
+        ).setMethodCallHandler { call, result -> handleFakeCallAudio(call, result) }
         handleCallShortcutIntent(intent)
         handleScheduledCallIntent(intent)
     }
@@ -79,6 +100,7 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onDestroy() {
+        fakeCallAudioPlayer?.stop()
         releaseCallProximityWakeLock()
         super.onDestroy()
     }
@@ -162,6 +184,63 @@ class MainActivity : FlutterActivity() {
             arrayOf(Manifest.permission.POST_NOTIFICATIONS),
             preparePermissionsRequestCode,
         )
+    }
+
+    /// Asks for the microphone so an SOS can record a short audio clip.
+    /// Answers true/false; a refusal is not an error.
+    private fun prepareMicrophonePermission(result: MethodChannel.Result) {
+        if (hasPermission(Manifest.permission.RECORD_AUDIO)) {
+            result.success(true)
+            return
+        }
+        if (pendingMicrophoneResult != null) {
+            result.success(false)
+            return
+        }
+        pendingMicrophoneResult = result
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(
+                arrayOf(Manifest.permission.RECORD_AUDIO),
+                microphonePermissionRequestCode,
+            )
+        }
+    }
+
+    /// Starts the SOS audio clip. Never asks for permission here: an SOS is
+    /// no moment for a dialog. Without the microphone it answers
+    /// `{started: false, reason: "permission"}` and the SOS goes on silently.
+    private fun handleStartSosAudioRecording(
+        call: MethodCall,
+        result: MethodChannel.Result,
+    ) {
+        if (!hasPermission(Manifest.permission.RECORD_AUDIO)) {
+            result.success(mapOf("started" to false, "reason" to "permission"))
+            return
+        }
+        val maxSeconds = (call.argument<Number>("maxSeconds")?.toLong() ?: 30L)
+            .coerceIn(5L, 120L)
+        val path = SosAudioRecorderService.newOutputPath(this)
+        SosAudioRecorderService.markStarting(this, path)
+        try {
+            val intent = SosAudioRecorderService.startIntent(
+                context = this,
+                outputPath = path,
+                maxDurationMillis = maxSeconds * 1000L,
+            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+            result.success(mapOf("started" to true, "path" to path))
+        } catch (error: Exception) {
+            result.success(
+                mapOf(
+                    "started" to false,
+                    "reason" to (error.localizedMessage ?: "start failed"),
+                ),
+            )
+        }
     }
 
     private fun handleStartJourneySafetyMonitor(
@@ -459,6 +538,49 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+    /** Caller voice for Fake Call; see [FakeCallAudioPlayer]. */
+    private fun handleFakeCallAudio(call: MethodCall, result: MethodChannel.Result) {
+        val player = fakeCallAudioPlayer
+            ?: FakeCallAudioPlayer(applicationContext).also { fakeCallAudioPlayer = it }
+        try {
+            when (call.method) {
+                "start" -> {
+                    val clip = call.argument<String>("clip")
+                    if (clip.isNullOrEmpty()) {
+                        result.error("FAKE_CALL_AUDIO_MISSING", "No clip given.", null)
+                        return
+                    }
+                    player.start(
+                        clip,
+                        call.argument<String>("filler"),
+                        call.argument<Boolean>("speakerOn") == true,
+                    )
+                    // Volume keys adjust call volume while the fake call talks.
+                    volumeControlStream = AudioManager.STREAM_VOICE_CALL
+                    result.success(true)
+                }
+                "setSpeaker" -> {
+                    player.setSpeaker(call.argument<Boolean>("enabled") == true)
+                    result.success(true)
+                }
+                "stop" -> {
+                    player.stop()
+                    volumeControlStream = AudioManager.USE_DEFAULT_STREAM_TYPE
+                    result.success(true)
+                }
+                else -> result.notImplemented()
+            }
+        } catch (error: Exception) {
+            player.stop()
+            volumeControlStream = AudioManager.USE_DEFAULT_STREAM_TYPE
+            result.error(
+                "FAKE_CALL_AUDIO_FAILED",
+                error.localizedMessage ?: "Could not play the caller voice.",
+                null,
+            )
+        }
+    }
+
     private fun startPendingPermissionRequest(
         action: PendingAction,
         result: MethodChannel.Result,
@@ -490,6 +612,14 @@ class MainActivity : FlutterActivity() {
         grantResults: IntArray,
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == microphonePermissionRequestCode) {
+            val granted = grantResults.isNotEmpty() &&
+                grantResults.all { it == PackageManager.PERMISSION_GRANTED }
+            pendingMicrophoneResult?.success(granted)
+            pendingMicrophoneResult = null
+            return
+        }
 
         if (
             requestCode != sendSmsRequestCode &&

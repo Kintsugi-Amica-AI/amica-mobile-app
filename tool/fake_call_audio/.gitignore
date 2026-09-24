@@ -1,0 +1,6 @@
+# Per-line TTS cache: re-runs only pay for changed lines.
+.cache/
+# Beep output from --offline-test.
+.offline_test/
+.env
+__pycache__/

@@ -799,6 +799,20 @@ class AppLocalizationsSi extends AppLocalizations {
       'ක්‍රියාත්මක මනඃකල්පිත ඇමතුමක් අතරතුර රහස් වචනය සඳහා සවන් දෙයි.';
 
   @override
+  String get settingsSosEvidenceSection => 'SOS සාක්ෂි';
+
+  @override
+  String get settingsRecordSosAudio => 'SOS ක්‍රියාත්මක වූ විට හඬ පටිගත කරන්න';
+
+  @override
+  String get settingsRecordSosAudioHelper =>
+      'හඬ SOS හෝ SOS බොත්තම ක්‍රියාත්මක වූ මොහොතේ සිට තත්පර 30ක පටයක් සුරකියි. එයට ප්‍රවේශ විය හැක්කේ ඔබට පමණි.';
+
+  @override
+  String get settingsMicrophoneNeeded =>
+      'SOS අතරතුර පටිගත කිරීමට Amica හට මයික්‍රොෆෝන ප්‍රවේශය ලබා දෙන්න.';
+
+  @override
   String get settingsEnableSecretPhrase => 'රහස් වචනය සක්‍රිය කරන්න';
 
   @override
@@ -1046,6 +1060,28 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get sosActiveRecordingAudio => 'හඬ පටිගත කරමින්';
+
+  @override
+  String get sosActiveAudioSaving => 'හඬ පටය සුරකිමින්…';
+
+  @override
+  String get sosActiveAudioSaved => 'හඬ පටය ආරක්ෂිතව සුරැකිණි';
+
+  @override
+  String get sosActiveAudioPending =>
+      'හඬ පටය දුරකථනයේ ඇත, සම්බන්ධ වූ විට උඩුගත වේ';
+
+  @override
+  String get sosActiveAudioNoPermission => 'පටිගත නොවේ: මයික්‍රොෆෝනයට අවසර නැත';
+
+  @override
+  String get sosActiveAudioOff => 'හඬ පටිගත කිරීම සැකසුම් තුළ අක්‍රියයි';
+
+  @override
+  String get sosActiveAudioFailed => 'හඬ පටිගත කළ නොහැකි විය';
+
+  @override
+  String get sosActiveAudioNotRecording => 'හඬ පටිගත නොකරයි';
 
   @override
   String get sosActiveSirenSounding => 'සයිරනය — නාද වෙමින්';

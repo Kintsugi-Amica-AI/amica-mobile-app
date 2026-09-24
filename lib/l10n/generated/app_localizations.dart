@@ -1444,6 +1444,30 @@ abstract class AppLocalizations {
   /// **'Listen for the secret phrase during an active fake call.'**
   String get settingsListenForPhrase;
 
+  /// No description provided for @settingsSosEvidenceSection.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS evidence'**
+  String get settingsSosEvidenceSection;
+
+  /// No description provided for @settingsRecordSosAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Record audio when an SOS fires'**
+  String get settingsRecordSosAudio;
+
+  /// No description provided for @settingsRecordSosAudioHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Saves a 30-second clip from the moment Voice SOS or the SOS button fires. Only you can access it.'**
+  String get settingsRecordSosAudioHelper;
+
+  /// No description provided for @settingsMicrophoneNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow microphone access so Amica can record during an SOS.'**
+  String get settingsMicrophoneNeeded;
+
   /// No description provided for @settingsEnableSecretPhrase.
   ///
   /// In en, this message translates to:
@@ -1887,6 +1911,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Recording audio'**
   String get sosActiveRecordingAudio;
+
+  /// No description provided for @sosActiveAudioSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving the audio clip…'**
+  String get sosActiveAudioSaving;
+
+  /// No description provided for @sosActiveAudioSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio clip saved securely'**
+  String get sosActiveAudioSaved;
+
+  /// No description provided for @sosActiveAudioPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio clip kept on phone, uploads when online'**
+  String get sosActiveAudioPending;
+
+  /// No description provided for @sosActiveAudioNoPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Not recording: microphone not allowed'**
+  String get sosActiveAudioNoPermission;
+
+  /// No description provided for @sosActiveAudioOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio recording is off in settings'**
+  String get sosActiveAudioOff;
+
+  /// No description provided for @sosActiveAudioFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t record audio'**
+  String get sosActiveAudioFailed;
+
+  /// No description provided for @sosActiveAudioNotRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Not recording audio'**
+  String get sosActiveAudioNotRecording;
 
   /// No description provided for @sosActiveSirenSounding.
   ///

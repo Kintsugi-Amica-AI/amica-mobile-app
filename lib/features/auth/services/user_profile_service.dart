@@ -70,6 +70,11 @@ class UserProfileService {
         safetySettings['fakeCallVolumeShortcutEnabled'],
         true,
       ),
+      // Record a short audio clip when an SOS fires (on by default).
+      'sosAudioRecordingEnabled': _readBool(
+        safetySettings['sosAudioRecordingEnabled'],
+        true,
+      ),
       'voiceSosEmergencyMessage': _readString(
         safetySettings['voiceSosEmergencyMessage'],
         _readString(
@@ -89,6 +94,7 @@ class UserProfileService {
     required bool voiceSosEnabled,
     required bool secretPhraseEnabled,
     required bool fakeCallVolumeShortcutEnabled,
+    bool? sosAudioRecordingEnabled,
   }) async {
     final user = _auth.currentUser;
     if (user == null) {
@@ -124,6 +130,8 @@ class UserProfileService {
         'voiceSosEnabled': voiceSosEnabled,
         'secretPhraseEnabled': secretPhraseEnabled,
         'fakeCallVolumeShortcutEnabled': fakeCallVolumeShortcutEnabled,
+        if (sosAudioRecordingEnabled != null)
+          'sosAudioRecordingEnabled': sosAudioRecordingEnabled,
         'voiceSosEmergencyMessage': message,
       },
       'updatedAt': FieldValue.serverTimestamp(),

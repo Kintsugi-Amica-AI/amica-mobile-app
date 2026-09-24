@@ -802,6 +802,20 @@ class AppLocalizationsTa extends AppLocalizations {
       'செயலில் உள்ள போலி அழைப்பின் போது இரகசிய சொற்றொடருக்குக் காதுகொடுக்கும்.';
 
   @override
+  String get settingsSosEvidenceSection => 'SOS சான்று';
+
+  @override
+  String get settingsRecordSosAudio => 'SOS தொடங்கும்போது ஒலியைப் பதிவு செய்';
+
+  @override
+  String get settingsRecordSosAudioHelper =>
+      'குரல் SOS அல்லது SOS பொத்தான் இயங்கிய நொடியிலிருந்து 30 வினாடி பதிவைச் சேமிக்கும். நீங்கள் மட்டுமே அதை அணுக முடியும்.';
+
+  @override
+  String get settingsMicrophoneNeeded =>
+      'SOS நேரத்தில் பதிவு செய்ய Amica-க்கு மைக்ரோஃபோன் அனுமதியை வழங்கவும்.';
+
+  @override
   String get settingsEnableSecretPhrase => 'இரகசிய சொற்றொடரை இயக்கு';
 
   @override
@@ -1064,6 +1078,29 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get sosActiveRecordingAudio => 'ஒலியைப் பதிவு செய்கிறது';
+
+  @override
+  String get sosActiveAudioSaving => 'ஒலிப் பதிவைச் சேமிக்கிறது…';
+
+  @override
+  String get sosActiveAudioSaved => 'ஒலிப் பதிவு பாதுகாப்பாகச் சேமிக்கப்பட்டது';
+
+  @override
+  String get sosActiveAudioPending =>
+      'ஒலிப் பதிவு தொலைபேசியில் உள்ளது, இணைப்பு கிடைத்ததும் பதிவேற்றப்படும்';
+
+  @override
+  String get sosActiveAudioNoPermission =>
+      'பதிவு இல்லை: மைக்ரோஃபோன் அனுமதி இல்லை';
+
+  @override
+  String get sosActiveAudioOff => 'அமைப்புகளில் ஒலிப் பதிவு முடக்கப்பட்டுள்ளது';
+
+  @override
+  String get sosActiveAudioFailed => 'ஒலியைப் பதிவு செய்ய முடியவில்லை';
+
+  @override
+  String get sosActiveAudioNotRecording => 'ஒலி பதிவு செய்யப்படவில்லை';
 
   @override
   String get sosActiveSirenSounding => 'சைரன் — ஒலிக்கிறது';
