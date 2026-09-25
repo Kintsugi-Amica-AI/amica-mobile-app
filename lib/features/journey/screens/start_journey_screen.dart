@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart' as geocoding;
+import 'package:google_maps_flutter/google_maps_flutter.dart' show LatLng;
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
@@ -772,7 +773,22 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
                       destinationTitle: destinationTitle,
                       routePoints: _usesTransit && _plan != null
                           ? const []
-                          : _route?.points ?? const [],
+                          : (_route?.points ??
+                              // No route from the backend (not deployed,
+                              // offline, no key)? Show a straight guide line
+                              // so the map never looks empty.
+                              ((_usesTransit && _planLegs.isNotEmpty) ||
+                                      _isLoadingRoute ||
+                                      _isLoadingPlan ||
+                                      currentLocation == null ||
+                                      destinationLocation == null
+                                  ? const <LatLng>[]
+                                  : [
+                                      LatLng(currentLocation.latitude,
+                                          currentLocation.longitude),
+                                      LatLng(destinationLocation.latitude,
+                                          destinationLocation.longitude),
+                                    ])),
                       routeLegs: _usesTransit ? _planLegs : const [],
                       transitStops: _usesTransit && _plan != null
                           ? mapStopsFor(_plan!, withCandidates: true)

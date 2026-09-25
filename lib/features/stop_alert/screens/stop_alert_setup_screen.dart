@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart' as geocoding;
+import 'package:google_maps_flutter/google_maps_flutter.dart' show LatLng;
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
@@ -123,7 +124,27 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
   // Picking the drop-off
   // ---------------------------------------------------------------------
 
+  /// True while the app itself (not the rider) is writing into the field,
+  /// e.g. naming a pinned spot. Stops that write from triggering a geocode
+  /// search that would move the pin.
+  bool _isSettingTextFromPin = false;
+
+  /// The field currently holds a name we filled in from a map pin, so a new
+  /// pin may replace it. Typed text is never overwritten.
+  bool _dropOffTextFromPin = false;
+
+  void _setDropOffTextFromPin(String name) {
+    _isSettingTextFromPin = true;
+    _dropOffController.text = name;
+    _isSettingTextFromPin = false;
+    _dropOffTextFromPin = true;
+  }
+
   void _onDropOffTextChanged() {
+    if (_isSettingTextFromPin) {
+      return;
+    }
+    _dropOffTextFromPin = false;
     final dropOffName = _dropOffController.text.trim();
 
     if (_dropOffLocation != null) {
@@ -224,12 +245,23 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
 
   void _pinDropOff(double latitude, double longitude) {
     _dropOffSearchDebounce?.cancel();
-    _dropOffSearchToken++;
+    final pinToken = ++_dropOffSearchToken;
+
+    // A pin must satisfy the "Where are you going?" field too, otherwise the
+    // form validator blocks Start. Keep what the rider typed; otherwise name
+    // the spot (placeholder first, real place name once it resolves).
+    final typed = _dropOffController.text.trim();
+    final canRename = typed.isEmpty || _dropOffTextFromPin;
+    if (canRename) {
+      _setDropOffTextFromPin(_loc.stopAlertSetupYourStopDefault);
+    }
+    final name = _dropOffController.text.trim();
+
     setState(() {
       _dropOffLocation = LocationDataModel(
         latitude: latitude,
         longitude: longitude,
-        address: _dropOffController.text.trim(),
+        address: name,
         updatedAt: DateTime.now(),
       );
       _dropOffStatus = _loc.stopAlertSetupStopPinned;
@@ -237,6 +269,54 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
       _errorMessage = null;
     });
     _schedulePlan();
+
+    if (canRename) {
+      unawaited(_nameDropOffFromPin(latitude, longitude, pinToken));
+    }
+  }
+
+  /// Fills the field with the place name under a pin, when it can be found.
+  Future<void> _nameDropOffFromPin(
+    double latitude,
+    double longitude,
+    int pinToken,
+  ) async {
+    try {
+      final places = await geocoding
+          .placemarkFromCoordinates(latitude, longitude)
+          .timeout(const Duration(seconds: 6));
+      if (!mounted ||
+          pinToken != _dropOffSearchToken ||
+          !_dropOffTextFromPin ||
+          places.isEmpty) {
+        return;
+      }
+      final place = places.first;
+      final parts = <String>[];
+      for (final part in [
+        place.name,
+        place.thoroughfare,
+        place.subLocality,
+        place.locality,
+      ]) {
+        final value = part?.trim() ?? '';
+        if (value.isNotEmpty && !parts.contains(value)) {
+          parts.add(value);
+        }
+        if (parts.length == 2) break;
+      }
+      if (parts.isEmpty) return;
+      final name = parts.join(', ');
+      _setDropOffTextFromPin(name);
+      setState(() {
+        _dropOffLocation = _dropOffLocation?.copyWith(
+          address: name,
+          updatedAt: DateTime.now(),
+        );
+      });
+    } catch (_) {
+      // Keep the placeholder name; the pin itself is what matters.
+    }
   }
 
   Future<void> _getCurrentLocation() async {
@@ -493,6 +573,10 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
   }
 
   String? _validateDropOff(String? value) {
+    // A pinned spot counts even if the name hasn't been filled in yet.
+    if (_dropOffLocation != null) {
+      return null;
+    }
     if (value == null || value.trim().isEmpty) {
       return _loc.stopAlertSetupValidateDropOff;
     }
@@ -551,6 +635,20 @@ class _StopAlertSetupScreenState extends State<StopAlertSetupScreen> {
                     destinationLongitude: dropOffLocation?.longitude,
                     destinationTitle: dropOffTitle,
                     routeLegs: _planLegs,
+                    // No route from the backend (not deployed, offline, no
+                    // key)? Still show a straight guide line between the two
+                    // points so the map never looks empty.
+                    routePoints: (_planLegs.isEmpty &&
+                            !_isLoadingPlan &&
+                            currentLocation != null &&
+                            dropOffLocation != null)
+                        ? [
+                            LatLng(currentLocation.latitude,
+                                currentLocation.longitude),
+                            LatLng(dropOffLocation.latitude,
+                                dropOffLocation.longitude),
+                          ]
+                        : const [],
                     transitStops: plan == null
                         ? const []
                         : mapStopsFor(plan, withCandidates: true),
