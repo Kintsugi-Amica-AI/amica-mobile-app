@@ -19,6 +19,8 @@ import '../../journey/widgets/journey_visuals.dart';
 import '../../journey/widgets/transit_trip_card.dart';
 import '../../../services/transit_plan_service.dart';
 import '../services/stop_alert_calculator.dart';
+import '../../notifications/models/app_notification.dart';
+import '../../notifications/services/notification_inbox_service.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
 class StopAlertActiveArguments {
@@ -173,7 +175,7 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
   /// rider's position changes.
   void _recomputeDistance() {
     final ride = _ride;
-    final dropOff = ride?.destinationLocation;
+    final dropOff = ride?.stopAlertTarget;
     final current = _currentLocation ?? ride?.currentLocation;
     if (ride == null || dropOff == null || current == null) {
       return;
@@ -217,6 +219,15 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
     // vibrate from here when it never started, so the rider does not get a
     // doubled buzz on the normal path.
     if (!_nativeMonitorStarted) {
+      // The native service records its own alarm in the Notifications list;
+      // when it never started, record it from here.
+      unawaited(NotificationInboxService.instance.add(AppNotification(
+        id: '${DateTime.now().microsecondsSinceEpoch}-stop_alert',
+        type: 'stop_alert',
+        title: _loc.stopAlertActiveComingUp,
+        body: _loc.stopAlertActiveGetReady(ride.stopAlertTargetName),
+        receivedAt: DateTime.now(),
+      )));
       try {
         await widget.emergencyActionService.vibrateTwice();
       } catch (_) {
@@ -236,7 +247,7 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
       return;
     }
 
-    final dropOff = ride.destinationLocation;
+    final dropOff = ride.stopAlertTarget;
     if (dropOff == null) {
       return;
     }
@@ -251,7 +262,7 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
       await widget.emergencyActionService.startStopAlertMonitor(
         dropOffLatitude: dropOff.latitude,
         dropOffLongitude: dropOff.longitude,
-        dropOffName: ride.destinationName,
+        dropOffName: ride.stopAlertTargetName,
         alertDistanceMeters: ride.alertDistanceMeters,
         routeFactor: ride.routeFactor,
         alreadyAlerted: _hasAlerted,
@@ -327,7 +338,7 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
       return SafeArea(child: Center(child: Text(_loc.stopAlertActiveNoRide)));
     }
 
-    final dropOff = ride.destinationLocation;
+    final dropOff = ride.stopAlertTarget;
     final mapLocation = _currentLocation ?? ride.currentLocation ?? ride.startLocation;
 
     final plan = ride.transitPlan;
@@ -349,7 +360,7 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
                 markerTitle: _loc.stopAlertSetupYouAreHereMarker,
                 destinationLatitude: dropOff?.latitude,
                 destinationLongitude: dropOff?.longitude,
-                destinationTitle: ride.destinationName,
+                destinationTitle: ride.stopAlertTargetName,
                 routeLegs: plan == null ? const [] : _legsFor(plan),
                 transitStops: plan == null ? const [] : mapStopsFor(plan),
                 mapPadding: EdgeInsets.only(
@@ -398,7 +409,7 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
                     children: [
                       _InfoRow(
                         label: _loc.stopAlertActiveGettingOffAt,
-                        value: ride.destinationName,
+                        value: ride.stopAlertTargetName,
                       ),
                       const Divider(height: 22),
                       _InfoRow(
@@ -515,7 +526,7 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
           const SizedBox(height: 6),
           Text(
             _hasAlerted
-                ? _loc.stopAlertActiveGetReady(ride.destinationName)
+                ? _loc.stopAlertActiveGetReady(ride.stopAlertTargetName)
                 : _loc.stopAlertActiveWillAlarmAt(
                     widget.calculator
                         .formatAlertDistance(ride.alertDistanceMeters)),
@@ -531,7 +542,7 @@ class _StopAlertActiveScreenState extends State<StopAlertActiveScreen>
 
   Widget _buildProgressBar(Journey ride) {
     final start = ride.startLocation;
-    final dropOff = ride.destinationLocation;
+    final dropOff = ride.stopAlertTarget;
     final distance = _distanceMeters;
 
     if (start == null || dropOff == null || distance == null) {

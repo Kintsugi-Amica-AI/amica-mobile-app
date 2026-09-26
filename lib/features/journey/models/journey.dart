@@ -106,6 +106,53 @@ class Journey {
   /// than counting down a safety timer.
   bool get isStopAlertRide => stopAlert['enabled'] == true;
 
+  /// Whether a safety countdown runs on this journey. Rides started from the
+  /// stop-alert setup screen switch it off; a bus or train journey started
+  /// from the journey screen has both the countdown and the stop alert.
+  bool get hasSafetyTimer => safetyCheck['required'] == true;
+
+  /// A ride that only watches the distance to a stop (no safety countdown).
+  bool get isStopAlertOnly => isStopAlertRide && !hasSafetyTimer;
+
+  /// Where the stop alarm counts down to. On a bus or train journey with a
+  /// trip plan that is the stop she gets off at, which can differ from the
+  /// place she is finally going to ([destinationLocation]).
+  LocationDataModel? get stopAlertTarget {
+    final dropOff = stopAlert['dropOff'];
+    if (dropOff is Map) {
+      final latitude = dropOff['latitude'];
+      final longitude = dropOff['longitude'];
+      if (latitude is num && longitude is num) {
+        final name = dropOff['name'];
+        return LocationDataModel(
+          latitude: latitude.toDouble(),
+          longitude: longitude.toDouble(),
+          address: name is String ? name : '',
+          updatedAt: DateTime.now(),
+        );
+      }
+    }
+    return destinationLocation;
+  }
+
+  String get stopAlertTargetName {
+    final dropOff = stopAlert['dropOff'];
+    if (dropOff is Map) {
+      final name = dropOff['name'];
+      if (name is String && name.isNotEmpty) return name;
+    }
+    return destinationName;
+  }
+
+  /// How many times the route was re-planned because she left it.
+  int get routeChangeCount {
+    final count = route['changeCount'];
+    return count is num ? count.toInt() : 0;
+  }
+
+  /// When the route was last re-planned, or null if it never was.
+  DateTime? get routeChangedAt => _readNullableDateTime(route['changedAt']);
+
   /// How close to the drop-off the alarm should sound, in metres.
   int get alertDistanceMeters {
     final distance = stopAlert['alertDistanceMeters'];

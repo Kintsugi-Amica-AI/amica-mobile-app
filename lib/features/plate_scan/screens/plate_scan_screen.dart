@@ -16,12 +16,14 @@ import '../../../core/widgets/primary_button.dart';
 import '../../journey/widgets/journey_visuals.dart';
 import '../models/detection.dart';
 import '../models/plate_scan_outcome.dart';
+import '../models/scanned_vehicle.dart';
 import '../models/vehicle_profile.dart';
 import '../services/plate_scan_service.dart';
 import '../services/vehicle_image_service.dart';
 import '../services/vehicle_inspector.dart';
 import '../services/vehicle_observation_service.dart';
 import '../widgets/vehicle_labels.dart';
+import 'plate_result_screen.dart';
 import '../widgets/vehicle_told_sheet.dart';
 import '../utils/vision_log.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -447,8 +449,24 @@ class _PlateScanScreenState extends State<PlateScanScreen>
         unawaited(widget.observationService
             .record(status.normalizedPlateNumber, inspection));
       }
-      await Navigator.pushNamed(context, AppRoutes.plateResult,
-          arguments: arguments);
+      // Opened from the journey screen: the result screen hands the confirmed
+      // vehicle back, and this screen passes it on to the journey screen.
+      final routeArgs = ModalRoute.of(context)?.settings.arguments;
+      final returnVehicle =
+          routeArgs is PlateScanArguments && routeArgs.returnVehicle;
+      final picked = await Navigator.push<ScannedVehicle>(
+        context,
+        MaterialPageRoute<ScannedVehicle>(
+          settings: RouteSettings(
+            name: AppRoutes.plateResult,
+            arguments: arguments,
+          ),
+          builder: (_) => PlateResultScreen(returnVehicle: returnVehicle),
+        ),
+      );
+      if (returnVehicle && picked != null && mounted) {
+        Navigator.pop(context, picked);
+      }
     } on PlateScanException catch (error) {
       if (!mounted) {
         return;

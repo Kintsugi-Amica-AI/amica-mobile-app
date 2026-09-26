@@ -106,6 +106,49 @@ void main() {
       expect(journey.stopAlertTriggered, isFalse);
     });
 
+    test('a journey with a timer and a stop alert keeps both', () {
+      final journey = Journey.fromMap(const {
+        'journeyType': 'bus',
+        'safetyCheck': {'required': true},
+        'stopAlert': {
+          'enabled': true,
+          'dropOff': {'name': 'Malabe stop', 'latitude': 6.9, 'longitude': 79.9},
+        },
+        'destination': {'name': 'Office', 'latitude': 6.95, 'longitude': 79.95},
+      }, 'id');
+
+      expect(journey.isStopAlertRide, isTrue);
+      expect(journey.hasSafetyTimer, isTrue);
+      expect(journey.isStopAlertOnly, isFalse);
+      // The alarm counts down to the stop, not the final destination.
+      expect(journey.stopAlertTargetName, 'Malabe stop');
+      expect(journey.stopAlertTarget?.latitude, 6.9);
+    });
+
+    test('a stop alert only ride has no timer and alarms at its destination',
+        () {
+      final journey = Journey.fromMap(const {
+        'journeyType': 'bus',
+        'safetyCheck': {'required': false},
+        'stopAlert': {'enabled': true},
+        'destination': {'name': 'Kandy', 'latitude': 7.29, 'longitude': 80.63},
+      }, 'id');
+
+      expect(journey.isStopAlertOnly, isTrue);
+      expect(journey.stopAlertTargetName, 'Kandy');
+      expect(journey.stopAlertTarget?.longitude, 80.63);
+    });
+
+    test('counts how many times the route was re-planned', () {
+      expect(Journey.fromMap(const {}, 'id').routeChangeCount, 0);
+      expect(
+        Journey.fromMap(const {
+          'route': {'changeCount': 2},
+        }, 'id').routeChangeCount,
+        2,
+      );
+    });
+
     test('a bus journey without a stopAlert map is not a stop alert ride', () {
       final journey = Journey.fromMap(const {'journeyType': 'bus'}, 'id');
 

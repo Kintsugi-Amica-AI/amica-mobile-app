@@ -5,6 +5,7 @@ import '../../../core/widgets/amica_background.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../models/plate_scan_outcome.dart';
+import '../models/scanned_vehicle.dart';
 import '../models/vehicle_status.dart';
 import '../services/vehicle_image_service.dart';
 import '../services/vehicle_journey_service.dart';
@@ -14,7 +15,11 @@ import 'vehicle_rating_screen.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
 class PlateResultScreen extends StatefulWidget {
-  const PlateResultScreen({super.key});
+  const PlateResultScreen({super.key, this.returnVehicle = false});
+
+  /// Opened from the journey screen: after she confirms, hand the vehicle
+  /// back to it instead of opening a new journey screen.
+  final bool returnVehicle;
 
   @override
   State<PlateResultScreen> createState() => _PlateResultScreenState();
@@ -54,6 +59,16 @@ class _PlateResultScreenState extends State<PlateResultScreen> {
           .notifyBoarding(vehicle.normalizedPlateNumber);
       if (!mounted) return;
       setState(() => _boardingStatus = result);
+      if (widget.returnVehicle) {
+        Navigator.pop(
+          context,
+          ScannedVehicle(
+            plate: vehicle.normalizedPlateNumber,
+            boardingStatus: result,
+          ),
+        );
+        return;
+      }
       await Navigator.push(
           context,
           MaterialPageRoute<void>(

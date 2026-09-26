@@ -299,6 +299,14 @@ class StopAlertMonitorService : Service(), LocationListener {
 
     private fun soundApproachingStopAlarm(distanceMeters: Float) {
         vibrateAlarmPattern()
+        // Also show it in the app's own Notifications list.
+        AppInbox.add(
+            this,
+            "stop_alert",
+            "Your stop is coming up",
+            "${formatDistance(roadDistanceOf(distanceMeters))} to $dropOffName. " +
+                "Get ready to get off.",
+        )
         notificationManager().notify(
             ALARM_NOTIFICATION_ID,
             buildAlarmNotification(distanceMeters),

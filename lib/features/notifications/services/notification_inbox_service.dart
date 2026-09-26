@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -68,7 +69,39 @@ class NotificationInboxService {
   }
 
   /// Reads the stored list into [items] and [unreadCount].
-  Future<void> load() async => _publish(await _read());
+  ///
+  /// Only publishes when something changed, so calling it on a timer does not
+  /// rebuild the screens listening to it.
+  Future<void> load() async {
+    final list = await _read();
+    final current = items.value;
+    var same = list.length == current.length;
+    for (var i = 0; same && i < list.length; i++) {
+      same = list[i].id == current[i].id && list[i].read == current[i].read;
+    }
+    if (!same) _publish(list);
+  }
+
+  Timer? _refreshTimer;
+  int _watchers = 0;
+
+  /// Keeps the list fresh while a screen that shows it is open.
+  ///
+  /// Android services and background pushes add to the stored list from
+  /// outside this isolate, so the in-memory copy has to be re-read now and
+  /// then, not only when the app is resumed. Call [stopWatching] to match.
+  void startWatching({Duration every = const Duration(seconds: 4)}) {
+    _watchers++;
+    _refreshTimer ??= Timer.periodic(every, (_) => unawaited(load()));
+  }
+
+  void stopWatching() {
+    if (_watchers > 0) _watchers--;
+    if (_watchers == 0) {
+      _refreshTimer?.cancel();
+      _refreshTimer = null;
+    }
+  }
 
   Future<void> add(AppNotification notification) => _change((list) {
         list.insert(0, notification);

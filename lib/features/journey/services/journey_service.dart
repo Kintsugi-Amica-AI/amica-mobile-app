@@ -17,6 +17,37 @@ class JourneyServiceException implements Exception {
   String toString() => message;
 }
 
+/// The approaching-stop alarm settings saved on a bus or train journey.
+class StopAlertSettings {
+  const StopAlertSettings({
+    required this.dropOff,
+    required this.dropOffName,
+    this.alertDistanceMeters = Journey.defaultAlertDistanceMeters,
+    this.routeFactor = 1,
+    this.routeDistanceMeters,
+  });
+
+  /// The stop she gets off at.
+  final LocationDataModel dropOff;
+  final String dropOffName;
+  final int alertDistanceMeters;
+  final double routeFactor;
+  final double? routeDistanceMeters;
+
+  Map<String, dynamic> toMap() => {
+        'enabled': true,
+        'alertDistanceMeters': alertDistanceMeters,
+        'alertedAt': null,
+        'routeFactor': routeFactor,
+        'routeDistanceMeters': routeDistanceMeters,
+        'dropOff': {
+          'name': dropOffName,
+          'latitude': dropOff.latitude,
+          'longitude': dropOff.longitude,
+        },
+      };
+}
+
 class JourneyService {
   const JourneyService();
 
@@ -36,6 +67,7 @@ class JourneyService {
     String? vehiclePlate,
     JourneyRoute? route,
     TransitPlan? transitPlan,
+    StopAlertSettings? stopAlert,
   }) async {
     final user = _currentUserOrThrow();
     final document = _firestore.collection(_collectionName).doc();
@@ -86,6 +118,9 @@ class JourneyService {
         'route': route?.toMap(),
         // Bus / train: where to get on and off, and the walks either side.
         'transitPlan': transitPlan?.toMap(),
+        // Bus / train: the stop alarm rides on the same journey, so one
+        // journey has both the safety countdown and the approaching-stop alarm.
+        if (stopAlert != null) 'stopAlert': stopAlert.toMap(),
         'pause': null,
         'schemaVersion': 1,
         'createdAt': FieldValue.serverTimestamp(),
@@ -110,13 +145,14 @@ class JourneyService {
 
   /// The newest active timer journey.
   ///
-  /// Smart Stop Alert rides live in this same collection (the backend schema
+  /// Stop-alert-only rides live in this same collection (the backend schema
   /// builds the feature on `journeyType` and `destination`), so they are
   /// filtered out here — they have no safety countdown for the timer screen to
-  /// show. Use [watchActiveStopAlertRide] for those.
+  /// show. Use [watchActiveStopAlertRide] for those. A bus or train journey
+  /// that has both a countdown and a stop alert stays here.
   Stream<Journey?> watchActiveJourney() {
     return _watchNewestActiveJourney(
-      where: (journey) => !journey.isStopAlertRide,
+      where: (journey) => !journey.isStopAlertOnly,
     );
   }
 
@@ -290,6 +326,23 @@ class JourneyService {
     }
 
     return document.id;
+  }
+
+  /// Saves a new route after she left the old one, and counts the change.
+  Future<void> updateRoute(
+    String journeyId,
+    JourneyRoute route, {
+    required int changeCount,
+  }) async {
+    _currentUserOrThrow();
+    await _firestore.collection(_collectionName).doc(journeyId).update({
+      'route': {
+        ...route.toMap(),
+        'changeCount': changeCount,
+        'changedAt': FieldValue.serverTimestamp(),
+      },
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   /// Records that the approaching-stop alarm sounded, so re-opening the ride

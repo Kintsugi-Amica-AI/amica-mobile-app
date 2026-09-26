@@ -1986,6 +1986,73 @@ class AppLocalizationsSi extends AppLocalizations {
       'සබැඳිය සූදානම්, නමුත් එය යැවීමට ඔබගේ සම්බන්ධතා පූරණය කළ නොහැකි විය.';
 
   @override
+  String get startJourneyScanVehicleTitle => 'පළමුව ඔබේ ටැක්සිය ස්කෑන් කරන්න';
+
+  @override
+  String get startJourneyScanVehicleSubtitle => 'අංක තහඩුව ඔබේ වෙන්කිරීමට ගැලපෙන්නේදැයි පරීක්ෂා කරන්න. ඔබ සිටින වාහනය ඔබේ සම්බන්ධතාවලට දැනුම් දෙනු ලැබේ.';
+
+  @override
+  String get startJourneyScanVehicleButton => 'වාහනය ස්කෑන් කරන්න';
+
+  @override
+  String get startJourneyScanAgainButton => 'වෙනත් වාහනයක් ස්කෑන් කරන්න';
+
+  @override
+  String get startJourneyStopAlertTitle => 'නැවතුම් ඇඟවීම';
+
+  @override
+  String get startJourneyStopAlertSubtitle => 'දුරකථනය අගුළු දමා තිබුණත්, ඔබේ නැවතුමට පෙර අනතුරු ඇඟවීමක් නාද වේ.';
+
+  @override
+  String get startJourneyStopAlertDistanceLabel => 'මගේ නැවතුමට කොපමණ දුරකට පෙර මට දන්වන්න';
+
+  @override
+  String journeyTimerStopAlertAway(String distance, String stop) {
+    return '${stop} සිට ${distance}';
+  }
+
+  @override
+  String journeyTimerStopAlertWillAlarm(String distance) {
+    return 'ඔබේ නැවතුමට ${distance} ඇතුළත අනතුරු ඇඟවීම නාද වේ';
+  }
+
+  @override
+  String journeyTimerStopAlertComingUp(String stop) {
+    return 'සූදානම් වන්න. ${stop} ළඟා වෙමින් පවතී.';
+  }
+
+  @override
+  String get journeyTimerStopAlertLockedOk => 'දුරකථනය අගුළු දමා ඇති විටත් අනතුරු ඇඟවීම ක්‍රියා කරයි.';
+
+  @override
+  String get journeyTimerStopAlertKeepOpen => 'අනතුරු ඇඟවීම නාද වීමට Amica විවෘතව තබන්න.';
+
+  @override
+  String get journeyTimerRouteChangedTitle => 'මාර්ගය වෙනස් විය';
+
+  @override
+  String journeyTimerRouteChangedBody(String distance, int minutes) {
+    return 'ඔබ සැලසුම් කළ මාර්ගයෙන් ඉවත් විය. නව මාර්ගය: ${distance}, මිනිත්තු ${minutes} ක් පමණ.';
+  }
+
+  @override
+  String get journeyTimerRouteChangedNotified => 'ඔබේ සම්බන්ධතාවලට දැනුම් දෙන ලදී.';
+
+  @override
+  String get journeyTimerRouteChangedNotNotified => 'ඔබේ සම්බන්ධතාවලට ළඟා විය නොහැකි විය.';
+
+  @override
+  String get journeyTimerRouteChangedSnack => 'මාර්ගය වෙනස් විය. නව මාර්ගය පෙන්වමින්.';
+
+  @override
+  String routeChangeSms(String name, String destination, String distance, int minutes) {
+    return 'Amica: ${name} ${destination} වෙත යන ගමනේදී මාර්ගය වෙනස් කළා. නව මාර්ගය: ${distance}, මිනිත්තු ${minutes} ක් පමණ.';
+  }
+
+  @override
+  String get routeChangeSmsFallbackName => 'ඔබේ සම්බන්ධතාව';
+
+  @override
   String liveShareSmsWithName(String name, String destination, String url) {
     return 'Amica: $name $destination වෙත යමින් සිටී. ඇගේ ගමන සජීවීව බලන්න: $url';
   }

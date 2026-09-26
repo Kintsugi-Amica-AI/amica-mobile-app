@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:geolocator/geolocator.dart' show Position;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -22,10 +23,14 @@ import '../../emergency_contacts/services/emergency_contact_service.dart';
 import '../../sos/screens/sos_active_screen.dart';
 import '../../sos/services/sos_audio_service.dart';
 import '../../sos/services/sos_service.dart';
+import '../../stop_alert/services/stop_alert_calculator.dart';
 import '../models/journey.dart';
 import '../models/location_data_model.dart';
 import '../services/journey_service.dart';
 import '../services/journey_share_service.dart';
+import '../services/route_change_monitor.dart';
+import '../../notifications/models/app_notification.dart';
+import '../../notifications/services/notification_inbox_service.dart';
 import '../widgets/journey_history_button.dart';
 import '../widgets/journey_visuals.dart';
 import '../widgets/transit_trip_card.dart';
@@ -108,6 +113,19 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
   int _journeyListenRetries = 0;
   static const int _maxJourneyListenRetries = 5;
   bool _wasPaused = false;
+
+  // Live watching while the journey runs: the route (has she left it?) and,
+  // on a bus or train journey, the approaching-stop alarm.
+  StreamSubscription<Position>? _positionSubscription;
+  final RouteChangeMonitor _routeMonitor = RouteChangeMonitor();
+  final StopAlertCalculator _stopCalculator = const StopAlertCalculator();
+  RouteChangeResult? _routeChange;
+  Position? _lastPosition;
+  double? _stopAlertDistanceMeters;
+  bool _stopAlertSounded = false;
+  bool _stopMonitorStarted = false;
+  bool _stopMonitorStarting = false;
+  String? _stopMonitorJourneyId;
   JourneyRoute? _fallbackRoute;
   bool _fallbackRouteRequested = false;
   bool _incidentRecorded = false;
@@ -144,6 +162,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     WidgetsBinding.instance.removeObserver(this);
     _journeySubscription?.cancel();
     _countdownTimer?.cancel();
+    _positionSubscription?.cancel();
     _cancelSafetyEscalations();
     _remainingNotifier.dispose();
     _pauseLeftNotifier.dispose();
@@ -164,6 +183,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
         });
         unawaited(_startNativeSafetyMonitorIfNeeded(journey));
         _keepLiveShareRunning(journey);
+        _syncLiveWatching(journey);
         _updateRemainingAndSafetyState();
       },
       onError: (Object error) {
@@ -303,6 +323,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     setState(() => _isSaving = true);
     try {
       await _stopNativeSafetyMonitor();
+      await _stopStopAlertMonitor();
       await widget.journeyService.markJourneySafe(journey.id);
       if (!mounted) {
         return;
@@ -350,6 +371,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     }
     try {
       await _stopNativeSafetyMonitor();
+      await _stopStopAlertMonitor();
       final location = await _sosLocation(journey);
       final alertId = timerTriggered
           ? await widget.sosService.createTimerSosAlert(
@@ -889,6 +911,170 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
   }
 
   // ---------------------------------------------------------------------------
+  // Live watching: route changes and the stop alarm
+  // ---------------------------------------------------------------------------
+
+  /// Starts or stops watching her position to match the journey's state.
+  void _syncLiveWatching(Journey? journey) {
+    if (journey == null || !journey.isActive) {
+      _positionSubscription?.cancel();
+      _positionSubscription = null;
+      unawaited(_stopStopAlertMonitor());
+      return;
+    }
+    if (journey.stopAlertTriggered) {
+      _stopAlertSounded = true;
+    }
+    _positionSubscription ??= widget.locationService.watchPosition().listen(
+      _onPosition,
+      onError: (Object _) {/* GPS off for a moment: keep the journey up. */},
+    );
+    unawaited(_startStopAlertMonitorIfNeeded(journey));
+    _recomputeStopAlert(journey);
+  }
+
+  void _onPosition(Position position) {
+    _lastPosition = position;
+    final journey = _journey;
+    if (journey == null || !journey.isActive) return;
+    _recomputeStopAlert(journey);
+    unawaited(_checkForRouteChange(journey, position));
+  }
+
+  Future<void> _checkForRouteChange(Journey journey, Position position) async {
+    final result = await _routeMonitor.onPosition(
+      journey: journey,
+      latitude: position.latitude,
+      longitude: position.longitude,
+      accuracyMeters: position.accuracy,
+      loc: _loc,
+    );
+    if (result == null || !mounted) return;
+    setState(() => _routeChange = result);
+    _showEscalationSnack(_loc.journeyTimerRouteChangedSnack);
+    // Also keep it in the app's Notifications list.
+    unawaited(NotificationInboxService.instance.add(AppNotification(
+      id: '${DateTime.now().microsecondsSinceEpoch}-route_changed',
+      type: 'route_changed',
+      title: _loc.journeyTimerRouteChangedTitle,
+      body: _loc.journeyTimerRouteChangedBody(
+        formatDistance(result.route.distanceMeters),
+        (result.route.durationSeconds / 60).ceil(),
+      ),
+      receivedAt: DateTime.now(),
+    )));
+  }
+
+  /// Distance to the stop she is getting off at, and the alarm when it is
+  /// close enough. The native service sounds the alarm with the phone locked;
+  /// this mirrors it while the screen is open and covers non-Android phones.
+  void _recomputeStopAlert(Journey journey) {
+    if (!journey.isStopAlertRide) return;
+    final target = journey.stopAlertTarget;
+    final current = _lastPosition != null
+        ? (_lastPosition!.latitude, _lastPosition!.longitude)
+        : (journey.currentLocation != null
+            ? (journey.currentLocation!.latitude,
+                journey.currentLocation!.longitude)
+            : null);
+    if (target == null || current == null) return;
+
+    final distance = _stopCalculator.distanceInMeters(
+      current.$1,
+      current.$2,
+      target.latitude,
+      target.longitude,
+    );
+    if (_stopAlertDistanceMeters != distance && mounted) {
+      setState(() => _stopAlertDistanceMeters = distance);
+    }
+    if (_stopCalculator.shouldAlert(
+      distanceMeters: distance,
+      alertDistanceMeters: _stopCalculator
+          .straightLineThresholdMeters(
+            alertDistanceMeters: journey.alertDistanceMeters,
+            routeFactor: journey.routeFactor,
+          )
+          .round(),
+      alreadyAlerted: _stopAlertSounded,
+    )) {
+      unawaited(_handleApproachingStop(journey));
+    }
+  }
+
+  Future<void> _handleApproachingStop(Journey journey) async {
+    if (_stopAlertSounded) return;
+    if (mounted) {
+      setState(() => _stopAlertSounded = true);
+    } else {
+      _stopAlertSounded = true;
+    }
+    // The native service owns the sound; only buzz from here when it never
+    // started, so the rider does not get a doubled buzz.
+    if (!_stopMonitorStarted) {
+      // The native service records its own alarm in the Notifications list;
+      // when it never started, record it from here.
+      unawaited(NotificationInboxService.instance.add(AppNotification(
+        id: '${DateTime.now().microsecondsSinceEpoch}-stop_alert',
+        type: 'stop_alert',
+        title: _loc.stopAlertActiveComingUp,
+        body: _loc.stopAlertActiveGetReady(journey.stopAlertTargetName),
+        receivedAt: DateTime.now(),
+      )));
+      try {
+        await widget.emergencyActionService.vibrateTwice();
+      } catch (_) {
+        // Vibration support varies; the card still shows the alert.
+      }
+    }
+    try {
+      await widget.journeyService.markStopAlertTriggered(journey.id);
+    } catch (_) {
+      // Bookkeeping only; never let it break the alert.
+    }
+  }
+
+  Future<void> _startStopAlertMonitorIfNeeded(Journey journey) async {
+    if (!journey.isStopAlertRide || !journey.isActive) return;
+    final target = journey.stopAlertTarget;
+    if (target == null) return;
+    if (_stopMonitorStarting || _stopMonitorJourneyId == journey.id) return;
+
+    _stopMonitorStarting = true;
+    try {
+      await widget.emergencyActionService.prepareNotificationPermission();
+      await widget.emergencyActionService.startStopAlertMonitor(
+        dropOffLatitude: target.latitude,
+        dropOffLongitude: target.longitude,
+        dropOffName: journey.stopAlertTargetName,
+        alertDistanceMeters: journey.alertDistanceMeters,
+        routeFactor: journey.routeFactor,
+        alreadyAlerted: _stopAlertSounded || journey.stopAlertTriggered,
+      );
+      _stopMonitorStarted = true;
+    } catch (_) {
+      // Android-only. Elsewhere the in-app alarm above still runs.
+      _stopMonitorStarted = false;
+    } finally {
+      // Marked even on failure so a phone without the service is not asked
+      // again on every location update.
+      _stopMonitorJourneyId = journey.id;
+      _stopMonitorStarting = false;
+    }
+  }
+
+  Future<void> _stopStopAlertMonitor() async {
+    if (_stopMonitorJourneyId == null && !_stopMonitorStarted) return;
+    _stopMonitorStarted = false;
+    _stopMonitorJourneyId = null;
+    try {
+      await widget.emergencyActionService.stopStopAlertMonitor();
+    } catch (_) {
+      // The foreground service is Android-only.
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // Route
   // ---------------------------------------------------------------------------
 
@@ -1003,7 +1189,8 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
     final mapLocation = journey.currentLocation ?? journey.startLocation;
     final destinationLocation = journey.destinationLocation;
     final route = _routeFor(journey);
-    final plan = journey.transitPlan;
+    // Once she has left the planned trip, the new road route replaces it.
+    final plan = journey.routeChangeCount > 0 ? null : journey.transitPlan;
     final c = Theme.of(context).amica;
     final topInset = MediaQuery.of(context).padding.top + kToolbarHeight;
 
@@ -1198,7 +1385,15 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
             ),
             const SizedBox(height: 12),
             // Bus / train: the stops and walks; otherwise the suggested route.
-            if (journey.transitPlan != null)
+            if (journey.isStopAlertRide) ...[
+              _buildStopAlertCard(journey),
+              const SizedBox(height: 12),
+            ],
+            if (journey.routeChangeCount > 0 || _routeChange != null) ...[
+              _buildRouteChangedCard(journey, route),
+              const SizedBox(height: 12),
+            ],
+            if (journey.transitPlan != null && journey.routeChangeCount == 0)
               TransitTripCard(
                 mode: journey.transitPlan!.mode,
                 plan: journey.transitPlan,
@@ -1263,6 +1458,113 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
               label: Text(_loc.journeyTimerTriggerTestSos),
             ),
       ],
+    );
+  }
+
+  Widget _buildStopAlertCard(Journey journey) {
+    final c = Theme.of(context).amica;
+    final textTheme = Theme.of(context).textTheme;
+    final distance = _stopAlertDistanceMeters;
+    final stop = journey.stopAlertTargetName;
+    final headline = _stopAlertSounded
+        ? _loc.journeyTimerStopAlertComingUp(stop)
+        : distance == null
+            ? stop
+            : _loc.journeyTimerStopAlertAway(
+                _stopCalculator.formatDistance(
+                  _stopCalculator.estimatedRoadDistanceMeters(
+                    straightLineMeters: distance,
+                    routeFactor: journey.routeFactor,
+                  ),
+                ),
+                stop,
+              );
+    return AmicaCard(
+      borderColor: _stopAlertSounded ? c.gold : null,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: Row(
+        children: [
+          GradientIconBadge(
+            icon: _stopAlertSounded
+                ? Icons.notifications_active_rounded
+                : journeyTypeIcon(journey.journeyType),
+            size: 38,
+            soft: true,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(_loc.startJourneyStopAlertTitle,
+                    style: textTheme.titleSmall),
+                Text(headline, style: textTheme.bodyMedium),
+                const SizedBox(height: 2),
+                Text(
+                  _loc.journeyTimerStopAlertWillAlarm(
+                    _stopCalculator
+                        .formatAlertDistance(journey.alertDistanceMeters),
+                  ),
+                  style: textTheme.bodySmall,
+                ),
+                Text(
+                  _stopMonitorStarted
+                      ? _loc.journeyTimerStopAlertLockedOk
+                      : _loc.journeyTimerStopAlertKeepOpen,
+                  style: textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Shown after she leaves the planned route: what the new route is and
+  /// whether her contacts were told.
+  Widget _buildRouteChangedCard(Journey journey, JourneyRoute? route) {
+    final c = Theme.of(context).amica;
+    final textTheme = Theme.of(context).textTheme;
+    final change = _routeChange;
+    final shown = change?.route ?? route;
+    return AmicaCard(
+      borderColor: c.gold,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: Row(
+        children: [
+          const GradientIconBadge(
+            icon: Icons.alt_route_rounded,
+            size: 38,
+            soft: true,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(_loc.journeyTimerRouteChangedTitle,
+                    style: textTheme.titleSmall),
+                if (shown != null)
+                  Text(
+                    _loc.journeyTimerRouteChangedBody(
+                      formatDistance(shown.distanceMeters),
+                      (shown.durationSeconds / 60).ceil(),
+                    ),
+                    style: textTheme.bodySmall,
+                  ),
+                if (change != null)
+                  Text(
+                    change.contactsWereTold
+                        ? _loc.journeyTimerRouteChangedNotified
+                        : _loc.journeyTimerRouteChangedNotNotified,
+                    style: textTheme.bodySmall,
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

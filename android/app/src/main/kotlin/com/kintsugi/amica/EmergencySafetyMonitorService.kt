@@ -235,6 +235,13 @@ class EmergencySafetyMonitorService : Service() {
     }
 
     private fun showSafetyCheckAlertNotification() {
+        // Also show it in the app's own Notifications list.
+        AppInbox.add(
+            this,
+            "safety_check",
+            "Are you safe?",
+            "Your journey timer ended. Open Amica to respond.",
+        )
         notificationManager().notify(
             ALERT_NOTIFICATION_ID,
             buildNotification(

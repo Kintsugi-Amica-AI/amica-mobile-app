@@ -25,10 +25,12 @@ class _NotificationBellState extends State<NotificationBell>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _inbox.load();
+    _inbox.startWatching();
   }
 
   @override
   void dispose() {
+    _inbox.stopWatching();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

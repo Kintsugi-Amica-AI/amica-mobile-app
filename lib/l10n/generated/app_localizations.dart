@@ -3484,6 +3484,120 @@ abstract class AppLocalizations {
   /// **'Link ready, but your contacts couldn\'t be loaded to send it.'**
   String get liveShareContactsFailed;
 
+  /// No description provided for @startJourneyScanVehicleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan your taxi first'**
+  String get startJourneyScanVehicleTitle;
+
+  /// No description provided for @startJourneyScanVehicleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the number plate matches your booking. Your contacts are told which vehicle you are in.'**
+  String get startJourneyScanVehicleSubtitle;
+
+  /// No description provided for @startJourneyScanVehicleButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan vehicle'**
+  String get startJourneyScanVehicleButton;
+
+  /// No description provided for @startJourneyScanAgainButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a different vehicle'**
+  String get startJourneyScanAgainButton;
+
+  /// No description provided for @startJourneyStopAlertTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop alert'**
+  String get startJourneyStopAlertTitle;
+
+  /// No description provided for @startJourneyStopAlertSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound an alarm before you reach your stop, even if your phone is locked.'**
+  String get startJourneyStopAlertSubtitle;
+
+  /// No description provided for @startJourneyStopAlertDistanceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Warn me this far before my stop'**
+  String get startJourneyStopAlertDistanceLabel;
+
+  /// No description provided for @journeyTimerStopAlertAway.
+  ///
+  /// In en, this message translates to:
+  /// **'{distance} from {stop}'**
+  String journeyTimerStopAlertAway(String distance, String stop);
+
+  /// No description provided for @journeyTimerStopAlertWillAlarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Alarm sounds within {distance} of your stop'**
+  String journeyTimerStopAlertWillAlarm(String distance);
+
+  /// No description provided for @journeyTimerStopAlertComingUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Get ready. {stop} is coming up.'**
+  String journeyTimerStopAlertComingUp(String stop);
+
+  /// No description provided for @journeyTimerStopAlertLockedOk.
+  ///
+  /// In en, this message translates to:
+  /// **'The alarm keeps working with your phone locked.'**
+  String get journeyTimerStopAlertLockedOk;
+
+  /// No description provided for @journeyTimerStopAlertKeepOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Amica open so the alarm can sound.'**
+  String get journeyTimerStopAlertKeepOpen;
+
+  /// No description provided for @journeyTimerRouteChangedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Route changed'**
+  String get journeyTimerRouteChangedTitle;
+
+  /// No description provided for @journeyTimerRouteChangedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You left the planned route. New route: {distance}, about {minutes} min.'**
+  String journeyTimerRouteChangedBody(String distance, int minutes);
+
+  /// No description provided for @journeyTimerRouteChangedNotified.
+  ///
+  /// In en, this message translates to:
+  /// **'Your contacts were told.'**
+  String get journeyTimerRouteChangedNotified;
+
+  /// No description provided for @journeyTimerRouteChangedNotNotified.
+  ///
+  /// In en, this message translates to:
+  /// **'Your contacts could not be reached.'**
+  String get journeyTimerRouteChangedNotNotified;
+
+  /// No description provided for @journeyTimerRouteChangedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Route changed. Showing your new route.'**
+  String get journeyTimerRouteChangedSnack;
+
+  /// No description provided for @routeChangeSms.
+  ///
+  /// In en, this message translates to:
+  /// **'Amica: {name} has changed route on the way to {destination}. New route: {distance}, about {minutes} min.'**
+  String routeChangeSms(String name, String destination, String distance, int minutes);
+
+  /// No description provided for @routeChangeSmsFallbackName.
+  ///
+  /// In en, this message translates to:
+  /// **'Your contact'**
+  String get routeChangeSmsFallbackName;
+
   /// No description provided for @liveShareSmsWithName.
   ///
   /// In en, this message translates to:

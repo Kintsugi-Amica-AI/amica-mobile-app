@@ -17,6 +17,10 @@ import '../../../core/widgets/primary_button.dart';
 import '../../../services/journey_route_service.dart';
 import '../../../services/location_service.dart';
 import '../../../services/transit_plan_service.dart';
+import '../../plate_scan/models/scanned_vehicle.dart';
+import '../../stop_alert/services/route_distance_service.dart';
+import '../../stop_alert/services/stop_alert_calculator.dart';
+import '../models/journey.dart';
 import '../models/location_data_model.dart';
 import '../widgets/journey_history_button.dart';
 import '../widgets/journey_visuals.dart';
@@ -32,6 +36,7 @@ class StartJourneyScreen extends StatefulWidget {
     this.journeyService = const JourneyService(),
     this.routeService = const JourneyRouteService(),
     this.transitService = const TransitPlanService(),
+    this.routeDistanceService = const RouteDistanceService(),
     this.vehiclePlate,
     this.boardingStatus,
     this.isTab = false,
@@ -41,6 +46,7 @@ class StartJourneyScreen extends StatefulWidget {
   final JourneyService journeyService;
   final JourneyRouteService routeService;
   final TransitPlanService transitService;
+  final RouteDistanceService routeDistanceService;
   final String? vehiclePlate;
   final String? boardingStatus;
 
@@ -72,6 +78,56 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
   String? _alightStopId;
 
   bool get _usesTransit => _journeyType == 'bus' || _journeyType == 'train';
+
+  /// A taxi the rider scanned from this screen (the "Scan vehicle" button).
+  ScannedVehicle? _scannedVehicle;
+
+  /// The plate this journey is for: the one it was opened with, or a taxi
+  /// scanned here. A scan only counts while Taxi is still the chosen type.
+  String? get _vehiclePlate =>
+      widget.vehiclePlate ??
+      (_journeyType == 'taxi' ? _scannedVehicle?.plate : null);
+
+  String? get _boardingStatus =>
+      widget.boardingStatus ?? _scannedVehicle?.boardingStatus;
+
+  /// Bus / train: sound an alarm before the stop she gets off at.
+  bool _stopAlertEnabled = true;
+  int _stopAlertDistanceMeters = Journey.defaultAlertDistanceMeters;
+
+  /// Alert distances that still make sense for this trip: an alarm that would
+  /// already be sounding at the start of a short ride is no use.
+  List<int> get _stopAlertOptions {
+    final tripMeters = _route?.distanceMeters;
+    final options = [
+      for (final meters in StopAlertCalculator.alertDistanceOptionsMeters)
+        if (tripMeters == null || meters < tripMeters * 0.8) meters,
+    ];
+    return options.isEmpty
+        ? [StopAlertCalculator.alertDistanceOptionsMeters.first]
+        : options;
+  }
+
+  int get _effectiveStopAlertDistance {
+    final options = _stopAlertOptions;
+    if (options.contains(_stopAlertDistanceMeters)) {
+      return _stopAlertDistanceMeters;
+    }
+    return options.lastWhere(
+      (meters) => meters <= _stopAlertDistanceMeters,
+      orElse: () => options.first,
+    );
+  }
+
+  Future<void> _scanVehicle() async {
+    final scanned = await Navigator.pushNamed<ScannedVehicle>(
+      context,
+      AppRoutes.plateScan,
+      arguments: const PlateScanArguments(returnVehicle: true),
+    );
+    if (!mounted || scanned == null) return;
+    setState(() => _scannedVehicle = scanned);
+  }
   int _reverseGeocodeToken = 0;
   bool _isLoadingRoute = false;
   bool _routeUnavailable = false;
@@ -352,6 +408,36 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
     });
 
     try {
+      // Bus / train with the stop alert on: the alarm counts down to the stop
+      // she gets off at (from the trip plan, or the place she chose).
+      StopAlertSettings? stopAlert;
+      if (_usesTransit && _stopAlertEnabled) {
+        final plan = _plan;
+        final target = plan != null
+            ? LocationDataModel(
+                latitude: plan.alightStop.latitude,
+                longitude: plan.alightStop.longitude,
+                address: plan.alightStop.name,
+                updatedAt: DateTime.now(),
+              )
+            : destinationLocation;
+        // Road distance is looked up once, now, so the alarm can work offline
+        // for the rest of the ride. No answer just means straight-line.
+        final estimate = await widget.routeDistanceService.estimate(
+          originLatitude: startLocation.latitude,
+          originLongitude: startLocation.longitude,
+          destinationLatitude: target.latitude,
+          destinationLongitude: target.longitude,
+        );
+        stopAlert = StopAlertSettings(
+          dropOff: target,
+          dropOffName: plan?.alightStop.name ?? _destinationController.text.trim(),
+          alertDistanceMeters: _effectiveStopAlertDistance,
+          routeFactor: estimate?.routeFactor ?? 1,
+          routeDistanceMeters: estimate?.roadDistanceMeters,
+        );
+      }
+
       final journeyId = await widget.journeyService.startJourney(
         startLocation: startLocation,
         destinationName: _destinationController.text.trim(),
@@ -363,11 +449,12 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
             int.tryParse(_durationController.text.trim()) ??
                 _suggestedDurationMinutes,
         journeyType: _journeyType,
-        vehiclePlate: widget.vehiclePlate,
+        vehiclePlate: _vehiclePlate,
         route: _route?.mode == routeModeForJourneyType(_journeyType)
             ? _route
             : null,
         transitPlan: _usesTransit ? _plan : null,
+        stopAlert: stopAlert,
       );
 
       if (_shareLive) {
@@ -746,7 +833,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         automaticallyImplyLeading: !widget.isTab,
-        title: Text(widget.vehiclePlate == null
+        title: Text(_vehiclePlate == null
             ? loc.startJourneyWalkWithMeTitle
             : loc.startJourneyRideWithMeTitle),
         actions: const [JourneyHistoryButton()],
@@ -846,6 +933,93 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
     );
   }
 
+  Widget _buildTaxiScanCard(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+    final c = Theme.of(context).amica;
+    final textTheme = Theme.of(context).textTheme;
+    final scanned = _scannedVehicle != null;
+    return AmicaCard(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.document_scanner_outlined, color: c.accentInk),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(loc.startJourneyScanVehicleTitle,
+                    style: textTheme.titleSmall),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(loc.startJourneyScanVehicleSubtitle, style: textTheme.bodySmall),
+          const SizedBox(height: 12),
+          PrimaryButton(
+            tone: scanned ? AmicaButtonTone.quiet : AmicaButtonTone.primary,
+            label: scanned
+                ? loc.startJourneyScanAgainButton
+                : loc.startJourneyScanVehicleButton,
+            icon: Icons.document_scanner_outlined,
+            onPressed: _isBusy ? null : _scanVehicle,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStopAlertCard(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+    final c = Theme.of(context).amica;
+    final textTheme = Theme.of(context).textTheme;
+    const calculator = StopAlertCalculator();
+    return AmicaCard(
+      padding: const EdgeInsets.fromLTRB(14, 6, 6, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: _stopAlertEnabled,
+            onChanged: _isBusy
+                ? null
+                : (value) => setState(() => _stopAlertEnabled = value),
+            secondary:
+                Icon(Icons.notifications_active_rounded, color: c.accentInk),
+            title: Text(loc.startJourneyStopAlertTitle,
+                style: textTheme.titleSmall),
+            subtitle: Text(loc.startJourneyStopAlertSubtitle,
+                style: textTheme.bodySmall),
+          ),
+          if (_stopAlertEnabled) ...[
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Text(loc.startJourneyStopAlertDistanceLabel,
+                  style: textTheme.bodySmall),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 10,
+              runSpacing: 8,
+              children: [
+                for (final meters in _stopAlertOptions)
+                  ChoiceChip(
+                    selected: meters == _effectiveStopAlertDistance,
+                    label: Text(calculator.formatAlertDistance(meters)),
+                    onSelected: _isBusy
+                        ? null
+                        : (_) =>
+                            setState(() => _stopAlertDistanceMeters = meters),
+                  ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildSheet(BuildContext context, ScrollController scrollController) {
     final loc = AppLocalizations.of(context);
     final c = Theme.of(context).amica;
@@ -864,7 +1038,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
     return JourneyGlassSheet(
       scrollController: scrollController,
       children: [
-        if (widget.vehiclePlate != null) ...[
+        if (_vehiclePlate != null) ...[
           Row(
             children: [
               GradientIconBadge(icon: journeyTypeIcon(_journeyType)),
@@ -873,10 +1047,10 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(loc.startJourneyVehicleLabel(widget.vehiclePlate!),
+                    Text(loc.startJourneyVehicleLabel(_vehiclePlate!),
                         style: textTheme.titleLarge),
-                    if (widget.boardingStatus != null)
-                      Text(widget.boardingStatus!, style: textTheme.bodySmall),
+                    if (_boardingStatus != null)
+                      Text(_boardingStatus!, style: textTheme.bodySmall),
                   ],
                 ),
               ),
@@ -1026,6 +1200,16 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
             ],
           ),
         ),
+        // Taxi: scan the plate before riding, so the journey knows the vehicle.
+        if (_journeyType == 'taxi' && widget.vehiclePlate == null) ...[
+          const SizedBox(height: 14),
+          _buildTaxiScanCard(context),
+        ],
+        // Bus / train: the stop alarm, right here in the journey.
+        if (_usesTransit) ...[
+          const SizedBox(height: 14),
+          _buildStopAlertCard(context),
+        ],
         const SizedBox(height: 16),
         // For how long.
         CustomTextField(
@@ -1085,7 +1269,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
         PrimaryButton(
           label: _isStartingJourney
               ? loc.startJourneyStarting
-              : widget.vehiclePlate == null
+              : _vehiclePlate == null
                   ? loc.startJourneyStartButton
                   : loc.startJourneyStartVehicleButton,
           icon: Icons.play_arrow_rounded,

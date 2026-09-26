@@ -1973,6 +1973,73 @@ class AppLocalizationsEn extends AppLocalizations {
       'Link ready, but your contacts couldn\'t be loaded to send it.';
 
   @override
+  String get startJourneyScanVehicleTitle => 'Scan your taxi first';
+
+  @override
+  String get startJourneyScanVehicleSubtitle => 'Check the number plate matches your booking. Your contacts are told which vehicle you are in.';
+
+  @override
+  String get startJourneyScanVehicleButton => 'Scan vehicle';
+
+  @override
+  String get startJourneyScanAgainButton => 'Scan a different vehicle';
+
+  @override
+  String get startJourneyStopAlertTitle => 'Stop alert';
+
+  @override
+  String get startJourneyStopAlertSubtitle => 'Sound an alarm before you reach your stop, even if your phone is locked.';
+
+  @override
+  String get startJourneyStopAlertDistanceLabel => 'Warn me this far before my stop';
+
+  @override
+  String journeyTimerStopAlertAway(String distance, String stop) {
+    return '${distance} from ${stop}';
+  }
+
+  @override
+  String journeyTimerStopAlertWillAlarm(String distance) {
+    return 'Alarm sounds within ${distance} of your stop';
+  }
+
+  @override
+  String journeyTimerStopAlertComingUp(String stop) {
+    return 'Get ready. ${stop} is coming up.';
+  }
+
+  @override
+  String get journeyTimerStopAlertLockedOk => 'The alarm keeps working with your phone locked.';
+
+  @override
+  String get journeyTimerStopAlertKeepOpen => 'Keep Amica open so the alarm can sound.';
+
+  @override
+  String get journeyTimerRouteChangedTitle => 'Route changed';
+
+  @override
+  String journeyTimerRouteChangedBody(String distance, int minutes) {
+    return 'You left the planned route. New route: ${distance}, about ${minutes} min.';
+  }
+
+  @override
+  String get journeyTimerRouteChangedNotified => 'Your contacts were told.';
+
+  @override
+  String get journeyTimerRouteChangedNotNotified => 'Your contacts could not be reached.';
+
+  @override
+  String get journeyTimerRouteChangedSnack => 'Route changed. Showing your new route.';
+
+  @override
+  String routeChangeSms(String name, String destination, String distance, int minutes) {
+    return 'Amica: ${name} has changed route on the way to ${destination}. New route: ${distance}, about ${minutes} min.';
+  }
+
+  @override
+  String get routeChangeSmsFallbackName => 'Your contact';
+
+  @override
   String liveShareSmsWithName(String name, String destination, String url) {
     return 'Amica: $name is on her way to $destination. Watch her journey live: $url';
   }

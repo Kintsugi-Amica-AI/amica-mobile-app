@@ -32,6 +32,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   void initState() {
     super.initState();
     _inbox.load();
+    _inbox.startWatching(every: const Duration(seconds: 2));
+  }
+
+  @override
+  void dispose() {
+    _inbox.stopWatching();
+    super.dispose();
   }
 
   Future<void> _open(AppNotification item) async {
@@ -259,6 +266,10 @@ class _DayGroup {
       'journey_arrived' => (Icons.check_circle_outline_rounded, c.sageSoft, c.sageInk),
       'guardian_response' => (Icons.reply_rounded, c.sky, c.skyInk),
       'guardian_linked' => (Icons.link_rounded, c.orchidSoft, c.orchidInk),
+      // Alerts on her own phone: the stop alarm, the safety check, a new route.
+      'stop_alert' => (Icons.notifications_active_rounded, c.accentSoft, c.accentInk),
+      'safety_check' => (Icons.shield_outlined, c.blush, c.terracottaDeep),
+      'route_changed' => (Icons.alt_route_rounded, c.accentSoft, c.accentInk),
       _ => (Icons.notifications_none_rounded, c.accentSoft, c.accentInk),
     };
 

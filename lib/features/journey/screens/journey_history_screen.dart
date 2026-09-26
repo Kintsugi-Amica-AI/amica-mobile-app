@@ -377,7 +377,7 @@ class _JourneyDetailSheet extends StatelessWidget {
         (loc.journeyDetailEnded, fmt.format(journey.actualEndTime!)),
       if (duration != null)
         (loc.journeyDetailDuration, _formatDuration(loc, duration)),
-      if (!journey.isStopAlertRide && journey.estimatedDurationMinutes > 0)
+      if (!journey.isStopAlertOnly && journey.estimatedDurationMinutes > 0)
         (
           loc.journeyDetailPlanned,
           loc.journeyHistoryMinutes(journey.estimatedDurationMinutes)
