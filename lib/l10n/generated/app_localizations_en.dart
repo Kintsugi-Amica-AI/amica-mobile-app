@@ -1976,7 +1976,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startJourneyScanVehicleTitle => 'Scan your taxi first';
 
   @override
-  String get startJourneyScanVehicleSubtitle => 'Check the number plate matches your booking. Your contacts are told which vehicle you are in.';
+  String get startJourneyScanVehicleSubtitle =>
+      'Check the number plate matches your booking. Your contacts are told which vehicle you are in.';
 
   @override
   String get startJourneyScanVehicleButton => 'Scan vehicle';
@@ -1988,52 +1989,59 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startJourneyStopAlertTitle => 'Stop alert';
 
   @override
-  String get startJourneyStopAlertSubtitle => 'Sound an alarm before you reach your stop, even if your phone is locked.';
+  String get startJourneyStopAlertSubtitle =>
+      'Sound an alarm before you reach your stop, even if your phone is locked.';
 
   @override
-  String get startJourneyStopAlertDistanceLabel => 'Warn me this far before my stop';
+  String get startJourneyStopAlertDistanceLabel =>
+      'Warn me this far before my stop';
 
   @override
   String journeyTimerStopAlertAway(String distance, String stop) {
-    return '${distance} from ${stop}';
+    return '$distance from $stop';
   }
 
   @override
   String journeyTimerStopAlertWillAlarm(String distance) {
-    return 'Alarm sounds within ${distance} of your stop';
+    return 'Alarm sounds within $distance of your stop';
   }
 
   @override
   String journeyTimerStopAlertComingUp(String stop) {
-    return 'Get ready. ${stop} is coming up.';
+    return 'Get ready. $stop is coming up.';
   }
 
   @override
-  String get journeyTimerStopAlertLockedOk => 'The alarm keeps working with your phone locked.';
+  String get journeyTimerStopAlertLockedOk =>
+      'The alarm keeps working with your phone locked.';
 
   @override
-  String get journeyTimerStopAlertKeepOpen => 'Keep Amica open so the alarm can sound.';
+  String get journeyTimerStopAlertKeepOpen =>
+      'Keep Amica open so the alarm can sound.';
 
   @override
   String get journeyTimerRouteChangedTitle => 'Route changed';
 
   @override
   String journeyTimerRouteChangedBody(String distance, int minutes) {
-    return 'You left the planned route. New route: ${distance}, about ${minutes} min.';
+    return 'You left the planned route. New route: $distance, about $minutes min.';
   }
 
   @override
   String get journeyTimerRouteChangedNotified => 'Your contacts were told.';
 
   @override
-  String get journeyTimerRouteChangedNotNotified => 'Your contacts could not be reached.';
+  String get journeyTimerRouteChangedNotNotified =>
+      'Your contacts could not be reached.';
 
   @override
-  String get journeyTimerRouteChangedSnack => 'Route changed. Showing your new route.';
+  String get journeyTimerRouteChangedSnack =>
+      'Route changed. Showing your new route.';
 
   @override
-  String routeChangeSms(String name, String destination, String distance, int minutes) {
-    return 'Amica: ${name} has changed route on the way to ${destination}. New route: ${distance}, about ${minutes} min.';
+  String routeChangeSms(
+      String name, String destination, String distance, int minutes) {
+    return 'Amica: $name has changed route on the way to $destination. New route: $distance, about $minutes min.';
   }
 
   @override

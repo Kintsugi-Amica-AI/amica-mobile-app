@@ -2026,10 +2026,12 @@ class AppLocalizationsTa extends AppLocalizations {
       'இணைப்பு தயார், ஆனால் அனுப்ப உங்கள் தொடர்புகளை ஏற்ற முடியவில்லை.';
 
   @override
-  String get startJourneyScanVehicleTitle => 'முதலில் உங்கள் டாக்ஸியை ஸ்கேன் செய்யுங்கள்';
+  String get startJourneyScanVehicleTitle =>
+      'முதலில் உங்கள் டாக்ஸியை ஸ்கேன் செய்யுங்கள்';
 
   @override
-  String get startJourneyScanVehicleSubtitle => 'எண் தகடு உங்கள் முன்பதிவுடன் பொருந்துகிறதா என சரிபார்க்கவும். நீங்கள் எந்த வாகனத்தில் இருக்கிறீர்கள் என்பது உங்கள் தொடர்புகளுக்குத் தெரிவிக்கப்படும்.';
+  String get startJourneyScanVehicleSubtitle =>
+      'எண் தகடு உங்கள் முன்பதிவுடன் பொருந்துகிறதா என சரிபார்க்கவும். நீங்கள் எந்த வாகனத்தில் இருக்கிறீர்கள் என்பது உங்கள் தொடர்புகளுக்குத் தெரிவிக்கப்படும்.';
 
   @override
   String get startJourneyScanVehicleButton => 'வாகனத்தை ஸ்கேன் செய்';
@@ -2041,52 +2043,60 @@ class AppLocalizationsTa extends AppLocalizations {
   String get startJourneyStopAlertTitle => 'நிறுத்த எச்சரிக்கை';
 
   @override
-  String get startJourneyStopAlertSubtitle => 'உங்கள் தொலைபேசி பூட்டியிருந்தாலும், நிறுத்தத்தை அடையும் முன் எச்சரிக்கை ஒலிக்கும்.';
+  String get startJourneyStopAlertSubtitle =>
+      'உங்கள் தொலைபேசி பூட்டியிருந்தாலும், நிறுத்தத்தை அடையும் முன் எச்சரிக்கை ஒலிக்கும்.';
 
   @override
-  String get startJourneyStopAlertDistanceLabel => 'என் நிறுத்தத்திற்கு இவ்வளவு தூரம் முன்பே எச்சரிக்கவும்';
+  String get startJourneyStopAlertDistanceLabel =>
+      'என் நிறுத்தத்திற்கு இவ்வளவு தூரம் முன்பே எச்சரிக்கவும்';
 
   @override
   String journeyTimerStopAlertAway(String distance, String stop) {
-    return '${stop} இலிருந்து ${distance}';
+    return '$stop இலிருந்து $distance';
   }
 
   @override
   String journeyTimerStopAlertWillAlarm(String distance) {
-    return 'உங்கள் நிறுத்தத்திலிருந்து ${distance} தூரத்திற்குள் எச்சரிக்கை ஒலிக்கும்';
+    return 'உங்கள் நிறுத்தத்திலிருந்து $distance தூரத்திற்குள் எச்சரிக்கை ஒலிக்கும்';
   }
 
   @override
   String journeyTimerStopAlertComingUp(String stop) {
-    return 'தயாராகுங்கள். ${stop} நெருங்குகிறது.';
+    return 'தயாராகுங்கள். $stop நெருங்குகிறது.';
   }
 
   @override
-  String get journeyTimerStopAlertLockedOk => 'தொலைபேசி பூட்டியிருந்தாலும் எச்சரிக்கை செயல்படும்.';
+  String get journeyTimerStopAlertLockedOk =>
+      'தொலைபேசி பூட்டியிருந்தாலும் எச்சரிக்கை செயல்படும்.';
 
   @override
-  String get journeyTimerStopAlertKeepOpen => 'எச்சரிக்கை ஒலிக்க Amica ஐத் திறந்தே வைத்திருங்கள்.';
+  String get journeyTimerStopAlertKeepOpen =>
+      'எச்சரிக்கை ஒலிக்க Amica ஐத் திறந்தே வைத்திருங்கள்.';
 
   @override
   String get journeyTimerRouteChangedTitle => 'பாதை மாறியது';
 
   @override
   String journeyTimerRouteChangedBody(String distance, int minutes) {
-    return 'நீங்கள் திட்டமிட்ட பாதையிலிருந்து விலகினீர்கள். புதிய பாதை: ${distance}, சுமார் ${minutes} நிமிடங்கள்.';
+    return 'நீங்கள் திட்டமிட்ட பாதையிலிருந்து விலகினீர்கள். புதிய பாதை: $distance, சுமார் $minutes நிமிடங்கள்.';
   }
 
   @override
-  String get journeyTimerRouteChangedNotified => 'உங்கள் தொடர்புகளுக்குத் தெரிவிக்கப்பட்டது.';
+  String get journeyTimerRouteChangedNotified =>
+      'உங்கள் தொடர்புகளுக்குத் தெரிவிக்கப்பட்டது.';
 
   @override
-  String get journeyTimerRouteChangedNotNotified => 'உங்கள் தொடர்புகளை அடைய முடியவில்லை.';
+  String get journeyTimerRouteChangedNotNotified =>
+      'உங்கள் தொடர்புகளை அடைய முடியவில்லை.';
 
   @override
-  String get journeyTimerRouteChangedSnack => 'பாதை மாறியது. புதிய பாதை காட்டப்படுகிறது.';
+  String get journeyTimerRouteChangedSnack =>
+      'பாதை மாறியது. புதிய பாதை காட்டப்படுகிறது.';
 
   @override
-  String routeChangeSms(String name, String destination, String distance, int minutes) {
-    return 'Amica: ${name} ${destination} செல்லும் வழியில் பாதையை மாற்றினார். புதிய பாதை: ${distance}, சுமார் ${minutes} நிமிடங்கள்.';
+  String routeChangeSms(
+      String name, String destination, String distance, int minutes) {
+    return 'Amica: $name $destination செல்லும் வழியில் பாதையை மாற்றினார். புதிய பாதை: $distance, சுமார் $minutes நிமிடங்கள்.';
   }
 
   @override

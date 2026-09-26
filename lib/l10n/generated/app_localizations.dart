@@ -3590,7 +3590,8 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Amica: {name} has changed route on the way to {destination}. New route: {distance}, about {minutes} min.'**
-  String routeChangeSms(String name, String destination, String distance, int minutes);
+  String routeChangeSms(
+      String name, String destination, String distance, int minutes);
 
   /// No description provided for @routeChangeSmsFallbackName.
   ///
