@@ -528,6 +528,9 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
               ),
               const Spacer(),
               Row(
+                // Top-aligned, equal-width slots so a longer, wrapping
+                // Sinhala or Tamil label cannot shift its button.
+                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _CallActionButton(
@@ -568,17 +571,26 @@ class _CallActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        FloatingActionButton(
-          heroTag: label,
-          backgroundColor: color,
-          onPressed: onPressed,
-          child: Icon(icon, color: Colors.white),
-        ),
-        const SizedBox(height: 8),
-        Text(label, style: const TextStyle(color: Colors.white70)),
-      ],
+    return SizedBox(
+      width: 120,
+      child: Column(
+        children: [
+          FloatingActionButton(
+            heroTag: label,
+            backgroundColor: color,
+            onPressed: onPressed,
+            child: Icon(icon, color: Colors.white),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Colors.white70, height: 1.25),
+          ),
+        ],
+      ),
     );
   }
 }

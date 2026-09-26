@@ -332,7 +332,11 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
               style: const TextStyle(color: Colors.white70),
             ),
             const SizedBox(height: 56),
+            // Top-aligned, equal-width slots: Sinhala and Tamil labels are longer
+            // and wrap to two lines, which must not push their circles out of
+            // line with the others.
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _CallControlButton(icon: Icons.mic_off, label: loc.fakeCallActiveMute),
@@ -347,6 +351,7 @@ class _FakeCallActiveScreenState extends State<FakeCallActiveScreen> {
             ),
             const SizedBox(height: 28),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _CallControlButton(icon: Icons.add, label: loc.fakeCallActiveAddCall),
@@ -387,23 +392,32 @@ class _CallControlButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: onTap,
-          child: CircleAvatar(
-            radius: 28,
-            backgroundColor:
-                isActive ? Colors.white : const Color(0xFF3C4043),
-            child: Icon(
-              icon,
-              color: isActive ? const Color(0xFF202124) : Colors.white,
+    return SizedBox(
+      width: 96,
+      child: Column(
+        children: [
+          GestureDetector(
+            onTap: onTap,
+            child: CircleAvatar(
+              radius: 28,
+              backgroundColor:
+                  isActive ? Colors.white : const Color(0xFF3C4043),
+              child: Icon(
+                icon,
+                color: isActive ? const Color(0xFF202124) : Colors.white,
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(label, style: const TextStyle(color: Colors.white70)),
-      ],
+          const SizedBox(height: 8),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Colors.white70, height: 1.25),
+          ),
+        ],
+      ),
     );
   }
 }
