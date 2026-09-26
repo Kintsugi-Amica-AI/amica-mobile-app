@@ -2593,10 +2593,12 @@ class AppLocalizationsTa extends AppLocalizations {
   String get journeyHistoryEmptyTitle => 'இன்னும் பயணங்கள் இல்லை';
 
   @override
-  String get journeyHistoryEmptyMessage => 'Amica உடன் நீங்கள் முடிக்கும் பயணங்கள் மீண்டும் பார்ப்பதற்காக இங்கே சேமிக்கப்படும்.';
+  String get journeyHistoryEmptyMessage =>
+      'Amica உடன் நீங்கள் முடிக்கும் பயணங்கள் மீண்டும் பார்ப்பதற்காக இங்கே சேமிக்கப்படும்.';
 
   @override
-  String get journeyHistoryLoadFailed => 'உங்கள் பயணங்களை ஏற்ற முடியவில்லை. மீண்டும் முயற்சிக்கவும்.';
+  String get journeyHistoryLoadFailed =>
+      'உங்கள் பயணங்களை ஏற்ற முடியவில்லை. மீண்டும் முயற்சிக்கவும்.';
 
   @override
   String get journeyHistoryRetry => 'மீண்டும் முயற்சிக்கவும்';
@@ -2614,7 +2616,8 @@ class AppLocalizationsTa extends AppLocalizations {
   String get journeyHistoryFilterOther => 'முடிந்தது';
 
   @override
-  String get journeyHistoryFilterEmpty => 'இந்த வடிகட்டிக்குப் பொருந்தும் பயணங்கள் இல்லை.';
+  String get journeyHistoryFilterEmpty =>
+      'இந்த வடிகட்டிக்குப் பொருந்தும் பயணங்கள் இல்லை.';
 
   @override
   String get journeyHistoryStatJourneys => 'பயணங்கள்';
@@ -2672,13 +2675,15 @@ class AppLocalizationsTa extends AppLocalizations {
   String get notificationsOpen => 'அறிவிப்புகளைப் பார்க்க';
 
   @override
-  String get notificationsRowSubtitle => 'வட்ட எச்சரிக்கைகளும் பயணப் புதுப்பிப்புகளும்';
+  String get notificationsRowSubtitle =>
+      'வட்ட எச்சரிக்கைகளும் பயணப் புதுப்பிப்புகளும்';
 
   @override
   String get notificationsEmptyTitle => 'எல்லாம் பார்த்துவிட்டீர்கள்';
 
   @override
-  String get notificationsEmptyMessage => 'உங்கள் வட்டத்தின் எச்சரிக்கைகள், பயணப் புதுப்பிப்புகள் மற்றும் பதில்கள் இங்கே தோன்றும்.';
+  String get notificationsEmptyMessage =>
+      'உங்கள் வட்டத்தின் எச்சரிக்கைகள், பயணப் புதுப்பிப்புகள் மற்றும் பதில்கள் இங்கே தோன்றும்.';
 
   @override
   String get notificationsFilterAll => 'அனைத்தும்';
@@ -2699,7 +2704,8 @@ class AppLocalizationsTa extends AppLocalizations {
   String get notificationsClearTitle => 'அனைத்து அறிவிப்புகளையும் அழிக்கவா?';
 
   @override
-  String get notificationsClearBody => 'இது பட்டியலிலிருந்து எல்லா அறிவிப்புகளையும் நீக்கும். இதைத் திரும்பப் பெற முடியாது.';
+  String get notificationsClearBody =>
+      'இது பட்டியலிலிருந்து எல்லா அறிவிப்புகளையும் நீக்கும். இதைத் திரும்பப் பெற முடியாது.';
 
   @override
   String get notificationsRemoved => 'அறிவிப்பு நீக்கப்பட்டது';

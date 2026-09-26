@@ -2528,10 +2528,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get journeyHistoryEmptyTitle => 'No journeys yet';
 
   @override
-  String get journeyHistoryEmptyMessage => 'Journeys you finish with Amica are kept here so you can look back on them.';
+  String get journeyHistoryEmptyMessage =>
+      'Journeys you finish with Amica are kept here so you can look back on them.';
 
   @override
-  String get journeyHistoryLoadFailed => 'Couldn\'t load your journeys. Please try again.';
+  String get journeyHistoryLoadFailed =>
+      'Couldn\'t load your journeys. Please try again.';
 
   @override
   String get journeyHistoryRetry => 'Try again';
@@ -2613,7 +2615,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationsEmptyTitle => 'You\'re all caught up';
 
   @override
-  String get notificationsEmptyMessage => 'Alerts from your circle, journey updates and replies will show up here.';
+  String get notificationsEmptyMessage =>
+      'Alerts from your circle, journey updates and replies will show up here.';
 
   @override
   String get notificationsFilterAll => 'All';
@@ -2634,7 +2637,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationsClearTitle => 'Clear all notifications?';
 
   @override
-  String get notificationsClearBody => 'This removes every notification from this list. It can\'t be undone.';
+  String get notificationsClearBody =>
+      'This removes every notification from this list. It can\'t be undone.';
 
   @override
   String get notificationsRemoved => 'Notification removed';

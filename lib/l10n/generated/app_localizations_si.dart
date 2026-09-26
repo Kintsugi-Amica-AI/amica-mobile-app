@@ -2543,10 +2543,12 @@ class AppLocalizationsSi extends AppLocalizations {
   String get journeyHistoryEmptyTitle => 'තවම ගමන් නැත';
 
   @override
-  String get journeyHistoryEmptyMessage => 'ඔබ Amica සමඟ අවසන් කරන ගමන් නැවත බැලීමට මෙහි තබා ගැනේ.';
+  String get journeyHistoryEmptyMessage =>
+      'ඔබ Amica සමඟ අවසන් කරන ගමන් නැවත බැලීමට මෙහි තබා ගැනේ.';
 
   @override
-  String get journeyHistoryLoadFailed => 'ඔබේ ගමන් පූරණය කළ නොහැකි විය. කරුණාකර නැවත උත්සාහ කරන්න.';
+  String get journeyHistoryLoadFailed =>
+      'ඔබේ ගමන් පූරණය කළ නොහැකි විය. කරුණාකර නැවත උත්සාහ කරන්න.';
 
   @override
   String get journeyHistoryRetry => 'නැවත උත්සාහ කරන්න';
@@ -2622,13 +2624,15 @@ class AppLocalizationsSi extends AppLocalizations {
   String get notificationsOpen => 'දැනුම්දීම් බලන්න';
 
   @override
-  String get notificationsRowSubtitle => 'කවයේ අනතුරු ඇඟවීම් සහ ගමන් යාවත්කාලීන';
+  String get notificationsRowSubtitle =>
+      'කවයේ අනතුරු ඇඟවීම් සහ ගමන් යාවත්කාලීන';
 
   @override
   String get notificationsEmptyTitle => 'සියල්ල බලා අවසන්';
 
   @override
-  String get notificationsEmptyMessage => 'ඔබේ කවයේ අනතුරු ඇඟවීම්, ගමන් යාවත්කාලීන සහ පිළිතුරු මෙහි පෙන්වයි.';
+  String get notificationsEmptyMessage =>
+      'ඔබේ කවයේ අනතුරු ඇඟවීම්, ගමන් යාවත්කාලීන සහ පිළිතුරු මෙහි පෙන්වයි.';
 
   @override
   String get notificationsFilterAll => 'සියල්ල';
@@ -2649,7 +2653,8 @@ class AppLocalizationsSi extends AppLocalizations {
   String get notificationsClearTitle => 'සියලු දැනුම්දීම් මකන්නද?';
 
   @override
-  String get notificationsClearBody => 'මෙය ලැයිස්තුවෙන් සියලු දැනුම්දීම් ඉවත් කරයි. එය ආපසු හැරවිය නොහැක.';
+  String get notificationsClearBody =>
+      'මෙය ලැයිස්තුවෙන් සියලු දැනුම්දීම් ඉවත් කරයි. එය ආපසු හැරවිය නොහැක.';
 
   @override
   String get notificationsRemoved => 'දැනුම්දීම ඉවත් කළා';
