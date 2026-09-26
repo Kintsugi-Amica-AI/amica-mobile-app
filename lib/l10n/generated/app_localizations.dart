@@ -4330,6 +4330,276 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{{count} has Amica · gets instant alerts} other{{count} have Amica · get instant alerts}}'**
   String contactsLinkedCount(int count);
 
+  /// No description provided for @commonToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get commonToday;
+
+  /// No description provided for @commonYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get commonYesterday;
+
+  /// No description provided for @commonEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get commonEarlier;
+
+  /// No description provided for @journeyHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Journey history'**
+  String get journeyHistoryTitle;
+
+  /// No description provided for @journeyHistoryOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'View journey history'**
+  String get journeyHistoryOpen;
+
+  /// No description provided for @journeyHistoryRowSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Look back on your past trips'**
+  String get journeyHistoryRowSubtitle;
+
+  /// No description provided for @journeyHistoryEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No journeys yet'**
+  String get journeyHistoryEmptyTitle;
+
+  /// No description provided for @journeyHistoryEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Journeys you finish with Amica are kept here so you can look back on them.'**
+  String get journeyHistoryEmptyMessage;
+
+  /// No description provided for @journeyHistoryLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your journeys. Please try again.'**
+  String get journeyHistoryLoadFailed;
+
+  /// No description provided for @journeyHistoryRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get journeyHistoryRetry;
+
+  /// No description provided for @journeyHistoryFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get journeyHistoryFilterAll;
+
+  /// No description provided for @journeyHistoryFilterSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrived safe'**
+  String get journeyHistoryFilterSafe;
+
+  /// No description provided for @journeyHistoryFilterSos.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS'**
+  String get journeyHistoryFilterSos;
+
+  /// No description provided for @journeyHistoryFilterOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended'**
+  String get journeyHistoryFilterOther;
+
+  /// No description provided for @journeyHistoryFilterEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No journeys match this filter.'**
+  String get journeyHistoryFilterEmpty;
+
+  /// No description provided for @journeyHistoryStatJourneys.
+  ///
+  /// In en, this message translates to:
+  /// **'Journeys'**
+  String get journeyHistoryStatJourneys;
+
+  /// No description provided for @journeyStatusSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrived safe'**
+  String get journeyStatusSafe;
+
+  /// No description provided for @journeyStatusSos.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS sent'**
+  String get journeyStatusSos;
+
+  /// No description provided for @journeyStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get journeyStatusCancelled;
+
+  /// No description provided for @journeyStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Timed out'**
+  String get journeyStatusExpired;
+
+  /// No description provided for @journeyStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get journeyStatusActive;
+
+  /// No description provided for @journeyDetailFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get journeyDetailFrom;
+
+  /// No description provided for @journeyDetailTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get journeyDetailTo;
+
+  /// No description provided for @journeyDetailStartFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Start point'**
+  String get journeyDetailStartFallback;
+
+  /// No description provided for @journeyDetailStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Started'**
+  String get journeyDetailStarted;
+
+  /// No description provided for @journeyDetailEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended'**
+  String get journeyDetailEnded;
+
+  /// No description provided for @journeyDetailPlanned.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned time'**
+  String get journeyDetailPlanned;
+
+  /// No description provided for @journeyDetailVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle'**
+  String get journeyDetailVehicle;
+
+  /// No description provided for @journeyHistoryMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String journeyHistoryMinutes(int minutes);
+
+  /// No description provided for @journeyHistoryHoursMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h {minutes} min'**
+  String journeyHistoryHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationsTitle;
+
+  /// No description provided for @notificationsOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'View notifications'**
+  String get notificationsOpen;
+
+  /// No description provided for @notificationsRowSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Circle alerts and journey updates'**
+  String get notificationsRowSubtitle;
+
+  /// No description provided for @notificationsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all caught up'**
+  String get notificationsEmptyTitle;
+
+  /// No description provided for @notificationsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts from your circle, journey updates and replies will show up here.'**
+  String get notificationsEmptyMessage;
+
+  /// No description provided for @notificationsFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get notificationsFilterAll;
+
+  /// No description provided for @notificationsFilterUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread'**
+  String get notificationsFilterUnread;
+
+  /// No description provided for @notificationsUnreadEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No unread notifications.'**
+  String get notificationsUnreadEmpty;
+
+  /// No description provided for @notificationsMarkAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get notificationsMarkAllRead;
+
+  /// No description provided for @notificationsClearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get notificationsClearAll;
+
+  /// No description provided for @notificationsClearTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all notifications?'**
+  String get notificationsClearTitle;
+
+  /// No description provided for @notificationsClearBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes every notification from this list. It can\'t be undone.'**
+  String get notificationsClearBody;
+
+  /// No description provided for @notificationsRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification removed'**
+  String get notificationsRemoved;
+
+  /// No description provided for @notificationsUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get notificationsUndo;
+
+  /// No description provided for @journeyDetailDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get journeyDetailDuration;
+
   /// No description provided for @zzzArbEnd.
   ///
   /// In en, this message translates to:

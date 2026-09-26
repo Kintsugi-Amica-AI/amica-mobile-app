@@ -16,6 +16,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../core/constants/app_routes.dart';
 import '../features/circle/models/guardian_alert.dart';
 import '../features/circle/services/guardian_link_service.dart';
+import '../features/notifications/models/app_notification.dart';
+import '../features/notifications/services/notification_inbox_service.dart';
 import '../l10n/generated/app_localizations.dart';
 
 /// Runs in its own isolate when a push arrives with Amica closed or in the
@@ -96,6 +98,8 @@ class PushNotificationService {
   /// Removes this device's token before signing out, so her alerts stop
   /// arriving on a phone someone else now uses.
   Future<void> unregister() async {
+    // Her notification list belongs to her, not to the next person to sign in.
+    await NotificationInboxService.instance.clear();
     final token = _registeredToken;
     _registeredToken = null;
     _registeredUid = null;
@@ -268,6 +272,17 @@ class PushNotificationService {
         title = fallbackTitle;
         body = data['body'] is String ? data['body'] as String : '';
     }
+
+    // Keep a copy for the in-app Notifications screen.
+    final now = DateTime.now();
+    await NotificationInboxService.instance.add(AppNotification(
+      id: '${now.microsecondsSinceEpoch}-${alert.type}',
+      type: alert.type,
+      title: title,
+      body: body,
+      receivedAt: now,
+      data: alert.toData(),
+    ));
 
     final isSos = channel == sosChannelId;
     await _notifications.show(

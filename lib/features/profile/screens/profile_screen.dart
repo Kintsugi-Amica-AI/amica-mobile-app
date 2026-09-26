@@ -177,6 +177,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onTap: _openSettings,
                     ),
                     const AmicaDivider(),
+                    AmicaListRow(
+                      icon: Icons.history_rounded,
+                      title: loc.journeyHistoryTitle,
+                      subtitle: loc.journeyHistoryRowSubtitle,
+                      onTap: () => Navigator.pushNamed(
+                          context, AppRoutes.journeyHistory),
+                    ),
+                    const AmicaDivider(),
+                    AmicaListRow(
+                      icon: Icons.notifications_none_rounded,
+                      title: loc.notificationsTitle,
+                      subtitle: loc.notificationsRowSubtitle,
+                      onTap: () =>
+                          Navigator.pushNamed(context, AppRoutes.notifications),
+                    ),
+                    const AmicaDivider(),
                     // The other direction of the circle: her alerts reach
                     // her guardians; this is for alerts she receives.
                     AmicaListRow(

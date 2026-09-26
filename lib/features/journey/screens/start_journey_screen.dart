@@ -18,6 +18,7 @@ import '../../../services/journey_route_service.dart';
 import '../../../services/location_service.dart';
 import '../../../services/transit_plan_service.dart';
 import '../models/location_data_model.dart';
+import '../widgets/journey_history_button.dart';
 import '../widgets/journey_visuals.dart';
 import '../widgets/transit_trip_card.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -748,6 +749,7 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
         title: Text(widget.vehiclePlate == null
             ? loc.startJourneyWalkWithMeTitle
             : loc.startJourneyRideWithMeTitle),
+        actions: const [JourneyHistoryButton()],
       ),
       extendBodyBehindAppBar: true,
       body: AmicaBackground(

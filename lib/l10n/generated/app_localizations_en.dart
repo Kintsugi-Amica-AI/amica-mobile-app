@@ -2507,5 +2507,144 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get commonToday => 'Today';
+
+  @override
+  String get commonYesterday => 'Yesterday';
+
+  @override
+  String get commonEarlier => 'Earlier';
+
+  @override
+  String get journeyHistoryTitle => 'Journey history';
+
+  @override
+  String get journeyHistoryOpen => 'View journey history';
+
+  @override
+  String get journeyHistoryRowSubtitle => 'Look back on your past trips';
+
+  @override
+  String get journeyHistoryEmptyTitle => 'No journeys yet';
+
+  @override
+  String get journeyHistoryEmptyMessage => 'Journeys you finish with Amica are kept here so you can look back on them.';
+
+  @override
+  String get journeyHistoryLoadFailed => 'Couldn\'t load your journeys. Please try again.';
+
+  @override
+  String get journeyHistoryRetry => 'Try again';
+
+  @override
+  String get journeyHistoryFilterAll => 'All';
+
+  @override
+  String get journeyHistoryFilterSafe => 'Arrived safe';
+
+  @override
+  String get journeyHistoryFilterSos => 'SOS';
+
+  @override
+  String get journeyHistoryFilterOther => 'Ended';
+
+  @override
+  String get journeyHistoryFilterEmpty => 'No journeys match this filter.';
+
+  @override
+  String get journeyHistoryStatJourneys => 'Journeys';
+
+  @override
+  String get journeyStatusSafe => 'Arrived safe';
+
+  @override
+  String get journeyStatusSos => 'SOS sent';
+
+  @override
+  String get journeyStatusCancelled => 'Cancelled';
+
+  @override
+  String get journeyStatusExpired => 'Timed out';
+
+  @override
+  String get journeyStatusActive => 'In progress';
+
+  @override
+  String get journeyDetailFrom => 'From';
+
+  @override
+  String get journeyDetailTo => 'To';
+
+  @override
+  String get journeyDetailStartFallback => 'Start point';
+
+  @override
+  String get journeyDetailStarted => 'Started';
+
+  @override
+  String get journeyDetailEnded => 'Ended';
+
+  @override
+  String get journeyDetailPlanned => 'Planned time';
+
+  @override
+  String get journeyDetailVehicle => 'Vehicle';
+
+  @override
+  String journeyHistoryMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String journeyHistoryHoursMinutes(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
+
+  @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get notificationsOpen => 'View notifications';
+
+  @override
+  String get notificationsRowSubtitle => 'Circle alerts and journey updates';
+
+  @override
+  String get notificationsEmptyTitle => 'You\'re all caught up';
+
+  @override
+  String get notificationsEmptyMessage => 'Alerts from your circle, journey updates and replies will show up here.';
+
+  @override
+  String get notificationsFilterAll => 'All';
+
+  @override
+  String get notificationsFilterUnread => 'Unread';
+
+  @override
+  String get notificationsUnreadEmpty => 'No unread notifications.';
+
+  @override
+  String get notificationsMarkAllRead => 'Mark all read';
+
+  @override
+  String get notificationsClearAll => 'Clear all';
+
+  @override
+  String get notificationsClearTitle => 'Clear all notifications?';
+
+  @override
+  String get notificationsClearBody => 'This removes every notification from this list. It can\'t be undone.';
+
+  @override
+  String get notificationsRemoved => 'Notification removed';
+
+  @override
+  String get notificationsUndo => 'Undo';
+
+  @override
+  String get journeyDetailDuration => 'Duration';
+
+  @override
   String get zzzArbEnd => 'do not translate; internal append anchor';
 }

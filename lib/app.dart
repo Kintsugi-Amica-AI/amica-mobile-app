@@ -23,9 +23,11 @@ import 'features/emergency_contacts/screens/emergency_contacts_screen.dart';
 import 'features/fake_call/screens/fake_call_active_screen.dart';
 import 'features/fake_call/screens/fake_call_screen.dart';
 import 'features/fake_call/services/fake_call_shortcut_service.dart';
+import 'features/journey/screens/journey_history_screen.dart';
 import 'features/journey/screens/journey_timer_screen.dart';
 import 'features/journey/screens/safety_check_screen.dart';
 import 'features/journey/screens/start_journey_screen.dart';
+import 'features/notifications/screens/notifications_screen.dart';
 import 'features/plate_scan/screens/plate_result_screen.dart';
 import 'features/plate_scan/screens/plate_scan_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
@@ -166,6 +168,8 @@ class _AmicaAppState extends State<AmicaApp> {
         AppRoutes.profile: (_) => const ProfileScreen(),
         AppRoutes.settings: (_) => SettingsScreen(),
         AppRoutes.circleLink: (_) => const CircleLinkScreen(),
+        AppRoutes.journeyHistory: (_) => const JourneyHistoryScreen(),
+        AppRoutes.notifications: (_) => const NotificationsScreen(),
         AppRoutes.guardianAlert: (context) {
           final args = ModalRoute.of(context)?.settings.arguments;
           return GuardianAlertScreen(

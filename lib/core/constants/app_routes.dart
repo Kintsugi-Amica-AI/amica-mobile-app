@@ -21,4 +21,6 @@ class AppRoutes {
   static const String settings = '/settings';
   static const String guardianAlert = '/circle/alert';
   static const String circleLink = '/circle/link';
+  static const String journeyHistory = '/journey/history';
+  static const String notifications = '/notifications';
 }

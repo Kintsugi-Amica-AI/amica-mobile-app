@@ -157,6 +157,32 @@ class JourneyService {
     });
   }
 
+  /// Every journey she has finished (or that ended in an SOS), newest first.
+  ///
+  /// Reads all of her journeys with one `userId` filter and sorts here, so it
+  /// needs no extra Firestore index. Active journeys are left out: those live
+  /// on the Journeys tab.
+  Stream<List<Journey>> watchJourneyHistory() {
+    final user = _auth.currentUser;
+    if (user == null) {
+      return Stream<List<Journey>>.error(
+        const JourneyServiceException('Please log in to view journeys.'),
+      );
+    }
+
+    return _firestore
+        .collection(_collectionName)
+        .where('userId', isEqualTo: user.uid)
+        .snapshots()
+        .map((snapshot) {
+      final journeys = [
+        for (final document in snapshot.docs) Journey.fromFirestore(document),
+      ].where((journey) => !journey.isActive).toList()
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return journeys;
+    });
+  }
+
   Stream<Journey?> watchJourney(String journeyId) {
     final user = _auth.currentUser;
     if (user == null) {

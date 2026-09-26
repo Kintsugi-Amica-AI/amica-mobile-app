@@ -2522,5 +2522,144 @@ class AppLocalizationsSi extends AppLocalizations {
   }
 
   @override
+  String get commonToday => 'අද';
+
+  @override
+  String get commonYesterday => 'ඊයේ';
+
+  @override
+  String get commonEarlier => 'කලින්';
+
+  @override
+  String get journeyHistoryTitle => 'ගමන් ඉතිහාසය';
+
+  @override
+  String get journeyHistoryOpen => 'ගමන් ඉතිහාසය බලන්න';
+
+  @override
+  String get journeyHistoryRowSubtitle => 'ඔබේ පසුගිය ගමන් නැවත බලන්න';
+
+  @override
+  String get journeyHistoryEmptyTitle => 'තවම ගමන් නැත';
+
+  @override
+  String get journeyHistoryEmptyMessage => 'ඔබ Amica සමඟ අවසන් කරන ගමන් නැවත බැලීමට මෙහි තබා ගැනේ.';
+
+  @override
+  String get journeyHistoryLoadFailed => 'ඔබේ ගමන් පූරණය කළ නොහැකි විය. කරුණාකර නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get journeyHistoryRetry => 'නැවත උත්සාහ කරන්න';
+
+  @override
+  String get journeyHistoryFilterAll => 'සියල්ල';
+
+  @override
+  String get journeyHistoryFilterSafe => 'ආරක්ෂිතව ළඟා විය';
+
+  @override
+  String get journeyHistoryFilterSos => 'SOS';
+
+  @override
+  String get journeyHistoryFilterOther => 'අවසන්';
+
+  @override
+  String get journeyHistoryFilterEmpty => 'මෙම පෙරහනට ගැලපෙන ගමන් නැත.';
+
+  @override
+  String get journeyHistoryStatJourneys => 'ගමන්';
+
+  @override
+  String get journeyStatusSafe => 'ආරක්ෂිතව ළඟා විය';
+
+  @override
+  String get journeyStatusSos => 'SOS යවන ලදී';
+
+  @override
+  String get journeyStatusCancelled => 'අවලංගු කළා';
+
+  @override
+  String get journeyStatusExpired => 'කාලය ඉකුත් විය';
+
+  @override
+  String get journeyStatusActive => 'ගමන පවතී';
+
+  @override
+  String get journeyDetailFrom => 'සිට';
+
+  @override
+  String get journeyDetailTo => 'දක්වා';
+
+  @override
+  String get journeyDetailStartFallback => 'ආරම්භක ස්ථානය';
+
+  @override
+  String get journeyDetailStarted => 'ආරම්භ වූයේ';
+
+  @override
+  String get journeyDetailEnded => 'අවසන් වූයේ';
+
+  @override
+  String get journeyDetailPlanned => 'සැලසුම් කළ කාලය';
+
+  @override
+  String get journeyDetailVehicle => 'වාහනය';
+
+  @override
+  String journeyHistoryMinutes(int minutes) {
+    return 'මිනිත්තු $minutes';
+  }
+
+  @override
+  String journeyHistoryHoursMinutes(int hours, int minutes) {
+    return 'පැය $hours මිනිත්තු $minutes';
+  }
+
+  @override
+  String get notificationsTitle => 'දැනුම්දීම්';
+
+  @override
+  String get notificationsOpen => 'දැනුම්දීම් බලන්න';
+
+  @override
+  String get notificationsRowSubtitle => 'කවයේ අනතුරු ඇඟවීම් සහ ගමන් යාවත්කාලීන';
+
+  @override
+  String get notificationsEmptyTitle => 'සියල්ල බලා අවසන්';
+
+  @override
+  String get notificationsEmptyMessage => 'ඔබේ කවයේ අනතුරු ඇඟවීම්, ගමන් යාවත්කාලීන සහ පිළිතුරු මෙහි පෙන්වයි.';
+
+  @override
+  String get notificationsFilterAll => 'සියල්ල';
+
+  @override
+  String get notificationsFilterUnread => 'නොකියවූ';
+
+  @override
+  String get notificationsUnreadEmpty => 'නොකියවූ දැනුම්දීම් නැත.';
+
+  @override
+  String get notificationsMarkAllRead => 'සියල්ල කියවූ ලෙස සලකුණු කරන්න';
+
+  @override
+  String get notificationsClearAll => 'සියල්ල මකන්න';
+
+  @override
+  String get notificationsClearTitle => 'සියලු දැනුම්දීම් මකන්නද?';
+
+  @override
+  String get notificationsClearBody => 'මෙය ලැයිස්තුවෙන් සියලු දැනුම්දීම් ඉවත් කරයි. එය ආපසු හැරවිය නොහැක.';
+
+  @override
+  String get notificationsRemoved => 'දැනුම්දීම ඉවත් කළා';
+
+  @override
+  String get notificationsUndo => 'ආපසු';
+
+  @override
+  String get journeyDetailDuration => 'කාලය';
+
+  @override
   String get zzzArbEnd => 'do not translate; internal append anchor';
 }

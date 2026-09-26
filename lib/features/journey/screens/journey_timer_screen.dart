@@ -26,6 +26,7 @@ import '../models/journey.dart';
 import '../models/location_data_model.dart';
 import '../services/journey_service.dart';
 import '../services/journey_share_service.dart';
+import '../widgets/journey_history_button.dart';
 import '../widgets/journey_visuals.dart';
 import '../widgets/transit_trip_card.dart';
 import 'safety_check_screen.dart';
@@ -973,6 +974,7 @@ class _JourneyTimerScreenState extends State<JourneyTimerScreen>
       appBar: AppBar(
         automaticallyImplyLeading: !widget.isTab,
         title: Text(_loc.journeyTimerTitle),
+        actions: const [JourneyHistoryButton()],
       ),
       extendBodyBehindAppBar: true,
       body: AmicaBackground(child: _buildBody(context, journey)),

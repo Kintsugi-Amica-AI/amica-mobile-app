@@ -11,6 +11,7 @@ import '../../auth/models/app_user.dart';
 import '../../auth/services/auth_service.dart';
 import '../../emergency_contacts/models/emergency_contact.dart';
 import '../../emergency_contacts/services/emergency_contact_service.dart';
+import '../../notifications/widgets/notification_bell.dart';
 import '../../sos/screens/sos_arming_screen.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../widgets/sos_hold_button.dart';
@@ -155,6 +156,8 @@ class _Header extends StatelessWidget {
             ),
           ),
           const Spacer(),
+          const NotificationBell(),
+          const SizedBox(width: 8),
           // Discreet mode within reach of the screen she is on when she
           // needs it, not three levels down in settings.
           ValueListenableBuilder<ThemeMode>(
