@@ -119,14 +119,20 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
     );
   }
 
+  /// Opens the plate-scan camera. When she confirms the vehicle there, it
+  /// comes back here with the plate.
   Future<void> _scanVehicle() async {
-    final scanned = await Navigator.pushNamed<ScannedVehicle>(
-      context,
-      AppRoutes.plateScan,
-      arguments: const PlateScanArguments(returnVehicle: true),
-    );
-    if (!mounted || scanned == null) return;
-    setState(() => _scannedVehicle = scanned);
+    try {
+      final scanned = await Navigator.of(context, rootNavigator: true)
+          .pushNamed<ScannedVehicle>(
+        AppRoutes.plateScan,
+        arguments: const PlateScanArguments(returnVehicle: true),
+      );
+      if (!mounted || scanned == null) return;
+      setState(() => _scannedVehicle = scanned);
+    } catch (_) {
+      // Nothing to hand back; she is simply still on this screen.
+    }
   }
   int _reverseGeocodeToken = 0;
   bool _isLoadingRoute = false;
@@ -962,7 +968,10 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
                 ? loc.startJourneyScanAgainButton
                 : loc.startJourneyScanVehicleButton,
             icon: Icons.document_scanner_outlined,
-            onPressed: _isBusy ? null : _scanVehicle,
+            // Opens the camera straight away. It must not wait for the GPS
+            // fix (`_isBusy`), which can take a while and left the button
+            // dimmed and dead.
+            onPressed: _isStartingJourney ? null : _scanVehicle,
           ),
         ],
       ),
