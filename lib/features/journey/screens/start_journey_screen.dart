@@ -18,6 +18,7 @@ import '../../../services/journey_route_service.dart';
 import '../../../services/location_service.dart';
 import '../../../services/transit_plan_service.dart';
 import '../../plate_scan/models/scanned_vehicle.dart';
+import '../../plate_scan/screens/plate_scan_screen.dart';
 import '../../stop_alert/services/route_distance_service.dart';
 import '../../stop_alert/services/stop_alert_calculator.dart';
 import '../models/journey.dart';
@@ -122,16 +123,20 @@ class _StartJourneyScreenState extends State<StartJourneyScreen> {
   /// Opens the plate-scan camera. When she confirms the vehicle there, it
   /// comes back here with the plate.
   Future<void> _scanVehicle() async {
+    final messenger = ScaffoldMessenger.of(context);
     try {
-      final scanned = await Navigator.of(context, rootNavigator: true)
-          .pushNamed<ScannedVehicle>(
-        AppRoutes.plateScan,
-        arguments: const PlateScanArguments(returnVehicle: true),
+      // Built here rather than opened by route name, so nothing about route
+      // arguments can stop the camera screen from opening.
+      final scanned = await Navigator.of(context).push<ScannedVehicle>(
+        MaterialPageRoute<ScannedVehicle>(
+          settings: const RouteSettings(name: AppRoutes.plateScan),
+          builder: (_) => PlateScanScreen(returnVehicle: true),
+        ),
       );
       if (!mounted || scanned == null) return;
       setState(() => _scannedVehicle = scanned);
-    } catch (_) {
-      // Nothing to hand back; she is simply still on this screen.
+    } catch (error) {
+      messenger.showSnackBar(SnackBar(content: Text('$error')));
     }
   }
   int _reverseGeocodeToken = 0;

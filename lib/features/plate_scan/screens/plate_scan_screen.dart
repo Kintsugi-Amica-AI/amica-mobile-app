@@ -31,6 +31,7 @@ import '../../../l10n/generated/app_localizations.dart';
 class PlateScanScreen extends StatefulWidget {
   PlateScanScreen({
     super.key,
+    this.returnVehicle = false,
     PlateScanService? plateScanService,
     ImagePicker? imagePicker,
     VehicleInspector? vehicleInspector,
@@ -42,6 +43,10 @@ class PlateScanScreen extends StatefulWidget {
         observationService =
             observationService ?? const VehicleObservationService(),
         imageService = imageService ?? const VehicleImageService();
+
+  /// Opened from the journey screen: hand the confirmed vehicle back to it
+  /// instead of ending on the result screen.
+  final bool returnVehicle;
 
   final PlateScanService plateScanService;
   final ImagePicker imagePicker;
@@ -452,8 +457,8 @@ class _PlateScanScreenState extends State<PlateScanScreen>
       // Opened from the journey screen: the result screen hands the confirmed
       // vehicle back, and this screen passes it on to the journey screen.
       final routeArgs = ModalRoute.of(context)?.settings.arguments;
-      final returnVehicle =
-          routeArgs is PlateScanArguments && routeArgs.returnVehicle;
+      final returnVehicle = widget.returnVehicle ||
+          (routeArgs is PlateScanArguments && routeArgs.returnVehicle);
       final picked = await Navigator.push<ScannedVehicle>(
         context,
         MaterialPageRoute<ScannedVehicle>(
