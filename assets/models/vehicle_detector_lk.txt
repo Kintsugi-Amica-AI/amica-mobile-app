@@ -1,0 +1,6 @@
+car
+van
+bus
+lorry
+motorbike
+three_wheeler

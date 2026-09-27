@@ -2,191 +2,531 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
-import '../../../core/constants/app_strings.dart';
-import '../../../core/widgets/amica_background.dart';
-import '../../../services/location_service.dart';
+import '../../../core/navigation/amica_shell.dart';
+import '../../../core/theme/theme_controller.dart';
+import '../../../core/widgets/amica_primitives.dart';
+import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/motion.dart';
+import '../../auth/models/app_user.dart';
 import '../../auth/services/auth_service.dart';
-import '../../sos/screens/sos_active_screen.dart';
-import '../../sos/services/sos_service.dart';
-import '../widgets/pulsing_sos_button.dart';
-import '../widgets/safety_feature_card.dart';
+import '../../emergency_contacts/models/emergency_contact.dart';
+import '../../emergency_contacts/services/emergency_contact_service.dart';
+import '../../notifications/widgets/notification_bell.dart';
+import '../../sos/screens/sos_arming_screen.dart';
+import '../../../l10n/generated/app_localizations.dart';
+import '../widgets/sos_hold_button.dart';
 
-class HomeScreen extends StatefulWidget {
+/// The home surface.
+///
+/// Reordered around one question: what does she need in the two seconds
+/// after she opens this? So the SOS sits in the lower half, inside the
+/// thumb zone, at a size nothing else competes with — the old layout put it
+/// mid-screen surrounded by four equally glowing feature cards.
+///
+/// Everything above it is reassurance rather than controls: what is armed
+/// right now, and how many people can reach her. Everything below is the
+/// quiet, non-alarming tools, deliberately small.
+class HomeScreen extends StatelessWidget {
   const HomeScreen({
     super.key,
     this.authService = const AuthService(),
-    this.locationService = const LocationService(),
-    this.sosService = const SosService(),
+    this.contactService = const EmergencyContactService(),
   });
 
   final AuthService authService;
-  final LocationService locationService;
-  final SosService sosService;
+  final EmergencyContactService contactService;
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  bool _isSendingSos = false;
-
-  Future<void> _logout(BuildContext context) async {
-    await widget.authService.signOut();
-    if (context.mounted) {
-      Navigator.pushReplacementNamed(context, AppRoutes.login);
-    }
+  static String greetingFor(DateTime now, AppLocalizations loc) {
+    if (now.hour < 12) return loc.greetingMorning;
+    if (now.hour < 17) return loc.greetingAfternoon;
+    return loc.greetingEvening;
   }
 
-  Future<void> _triggerManualSos(BuildContext context) async {
-    if (_isSendingSos) {
-      return;
-    }
-
-    setState(() => _isSendingSos = true);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Sending SOS alert...')),
-    );
-
-    try {
-      final location = await widget.locationService.getCurrentLocationData();
-      final alertId = await widget.sosService.createManualSosAlert(
-        location: location,
-      );
-
-      if (!context.mounted) {
-        return;
-      }
-      Navigator.pushNamed(
-        context,
-        AppRoutes.sosActive,
-        arguments: SosActiveArguments(
-          alertId: alertId,
-          triggerType: 'manual',
-          location: location,
-        ),
-      );
-    } on LocationServiceException catch (error) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message)),
-        );
-      }
-    } on SosServiceException catch (error) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message)),
-        );
-      }
-    } catch (_) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not create SOS alert')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSendingSos = false);
-      }
-    }
-  }
-
-  String _greeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
+  static String firstNameOf(AppUser? user) {
+    final name = user?.name.trim() ?? '';
+    if (name.isEmpty) return '';
+    return name.split(RegExp(r'\s+')).first;
   }
 
   @override
   Widget build(BuildContext context) {
-    final features = [
-      SafetyFeatureCard(
-        title: 'Start Journey',
-        subtitle: 'Set a timer before you travel.',
-        icon: Icons.timer_outlined,
-        iconColor: AppColors.secondary,
-        onTap: () => Navigator.pushNamed(context, AppRoutes.startJourney),
-      ),
-      SafetyFeatureCard(
-        title: AppStrings.emergencyContacts,
-        subtitle: 'Manage trusted contacts.',
-        icon: Icons.contacts_outlined,
-        iconColor: AppColors.primary,
-        onTap: () => Navigator.pushNamed(context, AppRoutes.emergencyContacts),
-      ),
-      SafetyFeatureCard(
-        title: AppStrings.fakeCall,
-        subtitle: 'Trigger a deterrent call.',
-        icon: Icons.phone_in_talk_outlined,
-        iconColor: AppColors.warning,
-        onTap: () => Navigator.pushNamed(context, AppRoutes.fakeCall),
-      ),
-      SafetyFeatureCard(
-        title: 'Scan Vehicle',
-        subtitle: 'Check a number plate.',
-        icon: Icons.document_scanner_outlined,
-        iconColor: AppColors.success,
-        onTap: () => Navigator.pushNamed(context, AppRoutes.plateScan),
-      ),
-    ];
-
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: const Text(AppStrings.appName),
-        actions: [
-          IconButton(
-            tooltip: 'Profile',
-            onPressed: () => Navigator.pushNamed(context, AppRoutes.profile),
-            icon: const Icon(Icons.person_outline_rounded),
-          ),
-          IconButton(
-            tooltip: 'Logout',
-            onPressed: () => _logout(context),
-            icon: const Icon(Icons.logout_rounded),
-          ),
-        ],
-      ),
-      body: AmicaBackground(
-        child: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-            children: [
-              Text(
-                '${_greeting()}, stay safe today',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Amica watches over your journeys and reaches trusted contacts the instant you need help.',
-              ),
-              const SizedBox(height: 28),
-              Center(
-                child: PulsingSosButton(
-                  isBusy: _isSendingSos,
-                  onTap: () => _triggerManualSos(context),
-                ),
-              ),
-              const SizedBox(height: 32),
-              Text(
-                'Safety toolkit',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 12),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 14,
-                crossAxisSpacing: 14,
-                childAspectRatio: 0.98,
-                children: features,
-              ),
-            ],
-          ),
+      body: SafeArea(
+        bottom: false,
+        child: StreamBuilder<List<EmergencyContact>>(
+          stream: contactService.watchEmergencyContacts(),
+          builder: (context, contactSnap) {
+            final guardians =
+                (contactSnap.data ?? []).where((c) => c.isActive).toList();
+
+            return StreamBuilder<AppUser?>(
+              stream: authService.authStateChanges(),
+              builder: (context, userSnap) {
+                final firstName = firstNameOf(userSnap.data);
+
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final loc = AppLocalizations.of(context);
+                    return SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints:
+                            BoxConstraints(minHeight: constraints.maxHeight),
+                        child: Column(
+                          children: [
+                            // Sections drift in one after another the
+                            // first time Home appears.
+                            FadeSlideIn(
+                              child: _Header(
+                                initial: firstName,
+                                onProfile: () => _openYouTab(context),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            FadeSlideIn(
+                              delay: const Duration(milliseconds: 80),
+                              child: _HeroCard(
+                                greeting:
+                                    HomeScreen.greetingFor(DateTime.now(), loc),
+                                firstName: firstName,
+                                guardianCount: guardians.length,
+                              ),
+                            ),
+                            const SizedBox(height: 28),
+                            FadeSlideIn(
+                              delay: const Duration(milliseconds: 160),
+                              offset: const Offset(0, 0.04),
+                              child: _SosHero(guardians: guardians),
+                            ),
+                            const SizedBox(height: 30),
+                            FadeSlideIn(
+                              delay: const Duration(milliseconds: 240),
+                              child: _QuieterOptions(),
+                            ),
+                            const SizedBox(height: 16),
+                            const FadeSlideIn(
+                              delay: Duration(milliseconds: 320),
+                              child: _SafetyTip(),
+                            ),
+                            // Clear the floating nav pill the page scrolls
+                            // under.
+                            SizedBox(
+                              height: 20 + MediaQuery.paddingOf(context).bottom,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            );
+          },
         ),
       ),
     );
+  }
+}
+
+class _Header extends StatelessWidget {
+  const _Header({required this.initial, required this.onProfile});
+
+  final String initial;
+  final VoidCallback onProfile;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Theme.of(context).amica;
+    final theme = Theme.of(context);
+    final loc = AppLocalizations.of(context);
+    final controller = AmicaThemeController.instance;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+      child: Row(
+        children: [
+          ShaderMask(
+            blendMode: BlendMode.srcIn,
+            shaderCallback: (bounds) => c.accentGradient.createShader(bounds),
+            child: Text(
+              'Amica',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontSize: 24,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ),
+          const Spacer(),
+          const NotificationBell(),
+          const SizedBox(width: 8),
+          // Discreet mode within reach of the screen she is on when she
+          // needs it, not three levels down in settings.
+          ValueListenableBuilder<ThemeMode>(
+            valueListenable: controller,
+            builder: (context, _, __) {
+              final on = controller.isDiscreetIn(context);
+              return Semantics(
+                button: true,
+                label:
+                    on ? loc.discreetModeTurnOff : loc.discreetModeTurnOn,
+                child: InkWell(
+                  onTap: () => controller.setDiscreet(!on),
+                  borderRadius: BorderRadius.circular(999),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: on ? null : c.card,
+                      gradient: on ? c.accentGradient : null,
+                      shape: BoxShape.circle,
+                      border: on ? null : Border.all(color: c.lineSoft),
+                      boxShadow: c.shadow,
+                    ),
+                    child: Icon(
+                      on ? Icons.dark_mode_rounded : Icons.dark_mode_outlined,
+                      size: 19,
+                      color: on ? AppColors.onAccent : c.accentInk,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: onProfile,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: c.accentGradient,
+              ),
+              child: AmicaAvatar(
+                initial: initial.isEmpty ? 'A' : initial,
+                size: 38,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The top of Home: a frosted glass card holding the greeting and, inside
+/// it, the standing reassurance — is she set up, how many people can reach
+/// her. Trust in a safety app is built before the emergency, not during it.
+class _HeroCard extends StatelessWidget {
+  const _HeroCard({
+    required this.greeting,
+    required this.firstName,
+    required this.guardianCount,
+  });
+
+  final String greeting;
+  final String firstName;
+  final int guardianCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Theme.of(context).amica;
+    final theme = Theme.of(context);
+    final loc = AppLocalizations.of(context);
+    final ready = guardianCount > 0;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: AmicaCard(
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
+        borderRadius: 28,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    firstName.isEmpty
+                        ? loc.homeGreetingNoName(greeting)
+                        : loc.homeGreetingWithName(greeting, firstName),
+                    style: theme.textTheme.displaySmall?.copyWith(fontSize: 26),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ShaderMask(
+                  blendMode: BlendMode.srcIn,
+                  shaderCallback: (b) => c.accentGradient.createShader(b),
+                  child: const Icon(Icons.auto_awesome_rounded, size: 22),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              guardianCount == 0
+                  ? loc.homeNoGuardiansSubline
+                  : loc.homeGuardianCountSubline(guardianCount),
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 14),
+            // Protection status, as a tinted pill inside the glass.
+            Material(
+              color: (ready ? c.sageSoft : c.goldSoft).withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(18),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(18),
+                onTap: () => _openYouTab(context),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 10, 8, 10),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: ready ? c.sage : c.gold,
+                        ),
+                        child: Icon(
+                          ready
+                              ? Icons.verified_user_rounded
+                              : Icons.shield_outlined,
+                          size: 18,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              ready
+                                  ? loc.homeYouAreProtected
+                                  : loc.homeFinishSettingUp,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                color: ready ? c.sageInk : c.gold,
+                              ),
+                            ),
+                            Text(
+                              ready
+                                  ? loc.homeProtectionReadySubline(guardianCount)
+                                  : loc.homeAddGuardianPrompt,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w500,
+                                color: c.plum70,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 20,
+                        color: ready ? c.sageInk : c.gold,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SosHero extends StatelessWidget {
+  const _SosHero({required this.guardians});
+
+  final List<EmergencyContact> guardians;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Theme.of(context).amica;
+    final loc = AppLocalizations.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          SosHoldButton(
+            onTriggered: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => SosArmingScreen(guardians: guardians),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 290),
+            child: Text(
+              loc.homeSosHoldHint,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w500,
+                height: 1.4,
+                color: c.plum45,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The non-alarm tools. Small, four across, visually quiet — these are for
+/// the ordinary uneasy walk home, not the emergency.
+class _QuieterOptions extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final c = Theme.of(context).amica;
+    final loc = AppLocalizations.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionLabel(loc.homeSectionQuieterOptions),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: AmicaTile(
+                  label: loc.homeTileWalkWithMe,
+                  icon: Icons.location_on_outlined,
+                  tint: c.sageSoft,
+                  iconColor: c.sage,
+                  // Same feature as the Journeys tab, so open that tab
+                  // rather than a duplicate screen with its own state.
+                  onTap: () {
+                    final shell = AmicaShellScope.maybeOf(context);
+                    if (shell != null) {
+                      shell.selectTab(AmicaShellScope.journeysTab);
+                    } else {
+                      Navigator.pushNamed(context, AppRoutes.startJourney);
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: AmicaTile(
+                  label: loc.homeTileFakeCall,
+                  icon: Icons.phone_outlined,
+                  tint: c.orchidSoft,
+                  iconColor: c.orchidInk,
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.fakeCall),
+                ),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: AmicaTile(
+                  label: loc.homeTileScanPlate,
+                  icon: Icons.qr_code_scanner_rounded,
+                  tint: c.sky,
+                  iconColor: c.skyInk,
+                  onTap: () =>
+                      Navigator.pushNamed(context, AppRoutes.plateScan),
+                ),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: AmicaTile(
+                  label: loc.homeTileStopAlert,
+                  icon: Icons.notifications_active_outlined,
+                  tint: c.accentSoft,
+                  iconColor: c.accentInk,
+                  onTap: () =>
+                      Navigator.pushNamed(context, AppRoutes.stopAlert),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A gentle daily safety tip, like the "tip of the day" card in the
+/// reference designs. Rotates by calendar day so it feels fresh without
+/// ever changing mid-glance.
+class _SafetyTip extends StatelessWidget {
+  const _SafetyTip();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Theme.of(context).amica;
+    final theme = Theme.of(context);
+    final loc = AppLocalizations.of(context);
+    final tips = [
+      loc.homeSafetyTip1,
+      loc.homeSafetyTip2,
+      loc.homeSafetyTip3,
+      loc.homeSafetyTip4,
+      loc.homeSafetyTip5,
+      loc.homeSafetyTip6,
+    ];
+    final now = DateTime.now();
+    final dayOfYear = now.difference(DateTime(now.year)).inDays;
+    final tip = tips[dayOfYear % tips.length];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: AmicaCard(
+        padding: const EdgeInsets.fromLTRB(14, 14, 16, 14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: c.accentGradient,
+                boxShadow: c.accentGlow,
+              ),
+              child: const Icon(
+                Icons.tips_and_updates_outlined,
+                size: 20,
+                color: AppColors.onAccent,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(loc.homeSafetyTipTitle,
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(color: c.accentInk)),
+                  const SizedBox(height: 3),
+                  Text(tip, style: theme.textTheme.bodyMedium),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Opens the "You" tab. Pushing the profile as a separate screen left it
+/// with no way back (it is built as a tab, without a back arrow); switching
+/// tabs keeps the bottom bar, so getting back is one tap.
+void _openYouTab(BuildContext context) {
+  final shell = AmicaShellScope.maybeOf(context);
+  if (shell != null) {
+    shell.selectTab(AmicaShellScope.youTab);
+  } else {
+    Navigator.pushNamed(context, AppRoutes.profile);
   }
 }

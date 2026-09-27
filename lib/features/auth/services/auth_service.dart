@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../../../services/live_location_tracker.dart';
+import '../../../services/push_notification_service.dart';
 import '../models/app_user.dart';
 
 class AuthServiceException implements Exception {
@@ -34,6 +38,60 @@ class AuthService {
       }
       return _loadUserProfile(firebaseUser);
     });
+  }
+
+  /// The signed-in user's profile, live: emits again whenever the Firestore
+  /// document changes (an edit, a verified phone number…) and when the user
+  /// signs in or out.
+  ///
+  /// Unlike [currentUserProfile], read errors are passed on to the listener
+  /// instead of being replaced by a blank fallback profile, so a rules or
+  /// network problem shows up as an error rather than as "your data is gone".
+  Stream<AppUser?> watchCurrentUserProfile() {
+    if (!_isFirebaseReady) {
+      return Stream<AppUser?>.value(null);
+    }
+
+    late final StreamController<AppUser?> controller;
+    StreamSubscription<User?>? authSub;
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? docSub;
+
+    controller = StreamController<AppUser?>(
+      onListen: () {
+        authSub = _auth.authStateChanges().listen((firebaseUser) {
+          docSub?.cancel();
+          docSub = null;
+          if (firebaseUser == null) {
+            controller.add(null);
+            return;
+          }
+          docSub = _firestore
+              .collection('users')
+              .doc(firebaseUser.uid)
+              .snapshots()
+              .listen(
+            (snapshot) {
+              final data = snapshot.data();
+              controller.add(
+                data == null
+                    ? AppUser.fallback(
+                        uid: firebaseUser.uid,
+                        email: firebaseUser.email ?? '',
+                        name: firebaseUser.displayName ?? 'Amica User',
+                      )
+                    : AppUser.fromMap(data, firebaseUser.uid),
+              );
+            },
+            onError: controller.addError,
+          );
+        }, onError: controller.addError);
+      },
+      onCancel: () async {
+        await docSub?.cancel();
+        await authSub?.cancel();
+      },
+    );
+    return controller.stream;
   }
 
   Future<AppUser> signUpWithEmailAndPassword({
@@ -149,6 +207,10 @@ class AuthService {
     if (!_isFirebaseReady) {
       return;
     }
+    // Stop this phone receiving her circle's alerts before the session ends
+    // (the token document can only be deleted while signed in).
+    await PushNotificationService.instance.unregister();
+    await LiveLocationTracker.instance.stop();
     try {
       await GoogleSignIn().signOut();
     } catch (_) {
@@ -257,7 +319,12 @@ class AuthService {
 
     final updates = <String, dynamic>{
       'uid': firebaseUser.uid,
-      'name': name,
+      // Keep a name the user has edited in Amica; only fill it from Google
+      // when the profile has none. Overwriting it on every sign-in made
+      // profile edits look as if they had not been saved.
+      'name': (data['name'] is String && (data['name'] as String).trim().isNotEmpty)
+          ? data['name']
+          : name,
       'email': email,
       'role': data['role'] ?? 'user',
       'status': data['status'] ?? 'active',

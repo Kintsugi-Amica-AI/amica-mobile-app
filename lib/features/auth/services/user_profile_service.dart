@@ -15,10 +15,30 @@ class UserProfileService {
   FirebaseFirestore get _firestore => FirebaseFirestore.instance;
 
   Future<String> getSecretPhrase() async {
-    final data = await _getCurrentUserData();
-    final phrase = _readString(data['secretPhrase']).trim();
-    return phrase.isEmpty ? defaultSecretPhrase : phrase;
+    return (await getSecretPhrases()).first;
   }
+
+  Future<List<String>> getSecretPhrases() async {
+    return readSecretPhrases(await _getCurrentUserData());
+  }
+
+  static List<String> readSecretPhrases(Map<String, dynamic> data) {
+    final stored = data['secretPhrases'];
+    final candidates = stored is List ? stored.whereType<String>() : <String>[];
+    final phrases = candidates
+        .map(normalizeSecretPhrase)
+        .where((phrase) => phrase.isNotEmpty)
+        .toSet()
+        .take(10)
+        .toList();
+    if (phrases.isNotEmpty) return phrases;
+    final legacy = data['secretPhrase'];
+    final fallback = legacy is String ? normalizeSecretPhrase(legacy) : '';
+    return [fallback.isEmpty ? defaultSecretPhrase : fallback];
+  }
+
+  static String normalizeSecretPhrase(String phrase) =>
+      phrase.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
 
   Future<Map<String, dynamic>> getSafetySettings() async {
     final data = await _getCurrentUserData();
@@ -50,6 +70,11 @@ class UserProfileService {
         safetySettings['fakeCallVolumeShortcutEnabled'],
         true,
       ),
+      // Record a short audio clip when an SOS fires (on by default).
+      'sosAudioRecordingEnabled': _readBool(
+        safetySettings['sosAudioRecordingEnabled'],
+        true,
+      ),
       'voiceSosEmergencyMessage': _readString(
         safetySettings['voiceSosEmergencyMessage'],
         _readString(
@@ -62,27 +87,38 @@ class UserProfileService {
 
   Future<void> saveFakeCallVoiceSettings({
     required String secretPhrase,
+    List<String>? secretPhrases,
     required String fakeCallContactName,
     required String fakeCallPhoneNumber,
     required String voiceSosEmergencyMessage,
     required bool voiceSosEnabled,
     required bool secretPhraseEnabled,
     required bool fakeCallVolumeShortcutEnabled,
+    bool? sosAudioRecordingEnabled,
   }) async {
     final user = _auth.currentUser;
     if (user == null) {
       throw const UserProfileException('Please log in before saving settings.');
     }
 
-    final normalizedPhrase = secretPhrase.trim().isEmpty
-        ? defaultSecretPhrase
-        : secretPhrase.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+    final phrases = (secretPhrases ?? [secretPhrase])
+        .map(normalizeSecretPhrase)
+        .where((phrase) => phrase.isNotEmpty)
+        .toSet()
+        .toList();
+    if (phrases.isEmpty ||
+        phrases.length > 10 ||
+        phrases.any((p) => p.length > 120)) {
+      throw const UserProfileException(
+          'Add 1 to 10 phrases, each at most 120 characters.');
+    }
     final message = voiceSosEmergencyMessage.trim().isEmpty
         ? defaultVoiceSosEmergencyMessage
         : voiceSosEmergencyMessage.trim();
 
     await _firestore.collection('users').doc(user.uid).set({
-      'secretPhrase': normalizedPhrase,
+      'secretPhrase': phrases.first,
+      'secretPhrases': phrases,
       'safetySettings': {
         'defaultEmergencyMessage': message,
         'fakeCallContactName': fakeCallContactName.trim().isEmpty
@@ -94,10 +130,57 @@ class UserProfileService {
         'voiceSosEnabled': voiceSosEnabled,
         'secretPhraseEnabled': secretPhraseEnabled,
         'fakeCallVolumeShortcutEnabled': fakeCallVolumeShortcutEnabled,
+        if (sosAudioRecordingEnabled != null)
+          'sosAudioRecordingEnabled': sosAudioRecordingEnabled,
         'voiceSosEmergencyMessage': message,
       },
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+  }
+
+  /// Saves the editable parts of the profile: the name and the medical
+  /// notes for responders. Merged, so nothing else on the user document is
+  /// touched. The phone number is not edited here — it only changes through
+  /// SMS verification (see `PhoneVerificationService`).
+  ///
+  /// Firestore failures are rethrown as [UserProfileException] carrying the
+  /// Firebase error code (e.g. `permission-denied`) instead of being
+  /// swallowed, so the screen can say what actually went wrong.
+  Future<void> updateProfile({
+    required String name,
+    required String medicalNotes,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw const UserProfileException('not-signed-in');
+    }
+    final trimmedName = name.trim();
+    if (trimmedName.isEmpty || trimmedName.length > 80) {
+      throw const UserProfileException('invalid-name');
+    }
+    final trimmedNotes = medicalNotes.trim();
+    if (trimmedNotes.length > 500) {
+      throw const UserProfileException('notes-too-long');
+    }
+
+    try {
+      await _firestore.collection('users').doc(user.uid).set({
+        'name': trimmedName,
+        'safetySettings': {'medicalNotes': trimmedNotes},
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } on FirebaseException catch (error) {
+      throw UserProfileException(error.code);
+    }
+
+    if (trimmedName != user.displayName) {
+      try {
+        await user.updateDisplayName(trimmedName);
+      } catch (_) {
+        // The Firestore profile is the source of truth; the Auth display
+        // name is only a convenience copy.
+      }
+    }
   }
 
   Future<Map<String, dynamic>> _getCurrentUserData() async {

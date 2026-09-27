@@ -14,6 +14,8 @@ class EmergencyContact {
     required this.schemaVersion,
     required this.createdAt,
     required this.updatedAt,
+    this.guardianUid,
+    this.guardianName = '',
   });
 
   final String id;
@@ -28,6 +30,16 @@ class EmergencyContact {
   final int schemaVersion;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  /// Set (by the backend only) once this contact has entered an invite code
+  /// in their own Amica app. Alerts then reach them as push notifications
+  /// as well as SMS.
+  final String? guardianUid;
+
+  /// The linked account's first name, for "Gets your alerts in Amica".
+  final String guardianName;
+
+  bool get isLinkedInAmica => guardianUid != null && guardianUid!.isNotEmpty;
 
   factory EmergencyContact.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> document,
@@ -55,6 +67,11 @@ class EmergencyContact {
       schemaVersion: _readInt(data['schemaVersion'], 1),
       createdAt: _readDateTime(data['createdAt']),
       updatedAt: _readDateTime(data['updatedAt']),
+      guardianUid: data['guardianUid'] is String &&
+              (data['guardianUid'] as String).isNotEmpty
+          ? data['guardianUid'] as String
+          : null,
+      guardianName: _readString(data['guardianName']),
     );
   }
 
@@ -102,6 +119,8 @@ class EmergencyContact {
       schemaVersion: schemaVersion ?? this.schemaVersion,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      guardianUid: guardianUid,
+      guardianName: guardianName,
     );
   }
 

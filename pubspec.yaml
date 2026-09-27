@@ -9,11 +9,19 @@ environment:
 dependencies:
   camera: ^0.11.0+2
   cloud_firestore: ^5.6.0
+  cloud_functions: ^5.1.3
   firebase_auth: ^5.3.4
   firebase_core: ^3.9.0
+  # Circle alerts: pushes to contacts who also have Amica.
+  firebase_messaging: ^15.2.10
+  # First photo of each new vehicle, shown to later riders.
+  firebase_storage: ^12.4.10
   flutter:
     sdk: flutter
   flutter_contacts: ^1.1.9+2
+  flutter_localizations:
+    sdk: flutter
+  flutter_local_notifications: ^18.0.1
   geocoding: ^3.0.0
   geolocator: ^13.0.2
   google_maps_flutter: ^2.9.0
@@ -21,7 +29,11 @@ dependencies:
   google_sign_in: ^6.2.2
   image: ^4.2.0
   image_picker: ^1.1.2
+  intl: 0.20.2
+  shared_preferences: ^2.3.3
   speech_to_text: ^7.4.0
+  # On-device plate finder and vehicle type detector (YOLO, TFLite).
+  tflite_flutter: ^0.12.1
   url_launcher: ^6.3.1
 
 dev_dependencies:
@@ -31,6 +43,39 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
   assets:
     - assets/images/
     - assets/icons/
+    # Detector models; see assets/models/README.md.
+    - assets/models/
+    # Fake Call caller voices, made once with Gemini TTS by
+    # tool/fake_call_audio/generate.py. Directory entries are not recursive,
+    # so each language folder is listed.
+    - assets/audio/fake_call/
+    - assets/audio/fake_call/en/
+    - assets/audio/fake_call/si/
+    - assets/audio/fake_call/ta/
+
+  # Bundled, not fetched at runtime: Amica has to render correctly with no
+  # network. Both families are SIL Open Font Licence 1.1 — see
+  # assets/fonts/OFL.txt.
+  fonts:
+    - family: BricolageGrotesque
+      fonts:
+        - asset: assets/fonts/BricolageGrotesque-500.ttf
+          weight: 500
+        - asset: assets/fonts/BricolageGrotesque-600.ttf
+          weight: 600
+        - asset: assets/fonts/BricolageGrotesque-700.ttf
+          weight: 700
+    - family: PublicSans
+      fonts:
+        - asset: assets/fonts/PublicSans-400.ttf
+          weight: 400
+        - asset: assets/fonts/PublicSans-500.ttf
+          weight: 500
+        - asset: assets/fonts/PublicSans-600.ttf
+          weight: 600
+        - asset: assets/fonts/PublicSans-700.ttf
+          weight: 700

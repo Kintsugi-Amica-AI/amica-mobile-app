@@ -1,78 +1,152 @@
 import 'package:flutter/material.dart';
 
 import '../constants/app_colors.dart';
+import 'motion.dart';
 
-/// Amica's signature gradient action button with a soft neon glow.
+/// What an Amica button means, by colour.
+enum AmicaButtonTone {
+  /// Default. The lavender → orchid brand gradient — the ordinary
+  /// "continue" action.
+  primary,
+
+  /// White pill with a hairline. A secondary choice beside a primary one.
+  quiet,
+
+  /// Emergency rose. Reserved for actions that summon help. Nothing else in
+  /// the app may use this tone, so it never loses its meaning.
+  danger,
+
+  /// Sage. Confirming safety — "I'm safe", "end journey".
+  safe,
+}
+
+/// Amica's action button: a 54px pill.
+///
+/// Primary actions carry the brand gradient with a soft tinted glow
+/// beneath (light mode only — dark stays matte). Hierarchy is still carried
+/// by colour and position: one gradient pill per screen at most.
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
     required this.label,
     required this.onPressed,
     super.key,
     this.icon,
-    this.isDanger = false,
-  });
+    this.tone = AmicaButtonTone.primary,
+    this.isBusy = false,
+    this.height = 54,
+    @Deprecated('Use tone: AmicaButtonTone.danger') bool isDanger = false,
+  }) : _legacyDanger = isDanger;
 
   final String label;
   final VoidCallback? onPressed;
   final IconData? icon;
+  final AmicaButtonTone tone;
 
-  /// When true, uses the safety-rose SOS gradient instead of the brand
-  /// violet-to-cyan gradient. Reserved for destructive/emergency actions.
-  final bool isDanger;
+  /// Swaps the label for a spinner and blocks taps. Use this rather than
+  /// retitling the button "Sending…" — the control stays the same size, so
+  /// nothing below it jumps while a request is in flight.
+  final bool isBusy;
 
-  bool get _enabled => onPressed != null;
+  final double height;
+  final bool _legacyDanger;
+
+  AmicaButtonTone get _tone =>
+      _legacyDanger ? AmicaButtonTone.danger : tone;
 
   @override
   Widget build(BuildContext context) {
-    final gradient =
-        isDanger ? AppColors.sosGradient : AppColors.primaryButtonGradient;
-    final glowColor = isDanger ? AppColors.alert : AppColors.primary;
+    final c = Theme.of(context).amica;
+    final enabled = onPressed != null && !isBusy;
+    final radius = BorderRadius.circular(height / 2);
 
-    return Opacity(
-      opacity: _enabled ? 1 : 0.45,
-      child: Container(
-        height: 52,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          gradient: gradient,
-          boxShadow: _enabled
-              ? [
-                  BoxShadow(
-                    color: glowColor.withValues(alpha: 0.45),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ]
-              : null,
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(18),
-            onTap: onPressed,
-            child: Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (icon != null) ...[
-                    Icon(icon, color: Colors.white, size: 20),
-                    const SizedBox(width: 10),
-                  ],
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.4,
-                      fontSize: 16,
+    final (Color? bg, Gradient? gradient, Color fg, Color? border) =
+        switch (_tone) {
+      AmicaButtonTone.primary =>
+        (null, c.accentGradient, AppColors.onAccent, null),
+      AmicaButtonTone.quiet => (c.card, null, c.plum, c.line),
+      AmicaButtonTone.danger =>
+        (null, c.sosGradient, AppColors.onTerracotta, null),
+      AmicaButtonTone.safe => (c.sage, null, AppColors.onSage, null),
+    };
+
+    final List<BoxShadow> glow = !enabled
+        ? const []
+        : switch (_tone) {
+            AmicaButtonTone.primary => c.accentGlow,
+            AmicaButtonTone.danger => c.shadow.isEmpty
+                ? const []
+                : [
+                    BoxShadow(
+                      color: c.terracotta.withValues(alpha: 0.28),
+                      blurRadius: 22,
+                      offset: const Offset(0, 10),
                     ),
-                  ),
-                ],
+                  ],
+            _ => const [],
+          };
+
+    return PressableScale(
+      enabled: enabled,
+      scale: 0.97,
+      child: Opacity(
+      opacity: enabled || isBusy ? 1 : 0.45,
+      child: SizedBox(
+        height: height,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: bg,
+            gradient: gradient,
+            borderRadius: radius,
+            border: border == null ? null : Border.all(color: border),
+            boxShadow: glow,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: radius,
+            child: InkWell(
+              onTap: enabled ? onPressed : null,
+              borderRadius: radius,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Center(
+                  child: isBusy
+                      ? SizedBox(
+                          width: 21,
+                          height: 21,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.2,
+                            valueColor: AlwaysStoppedAnimation(fg),
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (icon != null) ...[
+                              Icon(icon, color: fg, size: 20),
+                              const SizedBox(width: 9),
+                            ],
+                            Flexible(
+                              child: Text(
+                                label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: fg,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.1,
+                                  fontSize: 15.5,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
               ),
             ),
           ),
         ),
+      ),
       ),
     );
   }

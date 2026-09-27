@@ -3,13 +3,13 @@ package com.kintsugi.amica
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import android.telephony.SmsManager
 import android.view.KeyEvent
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -18,19 +18,26 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private val emergencyChannelName = "com.kintsugi.amica/emergency_actions"
+    private val fakeCallAudioChannelName = "com.kintsugi.amica/fake_call_audio"
     private val sendSmsRequestCode = 4101
     private val startCallRequestCode = 4102
     private val preparePermissionsRequestCode = 4103
+    private val microphonePermissionRequestCode = 4104
     private val volumeShortcutWindowMillis = 1500L
     private val openCallShortcutExtra = "openCallShortcut"
 
     private var emergencyChannel: MethodChannel? = null
     private var pendingResult: MethodChannel.Result? = null
     private var pendingAction: PendingAction? = null
+    // Kept apart from pendingResult: a refused microphone is an answer
+    // (false), not an error, and must never block an SMS permission request.
+    private var pendingMicrophoneResult: MethodChannel.Result? = null
     private var volumeShortcutPressCount = 0
     private var firstVolumeShortcutAtMillis = 0L
     private var pendingCallShortcut = false
+    private var pendingScheduledCall = false
     private var proximityWakeLock: PowerManager.WakeLock? = null
+    private var fakeCallAudioPlayer: FakeCallAudioPlayer? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -42,36 +49,67 @@ class MainActivity : FlutterActivity() {
         emergencyChannel?.setMethodCallHandler { call, result ->
             when (call.method) {
                 "prepareEmergencyPermissions" -> prepareEmergencyPermissions(result)
+                "prepareNotificationPermission" -> prepareNotificationPermission(result)
                 "sendSms" -> handleSendSms(call, result)
                 "startCall" -> handleStartCall(call, result)
                 "vibrateTwice" -> handleVibrateTwice(result)
                 "startJourneySafetyMonitor" -> handleStartJourneySafetyMonitor(call, result)
                 "stopJourneySafetyMonitor" -> handleStopJourneySafetyMonitor(result)
+                "hasJourneyCallEscalated" -> result.success(
+                    getSharedPreferences("amica_vehicle_escalations", MODE_PRIVATE)
+                        .getBoolean(call.argument<String>("journeyId").orEmpty(), false)
+                )
                 "startFakeCallShortcutMonitor" -> handleStartFakeCallShortcutMonitor(result)
                 "stopFakeCallShortcutMonitor" -> handleStopFakeCallShortcutMonitor(result)
                 "consumePendingFakeCallShortcut" -> consumePendingCallShortcut(result)
                 "setCallProximityEnabled" -> handleSetCallProximityEnabled(call, result)
+                "scheduleFakeCall" -> handleScheduleFakeCall(call, result)
+                "cancelScheduledFakeCall" -> handleCancelScheduledFakeCall(result)
+                "scheduledFakeCallRemainingSeconds" ->
+                    handleScheduledFakeCallRemainingSeconds(result)
+                "consumePendingScheduledFakeCall" ->
+                    consumePendingScheduledCall(result)
+                "startStopAlertMonitor" -> handleStartStopAlertMonitor(call, result)
+                "stopStopAlertMonitor" -> handleStopStopAlertMonitor(result)
+                "prepareMicrophonePermission" -> prepareMicrophonePermission(result)
+                "hasMicrophonePermission" ->
+                    result.success(hasPermission(Manifest.permission.RECORD_AUDIO))
+                "startSosAudioRecording" -> handleStartSosAudioRecording(call, result)
+                "stopSosAudioRecording" -> {
+                    startService(SosAudioRecorderService.stopIntent(this))
+                    result.success(true)
+                }
+                "sosAudioRecordingStatus" ->
+                    result.success(SosAudioRecorderService.status(this))
                 else -> result.notImplemented()
             }
         }
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            fakeCallAudioChannelName,
+        ).setMethodCallHandler { call, result -> handleFakeCallAudio(call, result) }
         handleCallShortcutIntent(intent)
+        handleScheduledCallIntent(intent)
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
         handleCallShortcutIntent(intent)
+        handleScheduledCallIntent(intent)
     }
 
     override fun onDestroy() {
+        fakeCallAudioPlayer?.stop()
         releaseCallProximityWakeLock()
         super.onDestroy()
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (
-            (event.keyCode == KeyEvent.KEYCODE_VOLUME_UP ||
-                event.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) &&
+            // Only volume-up is the shortcut; volume-down must always reach the
+            // system so the user can lower the volume normally.
+            event.keyCode == KeyEvent.KEYCODE_VOLUME_UP &&
             event.action == KeyEvent.ACTION_DOWN &&
             event.repeatCount == 0
         ) {
@@ -126,6 +164,85 @@ class MainActivity : FlutterActivity() {
         )
     }
 
+    /// Asks only for notifications, for features such as the Smart Stop Alert
+    /// that need to show an alarm but have no business requesting SMS or phone
+    /// permissions.
+    private fun prepareNotificationPermission(result: MethodChannel.Result) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            result.success(true)
+            return
+        }
+
+        if (hasPermission(Manifest.permission.POST_NOTIFICATIONS)) {
+            result.success(true)
+            return
+        }
+
+        startPendingPermissionRequest(
+            PendingAction(PendingActionType.PREPARE_PERMISSIONS),
+            result,
+            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+            preparePermissionsRequestCode,
+        )
+    }
+
+    /// Asks for the microphone so an SOS can record a short audio clip.
+    /// Answers true/false; a refusal is not an error.
+    private fun prepareMicrophonePermission(result: MethodChannel.Result) {
+        if (hasPermission(Manifest.permission.RECORD_AUDIO)) {
+            result.success(true)
+            return
+        }
+        if (pendingMicrophoneResult != null) {
+            result.success(false)
+            return
+        }
+        pendingMicrophoneResult = result
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(
+                arrayOf(Manifest.permission.RECORD_AUDIO),
+                microphonePermissionRequestCode,
+            )
+        }
+    }
+
+    /// Starts the SOS audio clip. Never asks for permission here: an SOS is
+    /// no moment for a dialog. Without the microphone it answers
+    /// `{started: false, reason: "permission"}` and the SOS goes on silently.
+    private fun handleStartSosAudioRecording(
+        call: MethodCall,
+        result: MethodChannel.Result,
+    ) {
+        if (!hasPermission(Manifest.permission.RECORD_AUDIO)) {
+            result.success(mapOf("started" to false, "reason" to "permission"))
+            return
+        }
+        val maxSeconds = (call.argument<Number>("maxSeconds")?.toLong() ?: 30L)
+            .coerceIn(5L, 120L)
+        val path = SosAudioRecorderService.newOutputPath(this)
+        SosAudioRecorderService.markStarting(this, path)
+        try {
+            val intent = SosAudioRecorderService.startIntent(
+                context = this,
+                outputPath = path,
+                maxDurationMillis = maxSeconds * 1000L,
+            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+            result.success(mapOf("started" to true, "path" to path))
+        } catch (error: Exception) {
+            result.success(
+                mapOf(
+                    "started" to false,
+                    "reason" to (error.localizedMessage ?: "start failed"),
+                ),
+            )
+        }
+    }
+
     private fun handleStartJourneySafetyMonitor(
         call: MethodCall,
         result: MethodChannel.Result,
@@ -160,6 +277,7 @@ class MainActivity : FlutterActivity() {
             safetyCheckAtMillis = safetyCheckAtMillis,
             emergencyPhone = emergencyPhone,
             emergencyMessage = emergencyMessage,
+            emergencyPhones = call.argument<List<String>>("emergencyPhones") ?: emptyList(),
         )
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -204,6 +322,110 @@ class MainActivity : FlutterActivity() {
         pendingCallShortcut = true
         intent.removeExtra(openCallShortcutExtra)
         emergencyChannel?.invokeMethod("onVolumeDownTriplePress", null)
+    }
+
+    private fun handleStartStopAlertMonitor(
+        call: MethodCall,
+        result: MethodChannel.Result,
+    ) {
+        val dropOffLatitude = call.argument<Number>("dropOffLatitude")?.toDouble()
+        val dropOffLongitude = call.argument<Number>("dropOffLongitude")?.toDouble()
+
+        if (dropOffLatitude == null || dropOffLongitude == null) {
+            result.error(
+                "INVALID_STOP_ALERT_ARGUMENTS",
+                "Drop-off coordinates are required.",
+                null,
+            )
+            return
+        }
+
+        val intent = StopAlertMonitorService.startIntent(
+            context = this,
+            dropOffLatitude = dropOffLatitude,
+            dropOffLongitude = dropOffLongitude,
+            dropOffName = call.argument<String>("dropOffName")?.trim().orEmpty(),
+            alertDistanceMeters = call.argument<Number>("alertDistanceMeters")
+                ?.toInt()
+                ?: 2000,
+            routeFactor = call.argument<Number>("routeFactor")?.toFloat() ?: 1f,
+            alreadyAlerted = call.argument<Boolean>("alreadyAlerted") == true,
+        )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+        result.success(true)
+    }
+
+    private fun handleStopStopAlertMonitor(result: MethodChannel.Result) {
+        startService(StopAlertMonitorService.stopIntent(this))
+        result.success(true)
+    }
+
+    private fun handleScheduleFakeCall(
+        call: MethodCall,
+        result: MethodChannel.Result,
+    ) {
+        val delaySeconds = call.argument<Number>("delaySeconds")?.toLong() ?: 0L
+        val callerName = call.argument<String>("callerName")?.trim().orEmpty()
+
+        if (delaySeconds <= 0L) {
+            result.error(
+                "INVALID_SCHEDULE_ARGUMENTS",
+                "Schedule delay must be greater than zero.",
+                null,
+            )
+            return
+        }
+
+        val intent = FakeCallSchedulerService.startIntent(
+            context = this,
+            triggerAtMillis = System.currentTimeMillis() + delaySeconds * 1000L,
+            callerName = callerName,
+        )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+        result.success(true)
+    }
+
+    private fun handleCancelScheduledFakeCall(result: MethodChannel.Result) {
+        startService(FakeCallSchedulerService.stopIntent(this))
+        result.success(true)
+    }
+
+    private fun handleScheduledFakeCallRemainingSeconds(
+        result: MethodChannel.Result,
+    ) {
+        val remainingMillis = FakeCallSchedulerService.remainingMillis(this)
+        result.success(((remainingMillis + 999L) / 1000L).toInt())
+    }
+
+    private fun consumePendingScheduledCall(result: MethodChannel.Result) {
+        val wasPending = pendingScheduledCall
+        pendingScheduledCall = false
+        result.success(wasPending)
+    }
+
+    private fun handleScheduledCallIntent(intent: Intent?) {
+        if (
+            intent?.getBooleanExtra(
+                FakeCallSchedulerService.EXTRA_OPEN_SCHEDULED_CALL,
+                false,
+            ) != true
+        ) {
+            return
+        }
+
+        pendingScheduledCall = true
+        intent.removeExtra(FakeCallSchedulerService.EXTRA_OPEN_SCHEDULED_CALL)
+        emergencyChannel?.invokeMethod("onScheduledFakeCallDue", null)
     }
 
     private fun handleSendSms(call: MethodCall, result: MethodChannel.Result) {
@@ -316,6 +538,49 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+    /** Caller voice for Fake Call; see [FakeCallAudioPlayer]. */
+    private fun handleFakeCallAudio(call: MethodCall, result: MethodChannel.Result) {
+        val player = fakeCallAudioPlayer
+            ?: FakeCallAudioPlayer(applicationContext).also { fakeCallAudioPlayer = it }
+        try {
+            when (call.method) {
+                "start" -> {
+                    val clip = call.argument<String>("clip")
+                    if (clip.isNullOrEmpty()) {
+                        result.error("FAKE_CALL_AUDIO_MISSING", "No clip given.", null)
+                        return
+                    }
+                    player.start(
+                        clip,
+                        call.argument<String>("filler"),
+                        call.argument<Boolean>("speakerOn") == true,
+                    )
+                    // Volume keys adjust call volume while the fake call talks.
+                    volumeControlStream = AudioManager.STREAM_VOICE_CALL
+                    result.success(true)
+                }
+                "setSpeaker" -> {
+                    player.setSpeaker(call.argument<Boolean>("enabled") == true)
+                    result.success(true)
+                }
+                "stop" -> {
+                    player.stop()
+                    volumeControlStream = AudioManager.USE_DEFAULT_STREAM_TYPE
+                    result.success(true)
+                }
+                else -> result.notImplemented()
+            }
+        } catch (error: Exception) {
+            player.stop()
+            volumeControlStream = AudioManager.USE_DEFAULT_STREAM_TYPE
+            result.error(
+                "FAKE_CALL_AUDIO_FAILED",
+                error.localizedMessage ?: "Could not play the caller voice.",
+                null,
+            )
+        }
+    }
+
     private fun startPendingPermissionRequest(
         action: PendingAction,
         result: MethodChannel.Result,
@@ -347,6 +612,14 @@ class MainActivity : FlutterActivity() {
         grantResults: IntArray,
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == microphonePermissionRequestCode) {
+            val granted = grantResults.isNotEmpty() &&
+                grantResults.all { it == PackageManager.PERMISSION_GRANTED }
+            pendingMicrophoneResult?.success(granted)
+            pendingMicrophoneResult = null
+            return
+        }
 
         if (
             requestCode != sendSmsRequestCode &&
@@ -392,11 +665,17 @@ class MainActivity : FlutterActivity() {
             when (action.type) {
                 PendingActionType.PREPARE_PERMISSIONS -> result.success(true)
                 PendingActionType.SEND_SMS -> {
-                    sendSmsDirectly(
-                        phone = action.phone.orEmpty(),
-                        message = action.message.orEmpty(),
-                    )
-                    result.success(true)
+                    // Replies only once the radio says the SMS left the
+                    // phone (or failed), so the app can show real status.
+                    SmsSender.sendWithReport(
+                        this,
+                        action.phone.orEmpty(),
+                        action.message.orEmpty(),
+                    ) { status, error ->
+                        result.success(
+                            mapOf("status" to status, "error" to error),
+                        )
+                    }
                 }
                 PendingActionType.START_CALL -> {
                     startPhoneCall(action.phone.orEmpty())
@@ -410,25 +689,6 @@ class MainActivity : FlutterActivity() {
                 null,
             )
         }
-    }
-
-    private fun sendSmsDirectly(phone: String, message: String) {
-        @Suppress("DEPRECATION")
-        val smsManager = SmsManager.getDefault()
-        val messageParts = smsManager.divideMessage(message)
-
-        if (messageParts.size > 1) {
-            smsManager.sendMultipartTextMessage(
-                phone,
-                null,
-                messageParts,
-                null,
-                null,
-            )
-            return
-        }
-
-        smsManager.sendTextMessage(phone, null, message, null, null)
     }
 
     private fun startPhoneCall(phone: String) {

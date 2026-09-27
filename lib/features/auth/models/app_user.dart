@@ -15,12 +15,17 @@ class AppUser {
     required this.createdAt,
     required this.updatedAt,
     this.secretPhrase,
+    this.phoneVerified = false,
   });
 
   final String uid;
   final String name;
   final String email;
   final String phone;
+
+  /// True once [phone] has been confirmed with an SMS code (Firebase phone
+  /// auth). Changing the number clears it.
+  final bool phoneVerified;
   final String? secretPhrase;
   final String role;
   final String status;
@@ -42,6 +47,7 @@ class AppUser {
           data['name'], _readString(data['displayName'], 'Amica User')),
       email: _readString(data['email']),
       phone: _readString(data['phone'], _readString(data['phoneNumber'])),
+      phoneVerified: data['phoneVerified'] == true,
       secretPhrase: _readString(data['secretPhrase']).isEmpty
           ? null
           : _readString(data['secretPhrase']),
@@ -113,8 +119,16 @@ class AppUser {
       'voiceSosEnabled': true,
       'secretPhraseEnabled': true,
       'fakeCallVolumeShortcutEnabled': true,
+      'sosAudioRecordingEnabled': true,
       'voiceSosEmergencyMessage': 'I need help. This is my live location.',
     };
+  }
+
+  /// Notes for responders (allergies, conditions…), stored under
+  /// `safetySettings.medicalNotes`. Empty when not set.
+  String get medicalNotes {
+    final value = safetySettings['medicalNotes'];
+    return value is String ? value.trim() : '';
   }
 
   static String _readString(dynamic value, [String fallback = '']) {

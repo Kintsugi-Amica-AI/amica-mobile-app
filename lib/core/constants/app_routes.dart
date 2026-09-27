@@ -10,6 +10,8 @@ class AppRoutes {
   static const String startJourney = '/journey/start';
   static const String journeyTimer = '/journey/timer';
   static const String safetyCheck = '/journey/safety-check';
+  static const String stopAlert = '/stop-alert';
+  static const String stopAlertActive = '/stop-alert/active';
   static const String sosActive = '/sos/active';
   static const String fakeCall = '/fake-call';
   static const String fakeCallActive = '/fake-call/active';
@@ -17,4 +19,8 @@ class AppRoutes {
   static const String plateResult = '/plate-scan/result';
   static const String profile = '/profile';
   static const String settings = '/settings';
+  static const String guardianAlert = '/circle/alert';
+  static const String circleLink = '/circle/link';
+  static const String journeyHistory = '/journey/history';
+  static const String notifications = '/notifications';
 }

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_routes.dart';
-import '../../../core/widgets/amica_background.dart';
 import '../../../core/widgets/amica_logo.dart';
+import '../../../core/widgets/auth_widgets.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/motion.dart';
 import '../../../core/widgets/primary_button.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -26,6 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _obscurePassword = true;
   bool _isGoogleLoading = false;
   String? _errorMessage;
 
@@ -61,7 +64,9 @@ class _LoginScreenState extends State<LoginScreen> {
     } on AuthServiceException catch (error) {
       setState(() => _errorMessage = error.message);
     } catch (_) {
-      setState(() => _errorMessage = 'Login failed. Please try again.');
+      setState(
+        () => _errorMessage = AppLocalizations.of(context).loginFailed,
+      );
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -86,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _errorMessage = error.message);
     } catch (_) {
       setState(
-        () => _errorMessage = 'Google sign-in failed. Please try again.',
+        () => _errorMessage = AppLocalizations.of(context).googleSignInFailed,
       );
     } finally {
       if (mounted) {
@@ -97,101 +102,131 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final loc = AppLocalizations.of(context);
+
+    // Logo on the pastel ground, then one frosted card holding the whole
+    // sign-in — email, password, log in, or Google — and the sign-up link
+    // underneath. Sections drift in one after another.
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: AmicaBackground(
-        child: SafeArea(
-          child: Form(
-            key: _formKey,
+      body: SafeArea(
+        child: Form(
+          key: _formKey,
+          child: AutofillGroup(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+              padding: const EdgeInsets.fromLTRB(22, 24, 22, 28),
               children: [
-                const AmicaLogo(),
-                const SizedBox(height: 32),
-                GlassCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Welcome back',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'Sign in to manage journeys, trusted contacts, and safety alerts.',
-                      ),
-                      const SizedBox(height: 28),
-                      CustomTextField(
-                        label: 'Email',
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        prefixIcon: Icons.alternate_email_rounded,
-                        validator: (value) {
-                          if (value == null || !value.contains('@')) {
-                            return 'Enter a valid email';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      CustomTextField(
-                        label: 'Password',
-                        controller: _passwordController,
-                        obscureText: true,
-                        prefixIcon: Icons.lock_outline_rounded,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Password is required';
-                          }
-                          return null;
-                        },
-                      ),
-                      if (_errorMessage != null) ...[
-                        const SizedBox(height: 16),
+                const SizedBox(height: 8),
+                const FadeSlideIn(
+                  offset: Offset(0, 0.08),
+                  child: Center(child: AmicaLogo(size: 116)),
+                ),
+                const SizedBox(height: 28),
+                FadeSlideIn(
+                  delay: const Duration(milliseconds: 120),
+                  child: AmicaCard(
+                    padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+                    borderRadius: 30,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
                         Text(
-                          _errorMessage!,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
+                          loc.loginWelcomeBack,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.headlineMedium,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          loc.loginSubtitle,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 22),
+                        CustomTextField(
+                          label: loc.commonEmail,
+                          controller: _emailController,
+                          prefixIcon: Icons.mail_outline_rounded,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          autofillHints: const [AutofillHints.email],
+                          validator: (value) {
+                            if (value == null || !value.contains('@')) {
+                              return loc.commonEnterValidEmail;
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 14),
+                        CustomTextField(
+                          label: loc.commonPassword,
+                          controller: _passwordController,
+                          prefixIcon: Icons.lock_outline_rounded,
+                          obscureText: _obscurePassword,
+                          textInputAction: TextInputAction.done,
+                          autofillHints: const [AutofillHints.password],
+                          onFieldSubmitted: (_) => _isBusy ? null : _login(),
+                          suffix: PasswordVisibilityButton(
+                            obscured: _obscurePassword,
+                            showLabel: loc.loginShowPassword,
+                            hideLabel: loc.loginHidePassword,
+                            onToggle: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return loc.loginPasswordRequired;
+                            }
+                            return null;
+                          },
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: _isBusy
+                                ? null
+                                : () => Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.forgotPassword,
+                                    ),
+                            child: Text(loc.loginForgotPassword),
                           ),
                         ),
+                        AuthErrorBanner(message: _errorMessage),
+                        PrimaryButton(
+                          label: loc.loginButton,
+                          icon: Icons.arrow_forward_rounded,
+                          isBusy: _isLoading,
+                          onPressed: _isBusy ? null : _login,
+                        ),
+                        const SizedBox(height: 18),
+                        OrDivider(label: loc.loginOr),
+                        const SizedBox(height: 18),
+                        GoogleSignInButton(
+                          label: loc.continueWithGoogle,
+                          isBusy: _isGoogleLoading,
+                          onPressed: _isBusy ? null : _continueWithGoogle,
+                        ),
                       ],
-                      const SizedBox(height: 24),
-                      PrimaryButton(
-                        label: _isLoading ? 'Logging in...' : 'Log in',
-                        icon: Icons.login_rounded,
-                        onPressed: _isBusy ? null : _login,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                FadeSlideIn(
+                  delay: const Duration(milliseconds: 240),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        loc.loginNewToAmica,
+                        style: theme.textTheme.bodyMedium,
                       ),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: _isBusy ? null : _continueWithGoogle,
-                        icon: const Icon(Icons.g_mobiledata_rounded),
-                        label: Text(
-                          _isGoogleLoading
-                              ? 'Connecting...'
-                              : 'Continue with Google',
-                        ),
-                      ),
-                      Center(
-                        child: TextButton(
-                          onPressed: _isBusy
-                              ? null
-                              : () => Navigator.pushNamed(
-                                    context,
-                                    AppRoutes.signup,
-                                  ),
-                          child: const Text('Create account'),
-                        ),
-                      ),
-                      Center(
-                        child: TextButton(
-                          onPressed: _isBusy
-                              ? null
-                              : () => Navigator.pushNamed(
-                                    context,
-                                    AppRoutes.forgotPassword,
-                                  ),
-                          child: const Text('Forgot password?'),
-                        ),
+                      TextButton(
+                        onPressed: _isBusy
+                            ? null
+                            : () =>
+                                Navigator.pushNamed(context, AppRoutes.signup),
+                        child: Text(loc.loginCreateAccount),
                       ),
                     ],
                   ),

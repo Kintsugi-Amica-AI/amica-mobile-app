@@ -1,0 +1,3 @@
+# Only needed when ffmpeg is not already on PATH (bundles an ffmpeg binary).
+# Gemini is called over plain HTTPS, so no Google SDK is required.
+imageio-ffmpeg>=0.5

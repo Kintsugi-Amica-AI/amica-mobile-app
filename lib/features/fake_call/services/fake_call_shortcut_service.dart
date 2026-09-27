@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../services/emergency_action_service.dart';
 import '../../auth/services/user_profile_service.dart';
+import '../screens/fake_call_screen.dart';
 
 class FakeCallShortcutService {
   FakeCallShortcutService({
@@ -31,11 +32,11 @@ class FakeCallShortcutService {
   }) {
     _navigatorKey = navigatorKey;
     _channel.setMethodCallHandler((call) async {
-      if (call.method != 'onVolumeDownTriplePress') {
-        return false;
-      }
-
-      return _handleShortcutRequest();
+      return switch (call.method) {
+        'onVolumeDownTriplePress' => _handleShortcutRequest(),
+        'onScheduledFakeCallDue' => _openCallScreen(),
+        _ => false,
+      };
     });
 
     _authSubscription ??= FirebaseAuth.instance.authStateChanges().listen((_) {
@@ -43,6 +44,7 @@ class FakeCallShortcutService {
     });
     unawaited(syncShortcutMonitor());
     unawaited(_openPendingShortcutIfNeeded());
+    unawaited(_openPendingScheduledCallIfNeeded());
   }
 
   Future<void> syncShortcutMonitor() async {
@@ -76,9 +78,21 @@ class FakeCallShortcutService {
     }
   }
 
+  Future<void> _openPendingScheduledCallIfNeeded() async {
+    try {
+      final isPending =
+          await _emergencyActionService.consumePendingScheduledFakeCall();
+      if (isPending) {
+        await _openCallScreen();
+      }
+    } catch (_) {
+      // The app can still be opened normally if consuming the pending flag fails.
+    }
+  }
+
   Future<bool> _handleShortcutRequest() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null || _isNavigating) {
+    if (user == null) {
       return false;
     }
 
@@ -87,15 +101,50 @@ class FakeCallShortcutService {
       return false;
     }
 
-    final navigator = _navigatorKey?.currentState;
+    return _openCallScreen();
+  }
+
+  /// Opens the incoming-call screen straight away.
+  ///
+  /// A scheduled call deliberately skips the volume-shortcut setting check:
+  /// the user armed this call explicitly, so it rings even when the
+  /// volume-button shortcut is switched off.
+  Future<bool> _openCallScreen() async {
+    if (_isNavigating) {
+      return false;
+    }
+
+    final navigator = await _awaitNavigator();
     if (navigator == null) {
       return false;
     }
 
     _isNavigating = true;
-    navigator.pushNamed(AppRoutes.fakeCall).whenComplete(() {
+    navigator
+        .pushNamed(
+          AppRoutes.fakeCall,
+          arguments: const FakeCallArguments(immediate: true),
+        )
+        .whenComplete(() {
       _isNavigating = false;
     });
     return true;
+  }
+
+  /// Waits for the navigator to exist before pushing the call screen.
+  ///
+  /// [configure] runs from `initState`, so on a cold start triggered by a
+  /// scheduled-call or shortcut notification there is no navigator yet. The
+  /// pending flag has already been consumed by then, so giving up
+  /// immediately would silently drop the call the user armed.
+  Future<NavigatorState?> _awaitNavigator() async {
+    for (var attempt = 0; attempt < 20; attempt++) {
+      final navigator = _navigatorKey?.currentState;
+      if (navigator != null) {
+        return navigator;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+    return _navigatorKey?.currentState;
   }
 }

@@ -18,7 +18,6 @@ import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import android.telephony.SmsManager
 import kotlin.math.max
 
 class EmergencySafetyMonitorService : Service() {
@@ -27,6 +26,7 @@ class EmergencySafetyMonitorService : Service() {
     private var wakeLock: PowerManager.WakeLock? = null
     private var emergencyPhone = ""
     private var emergencyMessage = ""
+    private var emergencyPhones: List<String> = emptyList()
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -61,6 +61,11 @@ class EmergencySafetyMonitorService : Service() {
             0L,
         )
         emergencyPhone = intent.getStringExtra(EXTRA_EMERGENCY_PHONE).orEmpty()
+        emergencyPhones = intent.getStringArrayListExtra("emergencyPhones")
+            ?.filter { it.isNotBlank() }?.distinct().orEmpty()
+        if (emergencyPhones.isEmpty() && emergencyPhone.isNotBlank()) {
+            emergencyPhones = listOf(emergencyPhone)
+        }
         emergencyMessage = intent.getStringExtra(EXTRA_EMERGENCY_MESSAGE)
             .orEmpty()
 
@@ -89,15 +94,26 @@ class EmergencySafetyMonitorService : Service() {
 
         scheduleAt(safetyCheckAtMillis + SMS_DELAY_MILLIS) {
             if (emergencyPhone.isNotBlank() && emergencyMessage.isNotBlank()) {
-                sendSmsDirectly(emergencyPhone, emergencyMessage)
+                var submitted = 0
+                for (phone in emergencyPhones) {
+                    try {
+                        sendSmsDirectly(phone, emergencyMessage)
+                        submitted++
+                    } catch (_: Exception) {
+                        // One failed recipient must not block the others.
+                    }
+                }
                 updateNotification(
-                    title = "Emergency SMS sent",
-                    text = "Amica sent your safety alert to your contact.",
+                    title = "Emergency SMS submission",
+                    text = "$submitted of ${emergencyPhones.size} submitted. Delivery depends on your network.",
                 )
             }
         }
 
         scheduleAt(safetyCheckAtMillis + CALL_DELAY_MILLIS) {
+            // Persist the unanswered check so Flutter can sync it after unlocking.
+            getSharedPreferences("amica_vehicle_escalations", MODE_PRIVATE).edit()
+                .putBoolean(intent.getStringExtra(EXTRA_JOURNEY_ID).orEmpty(), true).apply()
             if (emergencyPhone.isNotBlank()) {
                 startPhoneCall(emergencyPhone)
             }
@@ -219,6 +235,13 @@ class EmergencySafetyMonitorService : Service() {
     }
 
     private fun showSafetyCheckAlertNotification() {
+        // Also show it in the app's own Notifications list.
+        AppInbox.add(
+            this,
+            "safety_check",
+            "Are you safe?",
+            "Your journey timer ended. Open Amica to respond.",
+        )
         notificationManager().notify(
             ALERT_NOTIFICATION_ID,
             buildNotification(
@@ -309,16 +332,7 @@ class EmergencySafetyMonitorService : Service() {
     }
 
     private fun sendSmsDirectly(phone: String, message: String) {
-        @Suppress("DEPRECATION")
-        val smsManager = SmsManager.getDefault()
-        val messageParts = smsManager.divideMessage(message)
-
-        if (messageParts.size > 1) {
-            smsManager.sendMultipartTextMessage(phone, null, messageParts, null, null)
-            return
-        }
-
-        smsManager.sendTextMessage(phone, null, message, null, null)
+        SmsSender.sendQuietly(this, phone, message)
     }
 
     private fun startPhoneCall(phone: String) {
@@ -359,6 +373,7 @@ class EmergencySafetyMonitorService : Service() {
             safetyCheckAtMillis: Long,
             emergencyPhone: String,
             emergencyMessage: String,
+            emergencyPhones: List<String> = emptyList(),
         ): Intent {
             return Intent(context, EmergencySafetyMonitorService::class.java).apply {
                 action = ACTION_START
@@ -367,6 +382,7 @@ class EmergencySafetyMonitorService : Service() {
                 putExtra(EXTRA_SAFETY_CHECK_AT_MILLIS, safetyCheckAtMillis)
                 putExtra(EXTRA_EMERGENCY_PHONE, emergencyPhone)
                 putExtra(EXTRA_EMERGENCY_MESSAGE, emergencyMessage)
+                putStringArrayListExtra("emergencyPhones", ArrayList(emergencyPhones))
             }
         }
 

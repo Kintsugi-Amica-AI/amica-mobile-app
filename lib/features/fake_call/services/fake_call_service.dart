@@ -3,6 +3,17 @@ import '../models/fake_call_session.dart';
 class FakeCallService {
   const FakeCallService();
 
+  /// Delays offered when arming a deterrent call, short enough to cover
+  /// "I am about to get into this vehicle" and long enough to cover a walk to
+  /// a pickup point.
+  static const List<Duration> scheduleDelayOptions = [
+    Duration(seconds: 15),
+    Duration(seconds: 30),
+    Duration(minutes: 1),
+    Duration(minutes: 2),
+    Duration(minutes: 5),
+  ];
+
   String getDefaultCallerName() {
     return 'Amica Friend';
   }
@@ -40,5 +51,13 @@ class FakeCallService {
       return '$hours:$minutes:$seconds';
     }
     return '$minutes:$seconds';
+  }
+
+  /// Short label for a schedule choice, e.g. `15s`, `1 min`, `2 min`.
+  String formatScheduleDelay(Duration delay) {
+    if (delay.inSeconds < 60) {
+      return '${delay.inSeconds}s';
+    }
+    return '${delay.inMinutes} min';
   }
 }

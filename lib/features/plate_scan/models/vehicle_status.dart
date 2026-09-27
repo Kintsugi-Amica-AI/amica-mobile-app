@@ -1,3 +1,5 @@
+import 'vehicle_profile.dart';
+
 enum VehicleRiskStatus {
   safe,
   reported,
@@ -11,6 +13,13 @@ class VehicleStatus {
     this.reportsCount = 0,
     this.riskLevel = 'unknown',
     this.notes,
+    this.normalizedPlateNumber = '',
+    this.ratingAverage = 0,
+    this.ratingCount = 0,
+    this.isDemo = false,
+    this.unverifiedSafetyCheckCount = 0,
+    this.community = CommunityVehicleProfile.empty,
+    this.imagePath,
   });
 
   final String plateNumber;
@@ -18,6 +27,20 @@ class VehicleStatus {
   final int reportsCount;
   final String riskLevel;
   final String? notes;
+  final String normalizedPlateNumber;
+  final double ratingAverage;
+  final int ratingCount;
+  final bool isDemo;
+  final int unverifiedSafetyCheckCount;
+
+  /// The usual type and colour other Amica scans have seen on this plate.
+  final CommunityVehicleProfile community;
+
+  /// Storage path of the first photo a rider saved of this vehicle
+  /// (`vehicle_images/{plate}.jpg`), or null when there is none yet.
+  final String? imagePath;
+
+  bool get hasImage => imagePath != null;
 
   factory VehicleStatus.fromFirestore(
     String normalizedPlateNumber,
@@ -26,12 +49,22 @@ class VehicleStatus {
     if (data == null) {
       return VehicleStatus(
         plateNumber: normalizedPlateNumber,
+        normalizedPlateNumber: normalizedPlateNumber,
         status: VehicleRiskStatus.unknown,
         notes: 'No record found for this plate. Ride with caution.',
       );
     }
 
     return VehicleStatus(
+      normalizedPlateNumber: normalizedPlateNumber,
+      ratingAverage: data['ratingAverage'] is num
+          ? (data['ratingAverage'] as num).toDouble()
+          : 0,
+      ratingCount: _readInt(data['ratingCount']),
+      unverifiedSafetyCheckCount: _readInt(data['unverifiedSafetyCheckCount']),
+      community: CommunityVehicleProfile.fromMap(data['observedProfile']),
+      imagePath: _readImagePath(data['image']),
+      isDemo: data['metadata'] is Map && data['metadata']['demo'] == true,
       plateNumber: _readString(
         data['plateNumber'],
         normalizedPlateNumber,
@@ -51,6 +84,12 @@ class VehicleStatus {
       'reported' => VehicleRiskStatus.reported,
       _ => VehicleRiskStatus.unknown,
     };
+  }
+
+  static String? _readImagePath(dynamic value) {
+    if (value is! Map) return null;
+    final path = value['path'];
+    return path is String && path.startsWith('vehicle_images/') ? path : null;
   }
 
   static String _readString(dynamic value, [String fallback = '']) {

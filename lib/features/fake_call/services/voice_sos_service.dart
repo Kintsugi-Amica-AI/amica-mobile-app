@@ -14,6 +14,8 @@ class VoiceSosService {
 
   Future<void> startListening({
     required String expectedPhrase,
+    List<String>? expectedPhrases,
+    void Function(String phrase)? onMatchedPhrase,
     required void Function(String detectedText) onTextDetected,
     required void Function() onSecretPhraseDetected,
     required void Function(String error) onError,
@@ -24,8 +26,8 @@ class VoiceSosService {
       return;
     }
 
-    final normalizedExpectedPhrase = normalizePhrase(expectedPhrase);
-    if (normalizedExpectedPhrase.isEmpty) {
+    final phrases = expectedPhrases ?? [expectedPhrase];
+    if (phrases.every((phrase) => normalizePhrase(phrase).isEmpty)) {
       onError('Secret phrase is not configured.');
       return;
     }
@@ -40,7 +42,9 @@ class VoiceSosService {
         onResult: (result) {
           final detectedText = result.recognizedWords;
           onTextDetected(detectedText);
-          if (phraseMatches(detectedText, normalizedExpectedPhrase)) {
+          final matched = matchingPhrase(detectedText, phrases);
+          if (matched != null) {
+            onMatchedPhrase?.call(matched);
             onSecretPhraseDetected();
           }
         },
@@ -60,6 +64,13 @@ class VoiceSosService {
     final detected = normalizePhrase(detectedText);
     final expected = normalizePhrase(expectedPhrase);
     return expected.isNotEmpty && detected.contains(expected);
+  }
+
+  String? matchingPhrase(String detectedText, Iterable<String> phrases) {
+    for (final phrase in phrases) {
+      if (phraseMatches(detectedText, phrase)) return normalizePhrase(phrase);
+    }
+    return null;
   }
 
   String normalizePhrase(String phrase) {
